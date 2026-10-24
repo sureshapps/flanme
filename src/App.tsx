@@ -361,7 +361,7 @@ function RobotCard() {
       }
     };
 
-    const funTexts = ['Hallo! I'm Suresh Assit.', 'Are you OK?', 'You Need Suresh's Help?', 'Okay', 'Wow', 'Ah'];
+    const funTexts = ["Hallo! I'm Suresh Assit.", 'Are you OK?', "You Need Suresh's Help?", 'Okay', 'Wow', 'Ah'];
     const angryTexts = ['Enough!', "I'm angry", 'Stop', 'Sad'];
     const collapseTexts = ['Ouch!', "I'm done"];
     const pick = (list: string[]) => list[Math.floor(Math.random() * list.length)];
