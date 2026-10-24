@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { AudioLines, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'lucide-react';
+import { AudioLines, Flame, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -242,6 +242,7 @@ export default function App() {
       <style>{`
         @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
+        @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
         .title-code {
           font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
@@ -263,22 +264,12 @@ export default function App() {
           .title-code { font-size: 22vw; }
           .title-sub { font-size: 9vw; }
         }
-        /* Liquid-glass capsule button */
-        .box {
-          --w: 100px; --h: 100px; --r: 9999px; --tr: 25%;
+        /* Liquid-glass surface (shared by the button and the nav) */
+        .glass {
+          --r: 9999px; --tr: 15%;
           position: relative;
           isolation: isolate;
-          display: inline-flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 18px;
-          width: var(--w);
-          height: var(--h);
-          padding: 0 calc((var(--h) - 40px) / 2) 0 30px;
-          border: 0;
           border-radius: var(--r);
-          cursor: pointer;
-          color: #fff;
           background: rgba(0, 0, 0, 0.02);
           -webkit-backdrop-filter: blur(2px);
           backdrop-filter: blur(2px);
@@ -289,11 +280,7 @@ export default function App() {
             inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
             inset 0 0 3px -1px rgba(0, 0, 0, 0.8),
             0 12px 30px rgba(0, 0, 0, 0.2);
-          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .box:hover { transform: scale(1.04); }
-        .box:active { transform: scale(0.97); }
-        .box:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
         /* optical punch: glare shapes live here so contrast() sharpens them */
         .fx-layer {
           position: absolute; inset: 0; z-index: -1;
@@ -316,15 +303,46 @@ export default function App() {
           mask-composite: exclude;
           filter: blur(7px);
         }
-        .start-btn .btn-label { font-size: 13px; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+        /* capsule button */
+        .box {
+          --w: 100px; --h: 100px;
+          --icon: min(40px, calc(var(--h) * 0.8));
+          display: inline-flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: calc(var(--h) * 0.25);
+          min-width: var(--w);
+          height: var(--h);
+          padding: 0 calc((var(--h) - var(--icon)) / 2) 0 calc(var(--h) * 0.42);
+          border: 0;
+          cursor: pointer;
+          color: #fff;
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .box:hover { transform: scale(1.04); }
+        .box:active { transform: scale(0.97); }
+        .box:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
+        .start-btn .btn-label { font-family: 'Galiver Sans Obliques', 'JetBrains Mono', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
         .start-btn .btn-icon {
           flex: none; display: flex; align-items: center; justify-content: center;
-          width: 40px; height: 40px; border-radius: 9999px; background: #3e3e3e;
+          width: var(--icon); height: var(--icon); border-radius: 9999px; background: #3e3e3e;
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
           transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .start-btn:hover .btn-icon { transform: translateX(3px); }
-        .start-btn .btn-icon .svg { width: 20px; height: 20px; fill: #f5f5f5; }
+        .start-btn:hover .btn-icon { transform: translateX(2px); }
+        /* neon fire outline, fading in and out */
+        .neon-fire {
+          width: calc(var(--icon) * 0.6); height: calc(var(--icon) * 0.6);
+          color: #ffc46b;
+          animation: neon-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes neon-pulse {
+          0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 1px #ffb23e) drop-shadow(0 0 3px #ff7a18); }
+          50% { opacity: 1; filter: drop-shadow(0 0 2px #ffe0a0) drop-shadow(0 0 6px #ff8a1f) drop-shadow(0 0 12px #ff4d00); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .neon-fire { animation: none; filter: drop-shadow(0 0 2px #ffb23e) drop-shadow(0 0 6px #ff7a18); }
+        }
         .sig-img {
           --p: 0%;
           -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
@@ -336,10 +354,10 @@ export default function App() {
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
           ref={navRef}
-          className="nav-drop pointer-events-auto relative h-14 overflow-hidden rounded-full border border-white/50 bg-gradient-to-br from-white/35 via-white/10 to-white/25 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(255,255,255,0.25),inset_0_0_22px_rgba(255,255,255,0.18),0_10px_40px_rgba(0,0,0,0.28)] backdrop-blur-2xl backdrop-saturate-150 transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="glass nav-drop pointer-events-auto relative h-14 overflow-hidden text-white transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ width: menuOpen ? 'min(340px, calc(100vw - 2.5rem))' : '56px' }}
         >
-          <span className="pointer-events-none absolute inset-x-2 top-0 h-1/2 rounded-full bg-gradient-to-b from-white/35 to-transparent" aria-hidden="true" />
+          <span className="fx-layer" aria-hidden="true" />
           <button
             type="button"
             aria-label="Open navigation"
@@ -347,11 +365,11 @@ export default function App() {
             aria-controls="nav-items"
             tabIndex={menuOpen ? -1 : 0}
             onClick={() => setMenuOpen(true)}
-            className={`absolute inset-0 flex items-center justify-center rounded-full transition-opacity duration-300 ${menuOpen ? 'pointer-events-none opacity-0' : 'opacity-100 delay-200'}`}
+            className={`absolute inset-0 z-10 flex items-center justify-center rounded-full transition-opacity duration-300 ${menuOpen ? 'pointer-events-none opacity-0' : 'opacity-100 delay-200'}`}
           >
             <img src={NAV_ICON} alt="" aria-hidden="true" draggable={false} className="h-12 w-12 select-none object-contain" />
           </button>
-          <div id="nav-items" className="relative flex h-full items-center justify-between px-3">
+          <div id="nav-items" className={`relative flex h-full items-center justify-between px-3 ${menuOpen ? '' : 'pointer-events-none'}`}>
             {NAV_ITEMS.map(({ label, Icon }, index) => (
               <button
                 key={label}
@@ -403,7 +421,7 @@ export default function App() {
             <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
           </h1>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
-            <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[120px] select-none sm:w-[170px] md:w-[200px]" />
+            <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[150px] select-none sm:w-[190px] md:w-[220px]" />
             <p className="sig-line mt-3 text-[15px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
             <p className="sig-line mt-1 text-[11px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - Malaysia</p>
           </div>
@@ -411,13 +429,13 @@ export default function App() {
             <button
               type="button"
               onClick={() => openNotice('connect')}
-              className="box start-btn"
-              style={{ '--w': '150px', '--h': '35px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
+              className="glass box start-btn"
+              style={{ '--w': '260px', '--h': '75px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
             >
               <span className="fx-layer" aria-hidden="true" />
               <span className="btn-label">Jom Connect !</span>
               <span className="btn-icon" aria-hidden="true">
-                <svg className="svg" viewBox="0 0 24 24"><path d="M4 11h12.2l-5.6-5.6L12 4l8 8-8 8-1.4-1.4 5.6-5.6H4z" /></svg>
+                <Flame className="neon-fire" strokeWidth={1.8} />
               </span>
             </button>
           </div>
