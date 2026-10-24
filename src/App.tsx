@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { AudioLines, Flame, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'lucide-react';
-import { ROBOT_HAPPY, ROBOT_NEUTRAL } from './robotSvg';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -94,9 +93,289 @@ function Statistics() {
   );
 }
 
+type Mouth = 'smile' | 'sad' | 'wow' | 'oh';
+
+function RobotCard() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const fx = fxRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !fx || !ctx) return;
+
+    const W = 280;
+    const H = 320;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timers: number[] = [];
+    const later = (fn: () => void, ms: number) => { timers.push(window.setTimeout(fn, ms)); };
+
+    const mouse = { x: 0, y: 0 };
+    const target = { x: 0, y: 0 };
+    let blink = 0;
+    let time = 0;
+    let clickCount = 0;
+    let lastClick = 0;
+    let angryUntil = 0;
+    let collapseUntil = 0;
+    let laughUntil = 0;
+    let mouthMode: Mouth = 'smile';
+    let mouthUntil = 0;
+    let frame = 0;
+
+    const clamp = (value: number) => Math.max(-1, Math.min(1, value));
+    const updateTarget = (clientX: number, clientY: number) => {
+      const rect = canvas.getBoundingClientRect();
+      target.x = clamp((clientX - (rect.left + rect.width / 2)) / (rect.width / 2));
+      target.y = clamp((clientY - (rect.top + rect.height / 2)) / (rect.height / 2));
+    };
+    const onMove = (event: PointerEvent) => updateTarget(event.clientX, event.clientY);
+    const onLeave = () => { target.x = 0; target.y = 0; };
+
+    const draw = () => {
+      if (!reduced) time += 0.05;
+      mouse.x += (target.x - mouse.x) * 0.1;
+      mouse.y += (target.y - mouse.y) * 0.1;
+
+      const cx = W / 2;
+      const cy = H / 2 + 20;
+
+      ctx.clearRect(0, 0, W, H);
+      const now = Date.now();
+      if (now < collapseUntil) {
+        canvas.style.opacity = '0';
+        frame = requestAnimationFrame(draw);
+        return;
+      }
+      canvas.style.opacity = '1';
+      const isAngry = now < angryUntil;
+      const isLaughing = now < laughUntil;
+      canvas.classList.toggle('robot-canvas-angry', isAngry);
+
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 90, 40 + Math.sin(time) * 5, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const floatY = Math.sin(time) * 8;
+
+      const bodyX = cx + mouse.x * 5;
+      const bodyY = cy + floatY + 30;
+
+      const bodyGrad = ctx.createRadialGradient(bodyX - 20, bodyY - 20, 10, bodyX, bodyY, 60);
+      bodyGrad.addColorStop(0, '#ffffff');
+      bodyGrad.addColorStop(1, '#d1d9e6');
+
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.ellipse(bodyX, bodyY, 50, 45, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const logoX = bodyX + mouse.x * 10;
+      const logoY = bodyY + mouse.y * 5;
+      ctx.fillStyle = '#25d366';
+      ctx.beginPath();
+      ctx.arc(logoX, logoY, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(logoX - 3, logoY - 3, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      const headX = cx + mouse.x * 25;
+      const headY = cy + floatY - 50 + mouse.y * 15;
+
+      const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 20, headX, headY, 80);
+      headGrad.addColorStop(0, '#ffffff');
+      headGrad.addColorStop(1, '#cbd5e1');
+
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.roundRect(headX - 60, headY - 45, 120, 90, 40);
+      ctx.fill();
+
+      const faceX = headX + mouse.x * 10;
+      const faceY = headY + mouse.y * 8;
+      const faceHeight = 60;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(faceX - 45, faceY - faceHeight / 2, 90, faceHeight, 22);
+      ctx.fill();
+
+      if (Math.random() > 0.98) blink = 1;
+      if (blink > 0) blink -= 0.2;
+
+      const eyeY = faceY + mouse.y * 5 - 2;
+      const eyeColor = isAngry ? '#ff4d4d' : '#25d366';
+      ctx.fillStyle = eyeColor;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = eyeColor;
+
+      if (blink <= 0.2) {
+        ctx.beginPath();
+        ctx.ellipse(faceX - 22 + mouse.x * 5, eyeY, 7, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(faceX + 22 + mouse.x * 5, eyeY, 7, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      if (Date.now() > mouthUntil) mouthMode = 'smile';
+      ctx.strokeStyle = eyeColor;
+      ctx.lineWidth = 4;
+      const baseY = faceY + 14 + mouse.y * 6;
+      if (mouthMode === 'sad') {
+        ctx.beginPath();
+        ctx.moveTo(faceX - 18, baseY + 8);
+        ctx.quadraticCurveTo(faceX, baseY - 2, faceX + 18, baseY + 8);
+        ctx.stroke();
+      } else if (mouthMode === 'wow') {
+        ctx.beginPath();
+        ctx.arc(faceX, baseY + 4, 6, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (mouthMode === 'oh') {
+        ctx.beginPath();
+        ctx.arc(faceX, baseY + 4, 4, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        const smileDepth = (isLaughing ? 12 : 8) + Math.abs(mouse.y * 4);
+        ctx.beginPath();
+        ctx.moveTo(faceX - 18, baseY);
+        ctx.quadraticCurveTo(faceX, baseY + smileDepth, faceX + 18, baseY);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(headX - 40, headY - 40);
+      ctx.lineTo(headX - 55, headY - 65);
+      ctx.moveTo(headX + 40, headY - 40);
+      ctx.lineTo(headX + 55, headY - 65);
+      ctx.stroke();
+
+      frame = requestAnimationFrame(draw);
+    };
+
+    const emitPop = (text: string, duration: number) => {
+      const pop = document.createElement('span');
+      pop.className = 'robot-pop';
+      pop.textContent = text;
+      fx.appendChild(pop);
+      later(() => pop.remove(), duration);
+    };
+
+    const emitBubbles = (count: number, tone?: 'burst' | 'angry') => {
+      const rect = fx.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const radius = Math.min(rect.width, rect.height) * 0.48;
+      for (let i = 0; i < count; i += 1) {
+        const bubble = document.createElement('span');
+        bubble.className = tone === 'angry' ? 'robot-bubble robot-bubble-angry' : 'robot-bubble';
+        if (tone === 'burst') {
+          const angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
+          bubble.style.left = `${centerX + Math.cos(angle) * radius}px`;
+          bubble.style.top = `${centerY + Math.sin(angle) * radius}px`;
+        } else {
+          bubble.style.left = `${40 + Math.random() * 40}%`;
+          bubble.style.top = `${30 + Math.random() * 40}%`;
+        }
+        const size = `${8 + Math.random() * 8}px`;
+        bubble.style.width = size;
+        bubble.style.height = size;
+        fx.appendChild(bubble);
+        later(() => bubble.remove(), 900);
+      }
+    };
+
+    const funTexts = ['You tickle me', 'Haha', 'Nice', 'Okay', 'Wow', 'Ah'];
+    const angryTexts = ['Enough!', "I'm angry", 'Stop', 'Sad'];
+    const collapseTexts = ['Ouch!', "I'm done"];
+    const pick = (list: string[]) => list[Math.floor(Math.random() * list.length)];
+
+    const onClick = () => {
+      const now = Date.now();
+      if (now - lastClick > 1500) clickCount = 0;
+      clickCount += 1;
+      lastClick = now;
+
+      if (clickCount >= 8) {
+        angryUntil = now + 1200;
+        collapseUntil = now + 1200;
+        clickCount = 0;
+        canvas.classList.add('robot-canvas-collapse');
+        later(() => {
+          canvas.classList.remove('robot-canvas-collapse');
+          canvas.classList.remove('robot-canvas-reappear');
+          void canvas.offsetWidth;
+          canvas.classList.add('robot-canvas-reappear');
+          emitBubbles(14, 'burst');
+          later(() => canvas.classList.remove('robot-canvas-reappear'), 600);
+        }, 1200);
+        emitBubbles(18, 'burst');
+        mouthMode = 'oh';
+        mouthUntil = now + 1400;
+        emitPop(pick(collapseTexts), 1400);
+        return;
+      }
+
+      if (clickCount >= 5) {
+        angryUntil = now + 1500;
+        mouthMode = 'sad';
+        mouthUntil = now + 1500;
+        emitBubbles(8, 'angry');
+        emitPop(pick(angryTexts), 1500);
+      } else {
+        laughUntil = now + 1200;
+        mouthMode = Math.random() > 0.6 ? 'wow' : 'smile';
+        mouthUntil = now + 1200;
+        emitBubbles(4);
+        emitPop(pick(funTexts), 1200);
+      }
+
+      canvas.classList.remove('robot-canvas-fun');
+      void canvas.offsetWidth;
+      canvas.classList.add('robot-canvas-fun');
+      later(() => canvas.classList.remove('robot-canvas-fun'), 600);
+    };
+
+    window.addEventListener('pointermove', onMove, { passive: true });
+    document.documentElement.addEventListener('mouseleave', onLeave);
+    window.addEventListener('blur', onLeave);
+    canvas.addEventListener('click', onClick);
+    frame = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('pointermove', onMove);
+      document.documentElement.removeEventListener('mouseleave', onLeave);
+      window.removeEventListener('blur', onLeave);
+      canvas.removeEventListener('click', onClick);
+      timers.forEach((id) => window.clearTimeout(id));
+      fx.replaceChildren();
+    };
+  }, []);
+
+  return (
+    <div className="robot-card glass relative aspect-square w-full" style={{ '--r': '10%', '--tr': '15%' } as CSSProperties}>
+      <span className="fx-layer" aria-hidden="true" />
+      <canvas ref={canvasRef} className="robot-canvas" role="img" aria-label="Interactive robot. Click it for a reaction." />
+      <div ref={fxRef} className="robot-fx" aria-hidden="true" />
+    </div>
+  );
+}
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [robotHappy, setRobotHappy] = useState(false);
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const revealRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -104,7 +383,6 @@ export default function App() {
   const noticeRef = useRef<HTMLDialogElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const signatureRef = useRef<HTMLDivElement>(null);
-  const robotRef = useRef<HTMLDivElement>(null);
   const cursorTarget = useRef({ x: -999, y: -999 });
 
   useEffect(() => {
@@ -228,31 +506,6 @@ export default function App() {
     return () => ctx.revert();
   }, []);
 
-  useEffect(() => {
-    const el = robotRef.current;
-    if (!el) return;
-    const clamp = (value: number) => Math.max(-1, Math.min(1, value));
-    const look = (event: PointerEvent) => {
-      const rect = el.getBoundingClientRect();
-      const dx = (event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2);
-      const dy = (event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2);
-      el.style.setProperty('--mx', `${clamp(dx) * 12}px`);
-      el.style.setProperty('--my', `${clamp(dy) * 12}px`);
-    };
-    const center = () => {
-      el.style.setProperty('--mx', '0px');
-      el.style.setProperty('--my', '0px');
-    };
-    window.addEventListener('pointermove', look, { passive: true });
-    document.documentElement.addEventListener('mouseleave', center);
-    window.addEventListener('blur', center);
-    return () => {
-      window.removeEventListener('pointermove', look);
-      document.documentElement.removeEventListener('mouseleave', center);
-      window.removeEventListener('blur', center);
-    };
-  }, []);
-
   function navigate(label: string) {
     setMenuOpen(false);
     if (label === 'Live Demo') {
@@ -371,18 +624,33 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) {
           .neon-fire { animation: none; filter: drop-shadow(0 0 2px #ffb23e) drop-shadow(0 0 6px #ff7a18); }
         }
-        /* AI robot card */
-        .robot-stage { --mx: 0px; --my: 0px; touch-action: manipulation; }
-        .robot-float { animation: robot-bob 3.2s ease-in-out infinite; filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.3)); }
-        .robot-art { position: relative; width: 100%; height: 100%; }
-        .robot-art .bot { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transition: opacity 0.12s ease-out; }
-        .robot-art .bot-happy { opacity: 0; }
-        .robot-stage.is-happy .bot-neutral { opacity: 0; }
-        .robot-stage.is-happy .bot-happy { opacity: 1; }
-        .robot-art .face { transform: translate(calc(var(--mx) * 2.2), calc(var(--my) * 2.2)); transition: transform 0.05s ease-out; }
-        .robot-stage.is-happy .robot-float { animation: robot-bob 0.9s ease-in-out infinite; }
-        @keyframes robot-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
-        @media (prefers-reduced-motion: reduce) { .robot-float, .robot-stage.is-happy .robot-float { animation: none; } }
+        /* Interactive canvas robot */
+        .robot-card .robot-canvas {
+          position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; cursor: pointer;
+          filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+        }
+        .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 70, 70, 0.35)); }
+        .robot-fx { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+        .robot-canvas-fun { animation: robot-bounce 0.6s ease; }
+        .robot-canvas-collapse { animation: robot-collapse 1.2s ease forwards; }
+        .robot-canvas-reappear { animation: robot-reappear 0.6s ease; }
+        .robot-bubble {
+          position: absolute; width: 10px; height: 10px; border-radius: 999px;
+          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(37, 211, 102, 0.2));
+          opacity: 0; pointer-events: none; animation: robot-bubble 0.9s ease forwards;
+        }
+        .robot-bubble.robot-bubble-angry { background: radial-gradient(circle at 30% 30%, rgba(255, 210, 210, 0.9), rgba(255, 70, 70, 0.35)); }
+        .robot-pop {
+          position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+          font-size: 12px; letter-spacing: 0.4px; padding: 4px 8px; border-radius: 999px; white-space: nowrap;
+          background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.32); color: #eafff6;
+          animation: robot-pop 0.9s ease forwards; pointer-events: none;
+        }
+        @keyframes robot-bounce { 0% { transform: scale(1); } 35% { transform: scale(1.04); } 70% { transform: scale(0.98); } 100% { transform: scale(1); } }
+        @keyframes robot-collapse { 0% { opacity: 1; transform: scale(1); } 40% { opacity: 0.2; transform: scale(0.94); } 100% { opacity: 0; transform: scale(0.9); } }
+        @keyframes robot-reappear { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes robot-bubble { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 40% { opacity: 0.8; } 100% { opacity: 0; transform: translateY(-16px) scale(1.1); } }
+        @keyframes robot-pop { 0% { opacity: 0; transform: translate(-50%, 6px); } 30% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
         .sig-img {
           --p: 0%;
           -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
@@ -456,23 +724,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
         <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(180px,21vw,360px)]" style={{ animationDelay: '0.9s' }}>
-          <div
-            ref={robotRef}
-            role="img"
-            aria-label="AI robot. Press and hold to make it smile."
-            title="Press and hold"
-            className={`robot-stage glass aspect-square w-full cursor-pointer select-none ${robotHappy ? 'is-happy' : ''}`}
-            style={{ '--r': '10%', '--tr': '15%' } as CSSProperties}
-            onPointerDown={() => setRobotHappy(true)}
-            onPointerUp={() => setRobotHappy(false)}
-            onPointerLeave={() => setRobotHappy(false)}
-            onPointerCancel={() => setRobotHappy(false)}
-          >
-            <span className="fx-layer" aria-hidden="true" />
-            <div className="robot-float absolute inset-[9%]">
-              <div className="robot-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ROBOT_NEUTRAL + ROBOT_HAPPY }} />
-            </div>
-          </div>
+          <RobotCard />
         </div>
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
