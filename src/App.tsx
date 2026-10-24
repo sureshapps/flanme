@@ -93,6 +93,96 @@ function Statistics() {
   );
 }
 
+const SPEED_POINTS = [30, 42, 36, 55, 48, 66, 58, 76, 70, 90];
+const EXPERIENCE_BARS = [28, 36, 32, 44, 40, 54, 50, 66, 74, 90];
+
+function smoothPath(points: [number, number][]) {
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const [x0, y0] = points[i - 1];
+    const [x1, y1] = points[i];
+    const mx = (x0 + x1) / 2;
+    d += ` C ${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
+  }
+  return d;
+}
+
+function RingPill({ id, value, label, from, to }: { id: string; value: number; label: string; from: string; to: string }) {
+  const r = 15;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="glass metric-card metric-pill" style={{ '--r': '9999px' } as CSSProperties} role="img" aria-label={`${label} ${value} percent`}>
+      <span className="fx-layer" aria-hidden="true" />
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0 -rotate-90" style={{ filter: `drop-shadow(0 0 4px ${to})` }}>
+        <defs>
+          <linearGradient id={`ring-${id}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={from} />
+            <stop offset="100%" stopColor={to} />
+          </linearGradient>
+        </defs>
+        <circle cx="20" cy="20" r={r} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" />
+        <circle cx="20" cy="20" r={r} fill="none" stroke={`url(#ring-${id})`} strokeWidth="5" strokeLinecap="round" className="ring-fill" style={{ '--c': c, '--off': c * (1 - value / 100), strokeDasharray: c } as CSSProperties} />
+      </svg>
+      <div>
+        <p className="metric-value">{value}%</p>
+        <p className="metric-label mt-1">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function SpeedCard() {
+  const W = 130;
+  const H = 42;
+  const pts = SPEED_POINTS.map((v, i) => [i * (W / (SPEED_POINTS.length - 1)), H - 4 - (v / 100) * (H - 10)] as [number, number]);
+  const line = smoothPath(pts);
+  return (
+    <div className="glass metric-card metric-box" style={{ '--r': '18px' } as CSSProperties} role="img" aria-label="Working speed graph">
+      <span className="fx-layer" aria-hidden="true" />
+      <p className="metric-label">Working Speed Graph</p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full overflow-visible" aria-hidden="true">
+        <defs>
+          <linearGradient id="speed-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#7dff9b" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#7dff9b" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={`${line} L ${W} ${H} L 0 ${H} Z`} fill="url(#speed-fill)" className="chart-area" />
+        <path d={line} pathLength={1} fill="none" stroke="#9dffb4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="chart-line" style={{ filter: 'drop-shadow(0 0 3px rgba(125,255,155,0.8))' }} />
+        {pts.filter((_, i) => i % 3 === 1 || i === pts.length - 1).map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r="2.2" fill="#fff" className="chart-area" />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function ExperienceCard() {
+  return (
+    <div className="glass metric-card metric-box" style={{ '--r': '18px' } as CSSProperties} role="img" aria-label="16 plus years of experience">
+      <span className="fx-layer" aria-hidden="true" />
+      <p className="metric-label">Years of experience</p>
+      <p className="metric-value mt-1" style={{ fontSize: 22 }}>16+</p>
+      <div className="mt-2 flex h-8 items-end gap-[3px]" aria-hidden="true">
+        {EXPERIENCE_BARS.map((h, i) => (
+          <span key={i} className="chart-bar flex-1 rounded-[2px]" style={{ height: `${h}%`, background: i % 3 === 1 ? '#ff7a1a' : 'rgba(255,255,255,0.9)', animationDelay: `${1.4 + i * 0.07}s` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Metrics() {
+  return (
+    <div className="hero-rise pointer-events-none absolute right-[5%] bottom-[7%] z-[55] hidden w-[clamp(340px,30vw,500px)] grid-cols-2 gap-3 lg:grid" style={{ animationDelay: '1.1s' }}>
+      <RingPill id="skills" value={92} label="Skills Level" from="#7dff9b" to="#1fd45a" />
+      <RingPill id="creative" value={88} label="Creative Thinking" from="#ff7ad9" to="#b43cff" />
+      <SpeedCard />
+      <ExperienceCard />
+    </div>
+  );
+}
+
 type Mouth = 'smile' | 'sad' | 'wow' | 'oh';
 
 function RobotCard() {
@@ -137,12 +227,12 @@ function RobotCard() {
       target.x = clamp((clientX - (rect.left + rect.width / 2)) / (rect.width / 2));
       target.y = clamp((clientY - (rect.top + rect.height / 2)) / (rect.height / 2));
     };
-    // follow-the-cursor: robot trails behind the mouse arrow (mouse only, not touch / reduced motion)
+    // follow the pointer: trails behind the mouse arrow, or sits above the finger on touch (skipped for reduced motion)
     const follow = { x: 0, y: 0 };
-    let cursorPt: { x: number; y: number } | null = null;
+    let cursorPt: { x: number; y: number; touch: boolean } | null = null;
     const onMove = (event: PointerEvent) => {
       updateTarget(event.clientX, event.clientY);
-      if (event.pointerType === 'mouse' && !reduced) cursorPt = { x: event.clientX, y: event.clientY };
+      if (!reduced) cursorPt = { x: event.clientX, y: event.clientY, touch: event.pointerType !== 'mouse' };
     };
     const onLeave = () => { target.x = 0; target.y = 0; cursorPt = null; };
 
@@ -158,8 +248,8 @@ function RobotCard() {
         let tx = 0;
         let ty = 0;
         if (cursorPt) {
-          const px = Math.min(Math.max(cursorPt.x + 50, 60), window.innerWidth - 60);
-          const py = Math.min(Math.max(cursorPt.y + 60, 60), window.innerHeight - 60);
+          const px = Math.min(Math.max(cursorPt.x + (cursorPt.touch ? 0 : 50), 60), window.innerWidth - 60);
+          const py = Math.min(Math.max(cursorPt.y + (cursorPt.touch ? -80 : 60), 60), window.innerHeight - 60);
           tx = px - homeX;
           ty = py - homeY;
         }
@@ -438,6 +528,7 @@ function RobotCard() {
     };
 
     window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerdown', onMove, { passive: true });
     document.documentElement.addEventListener('mouseleave', onLeave);
     window.addEventListener('blur', onLeave);
     // canvas ignores the mouse so the trailing robot never blocks the page; clicks near it still trigger reactions
@@ -453,6 +544,7 @@ function RobotCard() {
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerdown', onMove);
       document.documentElement.removeEventListener('mouseleave', onLeave);
       window.removeEventListener('blur', onLeave);
       window.removeEventListener('click', onWindowClick);
@@ -747,6 +839,22 @@ export default function App() {
         @keyframes robot-reappear { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes robot-bubble { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 40% { opacity: 0.8; } 100% { opacity: 0; transform: translateY(-16px) scale(1.1); } }
         @keyframes robot-pop { 0% { opacity: 0; transform: translate(-50%, 6px); } 30% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
+        /* Metric glass widgets */
+        .metric-card.glass { background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .metric-card { display: flex; }
+        .metric-pill { align-items: center; gap: 10px; padding: 8px 14px 8px 10px; }
+        .metric-box { flex-direction: column; justify-content: space-between; padding: 11px 14px 10px; min-height: 100px; }
+        .metric-label { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.25; color: rgba(255, 255, 255, 0.82); }
+        .metric-value { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+        .ring-fill { stroke-dashoffset: var(--off); animation: ring-fill 1.6s cubic-bezier(0.22, 1, 0.36, 1) 1.3s backwards; }
+        @keyframes ring-fill { from { stroke-dashoffset: var(--c); } }
+        .chart-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: chart-draw 1.8s ease-out 1.4s backwards; }
+        @keyframes chart-draw { from { stroke-dashoffset: 1; } }
+        .chart-area { animation: chart-fade 1.2s ease-out 2s backwards; }
+        @keyframes chart-fade { from { opacity: 0; } }
+        .chart-bar { transform-origin: bottom; animation: bar-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+        @keyframes bar-grow { from { transform: scaleY(0); } }
+        @media (prefers-reduced-motion: reduce) { .ring-fill, .chart-line, .chart-area, .chart-bar { animation: none; } }
         .sig-img {
           --p: 0%;
           -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
@@ -804,7 +912,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main id="module" className="relative h-[100dvh] overflow-hidden">
+      <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" style={{ opacity: 0.1 }} aria-hidden="true">
           <defs>
             <pattern ref={patternRef} id="hero-grid" width="48" height="48" patternUnits="userSpaceOnUse">
@@ -819,6 +927,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
+        <Metrics />
         <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(162px,18.9vw,324px)]" style={{ animationDelay: '0.9s' }}>
           <RobotCard />
         </div>
