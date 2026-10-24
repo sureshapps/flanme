@@ -422,8 +422,8 @@ export default function App() {
           </h1>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
             <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[120px] select-none sm:w-[170px] md:w-[200px]" />
-            <p className="sig-line mt-3 text-[15px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
-            <p className="sig-line mt-1 text-[11px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - Malaysia</p>
+            <p className="sig-line mt-3 text-[13px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
+            <p className="sig-line mt-1 text-[8px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - MY </p>
           </div>
           <div className="hero-rise inline-block" style={{ animationDelay: '0.7s' }}>
             <button
