@@ -231,7 +231,7 @@ export default function App() {
             onClick={() => setMenuOpen(true)}
             className={`absolute inset-0 flex items-center justify-center rounded-full transition-opacity duration-300 ${menuOpen ? 'pointer-events-none opacity-0' : 'opacity-100 delay-200'}`}
           >
-            <img src={NAV_ICON} alt="" aria-hidden="true" draggable={false} className="h-10 w-10 select-none object-contain" />
+            <img src={NAV_ICON} alt="" aria-hidden="true" draggable={false} className="h-12 w-12 select-none object-contain" />
           </button>
           <div id="nav-items" className="flex h-full items-center justify-between px-3">
             {NAV_ITEMS.map(({ label, Icon }, index) => (
