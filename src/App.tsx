@@ -310,7 +310,8 @@ export default function App() {
           display: inline-flex;
           align-items: center;
           justify-content: space-between;
-          gap: calc(var(--h) * 0.25);
+          gap: 10px;
+          width: max-content;
           min-width: var(--w);
           height: var(--h);
           padding: 0 calc((var(--h) - var(--icon)) / 2) 0 calc(var(--h) * 0.42);
@@ -421,7 +422,7 @@ export default function App() {
             <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
           </h1>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
-            <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[150px] select-none sm:w-[190px] md:w-[220px]" />
+            <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[120px] select-none sm:w-[170px] md:w-[200px]" />
             <p className="sig-line mt-3 text-[15px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
             <p className="sig-line mt-1 text-[11px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - Malaysia</p>
           </div>
@@ -430,7 +431,7 @@ export default function App() {
               type="button"
               onClick={() => openNotice('connect')}
               className="glass box start-btn"
-              style={{ '--w': '260px', '--h': '75px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
+              style={{ '--w': '0px', '--h': '40px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
             >
               <span className="fx-layer" aria-hidden="true" />
               <span className="btn-label">Jom Connect !</span>
