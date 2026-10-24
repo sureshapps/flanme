@@ -219,9 +219,10 @@ export default function App() {
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
           ref={navRef}
-          className="nav-drop pointer-events-auto relative h-14 overflow-hidden rounded-full border border-white/40 bg-white/15 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_0_14px_rgba(255,255,255,0.12),0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="nav-drop pointer-events-auto relative h-14 overflow-hidden rounded-full border border-white/50 bg-gradient-to-br from-white/35 via-white/10 to-white/25 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(255,255,255,0.25),inset_0_0_22px_rgba(255,255,255,0.18),0_10px_40px_rgba(0,0,0,0.28)] backdrop-blur-2xl backdrop-saturate-150 transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ width: menuOpen ? 'min(340px, calc(100vw - 2.5rem))' : '56px' }}
         >
+          <span className="pointer-events-none absolute inset-x-2 top-0 h-1/2 rounded-full bg-gradient-to-b from-white/35 to-transparent" aria-hidden="true" />
           <button
             type="button"
             aria-label="Open navigation"
@@ -233,7 +234,7 @@ export default function App() {
           >
             <img src={NAV_ICON} alt="" aria-hidden="true" draggable={false} className="h-12 w-12 select-none object-contain" />
           </button>
-          <div id="nav-items" className="flex h-full items-center justify-between px-3">
+          <div id="nav-items" className="relative flex h-full items-center justify-between px-3">
             {NAV_ITEMS.map(({ label, Icon }, index) => (
               <button
                 key={label}
