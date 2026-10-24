@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { AudioLines, Flame, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'lucide-react';
+import { ROBOT_HAPPY, ROBOT_NEUTRAL } from './robotSvg';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -95,6 +96,7 @@ function Statistics() {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [robotHappy, setRobotHappy] = useState(false);
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const revealRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -102,6 +104,7 @@ export default function App() {
   const noticeRef = useRef<HTMLDialogElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const signatureRef = useRef<HTMLDivElement>(null);
+  const robotRef = useRef<HTMLDivElement>(null);
   const cursorTarget = useRef({ x: -999, y: -999 });
 
   useEffect(() => {
@@ -225,6 +228,31 @@ export default function App() {
     return () => ctx.revert();
   }, []);
 
+  useEffect(() => {
+    const el = robotRef.current;
+    if (!el) return;
+    const clamp = (value: number) => Math.max(-1, Math.min(1, value));
+    const look = (event: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      const dx = (event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2);
+      const dy = (event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2);
+      el.style.setProperty('--mx', `${clamp(dx) * 12}px`);
+      el.style.setProperty('--my', `${clamp(dy) * 12}px`);
+    };
+    const center = () => {
+      el.style.setProperty('--mx', '0px');
+      el.style.setProperty('--my', '0px');
+    };
+    window.addEventListener('pointermove', look, { passive: true });
+    document.documentElement.addEventListener('mouseleave', center);
+    window.addEventListener('blur', center);
+    return () => {
+      window.removeEventListener('pointermove', look);
+      document.documentElement.removeEventListener('mouseleave', center);
+      window.removeEventListener('blur', center);
+    };
+  }, []);
+
   function navigate(label: string) {
     setMenuOpen(false);
     if (label === 'Live Demo') {
@@ -343,6 +371,18 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) {
           .neon-fire { animation: none; filter: drop-shadow(0 0 2px #ffb23e) drop-shadow(0 0 6px #ff7a18); }
         }
+        /* AI robot card */
+        .robot-stage { --mx: 0px; --my: 0px; touch-action: manipulation; }
+        .robot-float { animation: robot-bob 3.2s ease-in-out infinite; filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.3)); }
+        .robot-art { position: relative; width: 100%; height: 100%; }
+        .robot-art .bot { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transition: opacity 0.12s ease-out; }
+        .robot-art .bot-happy { opacity: 0; }
+        .robot-stage.is-happy .bot-neutral { opacity: 0; }
+        .robot-stage.is-happy .bot-happy { opacity: 1; }
+        .robot-art .face { transform: translate(calc(var(--mx) * 2.2), calc(var(--my) * 2.2)); transition: transform 0.05s ease-out; }
+        .robot-stage.is-happy .robot-float { animation: robot-bob 0.9s ease-in-out infinite; }
+        @keyframes robot-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+        @media (prefers-reduced-motion: reduce) { .robot-float, .robot-stage.is-happy .robot-float { animation: none; } }
         .sig-img {
           --p: 0%;
           -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
@@ -415,6 +455,25 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
+        <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(180px,21vw,360px)]" style={{ animationDelay: '0.9s' }}>
+          <div
+            ref={robotRef}
+            role="img"
+            aria-label="AI robot. Press and hold to make it smile."
+            title="Press and hold"
+            className={`robot-stage glass aspect-square w-full cursor-pointer select-none ${robotHappy ? 'is-happy' : ''}`}
+            style={{ '--r': '10%', '--tr': '15%' } as CSSProperties}
+            onPointerDown={() => setRobotHappy(true)}
+            onPointerUp={() => setRobotHappy(false)}
+            onPointerLeave={() => setRobotHappy(false)}
+            onPointerCancel={() => setRobotHappy(false)}
+          >
+            <span className="fx-layer" aria-hidden="true" />
+            <div className="robot-float absolute inset-[9%]">
+              <div className="robot-art" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ROBOT_NEUTRAL + ROBOT_HAPPY }} />
+            </div>
+          </div>
+        </div>
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
             <span className="title-code block">Code</span>
@@ -423,7 +482,7 @@ export default function App() {
           <div ref={signatureRef} className="mb-6 sm:mb-8">
             <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[100px] select-none sm:w-[150px] md:w-[180px]" />
             <p className="sig-line mt-3 text-[10px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
-            <p className="sig-line mt-1 text-[8px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - MY </p>
+            <p className="sig-line mt-1 text-[8px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - MY</p>
           </div>
           <div className="hero-rise inline-block" style={{ animationDelay: '0.7s' }}>
             <button
