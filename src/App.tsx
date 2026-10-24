@@ -247,7 +247,7 @@ export default function App() {
         .title-code {
           font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
           font-weight: 400;
-          font-size: clamp(5rem, 8vw, 8rem);
+          font-size: clamp(5rem, 10vw, 10rem);
           line-height: 1;
           letter-spacing: 0;
           color: #fff;
