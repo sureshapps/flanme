@@ -6,9 +6,9 @@ const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/head
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
 const NAV_LINKS = ['Module', 'Case Records', 'Biotech', 'Tiers', 'Live Demo'];
 const STATS = [
-  { radius: 330, start: -92, end: 16, dot: -49, number: ' ', suffix: ' ', label: 'DESIGNER' },
-  { radius: 395, start: -56, end: 60, dot: 2, number: ' ', suffix: ' ', label: 'DEVELOPER' },
-  { radius: 460, start: -14, end: 72, dot: 44, number: ' ', suffix: ' ', label: 'TECHNOLOGY' },
+  { radius: 330, start: -92, end: 16, dot: -49 },
+  { radius: 395, start: -56, end: 60, dot: 2 },
+  { radius: 460, start: -14, end: 72, dot: 44 },
 ];
 
 function Logo() {
@@ -19,6 +19,8 @@ function Logo() {
   );
 }
 
+const STAR = 'M 0 -6 Q 0.8 -0.8 6 0 Q 0.8 0.8 0 6 Q -0.8 0.8 -6 0 Q -0.8 -0.8 0 -6 Z';
+
 function polar(radius: number, angle: number) {
   const radians = angle * Math.PI / 180;
   return { x: -110 + radius * Math.cos(radians), y: 300 + radius * Math.sin(radians) };
@@ -28,12 +30,21 @@ function Statistics() {
   return (
     <div className="pointer-events-none absolute inset-y-0 right-0 z-50 hidden sm:block" aria-hidden="true">
       <svg viewBox="0 0 380 700" preserveAspectRatio="xMaxYMid meet" className="h-full w-auto">
+        <style>{`
+          .star { transform-box: fill-box; transform-origin: center; opacity: 0; animation: star-twinkle 2.6s ease-in-out infinite backwards; filter: drop-shadow(0 0 3px rgba(255,255,255,0.9)); }
+          .star-small { animation-duration: 3.2s; }
+          @keyframes star-twinkle {
+            0%, 100% { opacity: 0.25; transform: scale(0.55) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.15) rotate(45deg); }
+          }
+          @media (prefers-reduced-motion: reduce) { .star { animation: none; opacity: 0.9; } }
+        `}</style>
         <defs>
           {STATS.map((stat, index) => {
             const start = polar(stat.radius, stat.start);
             const end = polar(stat.radius, stat.end);
             return (
-              <linearGradient key={stat.label} id={`arc-gradient-${index}`} gradientUnits="userSpaceOnUse" x1={start.x} y1={start.y} x2={end.x} y2={end.y}>
+              <linearGradient key={index} id={`arc-gradient-${index}`} gradientUnits="userSpaceOnUse" x1={start.x} y1={start.y} x2={end.x} y2={end.y}>
                 <stop offset="0%" stopColor="white" stopOpacity="0" />
                 <stop offset="22%" stopColor="white" stopOpacity="0.5" />
                 <stop offset="55%" stopColor="white" stopOpacity="0.5" />
@@ -51,7 +62,7 @@ function Statistics() {
           const lineDelay = 0.4 + index * 0.22;
           const markDelay = lineDelay + 0.9;
           return (
-            <g key={stat.label}>
+            <g key={index}>
               <path
                 d={`M ${start.x} ${start.y} A ${stat.radius} ${stat.radius} 0 0 1 ${end.x} ${end.y}`}
                 fill="none"
@@ -60,14 +71,11 @@ function Statistics() {
                 className="arc-line"
                 style={{ '--len': length, animationDelay: `${lineDelay}s` } as CSSProperties}
               />
-              <circle cx={dot.x} cy={dot.y} r="7" fill="none" stroke="white" strokeWidth="1" strokeOpacity="0.35" className="arc-ring" style={{ animationDelay: `${markDelay + 0.3}s` }} />
-              <circle cx={dot.x} cy={dot.y} r="3.4" fill="white" className="arc-dot" style={{ animationDelay: `${markDelay}s` }} />
-              <text x={dot.x + 16} y={dot.y + 4} fill="white" fontSize="32" letterSpacing="-1" className="arc-text" style={{ animationDelay: `${markDelay + 0.15}s` }}>
-                {stat.number}<tspan fontSize="19" dy="-10">{stat.suffix}</tspan>
-              </text>
-              <text x={dot.x + 18} y={dot.y + 22} fill="white" fillOpacity="0.8" fontSize="8.5" fontWeight="600" letterSpacing="2" className="arc-text" style={{ animationDelay: `${markDelay + 0.3}s` }}>
-                {stat.label}
-              </text>
+              <g transform={`translate(${dot.x} ${dot.y})`}>
+                <path d={STAR} fill="white" className="star star-main" style={{ animationDelay: `${markDelay}s` }} />
+                <g transform="translate(9 -8) scale(0.5)"><path d={STAR} fill="white" className="star star-small" style={{ animationDelay: `${markDelay + 0.5}s` }} /></g>
+                <g transform="translate(-8 8) scale(0.38)"><path d={STAR} fill="white" className="star star-small" style={{ animationDelay: `${markDelay + 1.1}s` }} /></g>
+              </g>
             </g>
           );
         })}
