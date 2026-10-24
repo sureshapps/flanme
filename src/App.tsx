@@ -1209,12 +1209,13 @@ export default function App() {
           <h2 className="info-title">Suresh Kaleyannan</h2>
           <p className="info-role">DevOps · Web Developer · MY</p>
           <p className="info-text">React and TypeScript on the front end, Linux servers and cloud behind it. Code that ships and infrastructure that stays up.</p>
+      
+           <p className="info-role"> The Digital Dimension of Suresh</p>
+       
           <ul className="info-list">
-            <li>Move your cursor to reveal the second layer.</li>
-            <li>Click the robot to say hi.</li>
-            <li>Open the menu at the top left to explore.</li>
+            <li>Where today's technology meets tomorrow's imagination, code becomes possibility, creativity evolves into intelligence, and the digital world becomes a canvas for realities yet to exist.</li>
           </ul>
-          <p className="info-foot">Click anywhere to close</p>
+          <p className="info-foot">www.suresh.app</p>
         </div>
       </div>
 
