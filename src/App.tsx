@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import gsap from 'gsap';
 import { AudioLines, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
 const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
+const SIGNATURE = '/signature.png';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
 const NAV_ITEMS = [
   { label: 'Module', Icon: Home },
@@ -99,6 +101,7 @@ export default function App() {
   const patternRef = useRef<SVGPatternElement>(null);
   const noticeRef = useRef<HTMLDialogElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const signatureRef = useRef<HTMLDivElement>(null);
   const cursorTarget = useRef({ x: -999, y: -999 });
 
   useEffect(() => {
@@ -202,6 +205,26 @@ export default function App() {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const root = signatureRef.current;
+    if (!root) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = gsap.context(() => {
+      if (reduced) {
+        gsap.set('.sig-img', { '--p': '140%' });
+        gsap.set('.sig-line', { opacity: 1, y: 0 });
+        return;
+      }
+      gsap.set('.sig-img', { '--p': '0%' });
+      const tl = gsap.timeline({ delay: 1 });
+      tl.to('.sig-img', { '--p': '140%', duration: 2.6, ease: 'power2.inOut' })
+        .to('.sig-img', { filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.95))', duration: 0.5, yoyo: true, repeat: 1, ease: 'sine.inOut' }, '-=0.3')
+        .fromTo('.sig-line', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.18, ease: 'power3.out' }, '-=1.1');
+      gsap.to('.sig-img', { filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.55))', duration: 2.4, yoyo: true, repeat: -1, ease: 'sine.inOut', delay: 5 });
+    }, root);
+    return () => ctx.revert();
+  }, []);
+
   function navigate(label: string) {
     setMenuOpen(false);
     if (label === 'Live Demo') {
@@ -216,6 +239,43 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Josefin+Sans:wght@300;400&display=swap');
+        .glass-text, .glass-gloss, .glass-glow {
+          display: block;
+          font-family: 'Anton', 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+          font-style: italic;
+          font-weight: 400;
+          text-transform: uppercase;
+          font-size: clamp(3rem, 8.5vw, 6.75rem);
+          line-height: 0.95;
+          letter-spacing: 0.01em;
+        }
+        .glass-glow { position: absolute; inset: 0; color: rgba(255,255,255,0.4); filter: blur(14px); pointer-events: none; }
+        .glass-text {
+          position: relative;
+          color: transparent;
+          background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.2) 55%, rgba(255,255,255,0.36) 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-stroke: 1.5px rgba(255,255,255,0.8);
+          filter: drop-shadow(0 8px 22px rgba(110,20,0,0.22));
+        }
+        .glass-gloss {
+          position: absolute; inset: 0; pointer-events: none;
+          color: transparent;
+          background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 46%);
+          -webkit-background-clip: text;
+          background-clip: text;
+        }
+        .sig-img {
+          --p: 0%;
+          -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
+          mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
+          filter: drop-shadow(0 0 6px rgba(255,255,255,0.55));
+        }
+        .sig-line { opacity: 0; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; text-transform: uppercase; }
+      `}</style>
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
           ref={navRef}
@@ -280,14 +340,17 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
-        <section className="absolute bottom-12 left-5 z-50 max-w-[300px] sm:bottom-16 sm:left-8 sm:max-w-md md:bottom-24 md:left-12" aria-labelledby="hero-title">
-          <p className="hero-rise mb-5 text-[11px] font-semibold tracking-[0.12em] text-white/90 sm:text-xs" style={{ animationDelay: '0.15s' }}>Gateway to your <span className="italic">augmented self</span></p>
-          <h1 id="hero-title" className="hero-rise mb-5 text-4xl leading-[1.05] tracking-[-0.08em] text-white sm:text-5xl md:text-6xl" style={{ animationDelay: '0.3s' }}>
-            A window<br />of coming<br />enhancements
+        <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
+          <h1 id="hero-title" className="hero-rise relative mb-5 sm:mb-7" style={{ animationDelay: '0.2s' }}>
+            <span className="glass-glow" aria-hidden="true">Code Beyond<br />Limits.</span>
+            <span className="glass-text">Code Beyond<br />Limits.</span>
+            <span className="glass-gloss" aria-hidden="true">Code Beyond<br />Limits.</span>
           </h1>
-          <p className="hero-rise mb-7 text-sm leading-relaxed text-white/90 sm:text-base" style={{ animationDelay: '0.5s' }}>
-            A future where carbon fiber, titanium, and human instinct align. Not machine. Not human. Something wonderfully poised between.
-          </p>
+          <div ref={signatureRef} className="mb-6 sm:mb-8">
+            <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[150px] select-none sm:w-[190px] md:w-[220px]" />
+            <p className="sig-line mt-3 text-[15px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
+            <p className="sig-line mt-1 text-[11px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - Malaysia</p>
+          </div>
           <div className="hero-rise inline-block" style={{ animationDelay: '0.7s' }}>
             <button type="button" onClick={() => openNotice('reserve')} className="group relative overflow-hidden rounded-full bg-white px-7 py-3 text-sm font-semibold text-gray-900 shadow-lg shadow-black/20 transition-transform duration-300 hover:scale-[1.04] active:scale-95 sm:px-8 sm:py-3.5">
               <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" aria-hidden="true" />
