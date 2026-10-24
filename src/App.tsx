@@ -326,8 +326,7 @@ export default function App() {
         .start-btn .btn-label { font-family: 'Galiver Sans Obliques', 'JetBrains Mono', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
         .start-btn .btn-icon {
           flex: none; display: flex; align-items: center; justify-content: center;
-          width: var(--icon); height: var(--icon); border-radius: 9999px; background: #3e3e3e;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+          width: var(--icon); height: var(--icon);
           transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .start-btn:hover .btn-icon { transform: translateX(2px); }
