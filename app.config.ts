@@ -1,3 +1,3 @@
 export default {
-  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519664041151201/QnTsCSPlnetseLoW.svg",
+  logoUrl: "https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/S..png",
 };
