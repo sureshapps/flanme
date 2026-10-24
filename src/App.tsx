@@ -1208,7 +1208,7 @@ export default function App() {
           <p className="info-kicker">About</p>
           <h2 className="info-title">Suresh Kaleyannan</h2>
           <p className="info-role">DevOps · Web Developer · MY</p>
-          <p className="info-text">React and TypeScript on the front end, Linux servers and cloud behind it. Code that ships and infrastructure that stays up.</p>
+          <p className="info-text">I bridge today's technology with tomorrow's possibilities, transforming code, design and imagination into digital experiences that push beyond the boundaries of what's possible.</p>
       
            <p className="info-role"> The Digital Dimension of Suresh</p>
        
