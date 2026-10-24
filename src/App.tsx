@@ -3,6 +3,7 @@ import { AudioLines, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'luci
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
+const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
 const NAV_ITEMS = [
   { label: 'Module', Icon: Home },
@@ -230,7 +231,7 @@ export default function App() {
             onClick={() => setMenuOpen(true)}
             className={`absolute inset-0 flex items-center justify-center rounded-full transition-opacity duration-300 ${menuOpen ? 'pointer-events-none opacity-0' : 'opacity-100 delay-200'}`}
           >
-            <Layers size={24} strokeWidth={1.75} />
+            <img src={NAV_ICON} alt="" aria-hidden="true" draggable={false} className="h-6 w-6 select-none object-contain" />
           </button>
           <div id="nav-items" className="flex h-full items-center justify-between px-3">
             {NAV_ITEMS.map(({ label, Icon }, index) => (
