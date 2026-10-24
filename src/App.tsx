@@ -691,10 +691,10 @@ export default function App() {
         /* Interactive canvas robot */
         .robot-card .robot-canvas {
           position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; cursor: pointer;
-          filter: drop-shadow(0 10px 20px rgba(255, 90, 20, 0.0));
+          filter: drop-shadow(0 0px 0px rgba(255, 90, 20, 0.0));
         }
-        .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0.45)); }
-        .robot-card.glass { background: radial-gradient(120% 120% at 50% 20%, #ff4a1c 0%, #d81e0a 55%, #8f0d05 100%); }
+        .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0)); }
+        .robot-card.glass { background: radial-gradient(120% 120% at 50% 20%, #ff4a1c 0%, #d81e0a 0%, #8f0d05 0%); }
         .robot-fx { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
         .robot-canvas-fun { animation: robot-bounce 0.6s ease; }
         .robot-canvas-collapse { animation: robot-collapse 1.2s ease forwards; }
