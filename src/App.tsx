@@ -263,6 +263,68 @@ export default function App() {
           .title-code { font-size: 22vw; }
           .title-sub { font-size: 9vw; }
         }
+        /* Liquid-glass capsule button */
+        .box {
+          --w: 100px; --h: 100px; --r: 9999px; --tr: 25%;
+          position: relative;
+          isolation: isolate;
+          display: inline-flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+          width: var(--w);
+          height: var(--h);
+          padding: 0 calc((var(--h) - 40px) / 2) 0 30px;
+          border: 0;
+          border-radius: var(--r);
+          cursor: pointer;
+          color: #fff;
+          background: rgba(0, 0, 0, 0.02);
+          -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
+          box-shadow:
+            inset 3px 3px 0.5px -3px rgba(255, 255, 255, 0.9),
+            inset -3px -3px 0.5px -3px rgba(255, 255, 255, 0.85),
+            inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.6),
+            inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
+            inset 0 0 3px -1px rgba(0, 0, 0, 0.8),
+            0 12px 30px rgba(0, 0, 0, 0.2);
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .box:hover { transform: scale(1.04); }
+        .box:active { transform: scale(0.97); }
+        .box:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
+        /* optical punch: glare shapes live here so contrast() sharpens them */
+        .fx-layer {
+          position: absolute; inset: 0; z-index: -1;
+          border-radius: inherit; overflow: hidden; pointer-events: none;
+          filter: contrast(3);
+        }
+        /* internal dark caustic shadow */
+        .fx-layer::before {
+          content: ''; position: absolute; inset: 6px; border-radius: inherit;
+          background: radial-gradient(120% 140% at 80% 130%, rgba(0, 0, 0, 0.35) 0%, transparent 60%);
+          filter: blur(8px);
+        }
+        /* perimeter diagonal sheen (transparent band = --tr) */
+        .fx-layer::after {
+          content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 8px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, transparent var(--tr), transparent calc(100% - var(--tr)), rgba(255,255,255,0.85) 100%);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          filter: blur(7px);
+        }
+        .start-btn .btn-label { font-size: 17px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+        .start-btn .btn-icon {
+          flex: none; display: flex; align-items: center; justify-content: center;
+          width: 40px; height: 40px; border-radius: 9999px; background: #3e3e3e;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .start-btn:hover .btn-icon { transform: translateX(3px); }
+        .start-btn .btn-icon .svg { width: 20px; height: 20px; fill: #f5f5f5; }
         .sig-img {
           --p: 0%;
           -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
@@ -346,9 +408,17 @@ export default function App() {
             <p className="sig-line mt-1 text-[11px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - Malaysia</p>
           </div>
           <div className="hero-rise inline-block" style={{ animationDelay: '0.7s' }}>
-            <button type="button" onClick={() => openNotice('reserve')} className="group relative overflow-hidden rounded-full bg-white px-7 py-3 text-sm font-semibold text-gray-900 shadow-lg shadow-black/20 transition-transform duration-300 hover:scale-[1.04] active:scale-95 sm:px-8 sm:py-3.5">
-              <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" aria-hidden="true" />
-              <span className="relative">Reserve Now</span>
+            <button
+              type="button"
+              onClick={() => openNotice('connect')}
+              className="box start-btn"
+              style={{ '--w': '260px', '--h': '75px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
+            >
+              <span className="fx-layer" aria-hidden="true" />
+              <span className="btn-label">Jom Connect !</span>
+              <span className="btn-icon" aria-hidden="true">
+                <svg className="svg" viewBox="0 0 24 24"><path d="M4 11h12.2l-5.6-5.6L12 4l8 8-8 8-1.4-1.4 5.6-5.6H4z" /></svg>
+              </span>
             </button>
           </div>
         </section>
