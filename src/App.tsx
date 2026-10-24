@@ -240,33 +240,28 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Josefin+Sans:wght@300;400&display=swap');
-        .glass-text, .glass-gloss, .glass-glow {
-          display: block;
-          font-family: 'Anton', 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
-          font-style: italic;
+        @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
+        @import url('https://fonts.cdnfonts.com/css/change-your-name');
+        @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
+        .title-code {
+          font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
           font-weight: 400;
-          text-transform: uppercase;
-          font-size: clamp(3rem, 8.5vw, 6.75rem);
-          line-height: 0.95;
-          letter-spacing: 0.01em;
+          font-size: clamp(3.5rem, 8vw, 8rem);
+          line-height: 1;
+          letter-spacing: 0;
+          color: #fff;
         }
-        .glass-glow { position: absolute; inset: 0; color: rgba(255,255,255,0.4); filter: blur(14px); pointer-events: none; }
-        .glass-text {
-          position: relative;
-          color: transparent;
-          background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.2) 55%, rgba(255,255,255,0.36) 100%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-stroke: 1.5px rgba(255,255,255,0.8);
-          filter: drop-shadow(0 8px 22px rgba(110,20,0,0.22));
+        .title-sub {
+          font-family: 'Change Your Name', 'Brush Script MT', cursive;
+          font-weight: 400;
+          font-size: clamp(1.75rem, 3.6vw, 3.5rem);
+          line-height: 1.1;
+          letter-spacing: 0;
+          color: #fff;
         }
-        .glass-gloss {
-          position: absolute; inset: 0; pointer-events: none;
-          color: transparent;
-          background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 46%);
-          -webkit-background-clip: text;
-          background-clip: text;
+        @media (max-width: 639px) {
+          .title-code { font-size: 22vw; }
+          .title-sub { font-size: 9vw; }
         }
         .sig-img {
           --p: 0%;
@@ -341,10 +336,9 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
-          <h1 id="hero-title" className="hero-rise relative mb-5 sm:mb-7" style={{ animationDelay: '0.2s' }}>
-            <span className="glass-glow" aria-hidden="true">Code Beyond<br />Limits.</span>
-            <span className="glass-text">Code Beyond<br />Limits.</span>
-            <span className="glass-gloss" aria-hidden="true">Code Beyond<br />Limits.</span>
+          <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
+            <span className="title-code block">Code</span>
+            <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
           </h1>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
             <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[150px] select-none sm:w-[190px] md:w-[220px]" />
