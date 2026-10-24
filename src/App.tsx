@@ -162,8 +162,8 @@ function ExperienceCard() {
     <div className="glass metric-card metric-box" style={{ '--r': '18px' } as CSSProperties} role="img" aria-label="16 plus years of experience">
       <span className="fx-layer" aria-hidden="true" />
       <p className="metric-label">Years of experience</p>
-      <p className="metric-value mt-1" style={{ fontSize: 22 }}>16+</p>
-      <div className="mt-2 flex h-8 items-end gap-[3px]" aria-hidden="true">
+      <p className="metric-value metric-value-lg mt-1">16+</p>
+      <div className="mt-1.5 flex h-5 items-end gap-[3px] lg:mt-2 lg:h-8" aria-hidden="true">
         {EXPERIENCE_BARS.map((h, i) => (
           <span key={i} className="chart-bar flex-1 rounded-[2px]" style={{ height: `${h}%`, background: i % 3 === 1 ? '#ff7a1a' : 'rgba(255,255,255,0.9)', animationDelay: `${1.4 + i * 0.07}s` }} />
         ))}
@@ -174,7 +174,7 @@ function ExperienceCard() {
 
 function Metrics() {
   return (
-    <div className="hero-rise pointer-events-none absolute right-[5%] bottom-[7%] z-[55] hidden w-[clamp(340px,30vw,500px)] grid-cols-2 gap-3 lg:grid" style={{ animationDelay: '1.1s' }}>
+    <div className="hero-rise pointer-events-none absolute right-3 top-[88px] z-[55] grid w-[60vw] max-w-[280px] grid-cols-2 gap-2 sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:grid lg:w-[clamp(340px,30vw,500px)] lg:max-w-none lg:gap-3" style={{ animationDelay: '1.1s' }}>
       <RingPill id="skills" value={92} label="Skills Level" from="#7dff9b" to="#1fd45a" />
       <RingPill id="creative" value={88} label="Creative Thinking" from="#ff7ad9" to="#b43cff" />
       <SpeedCard />
@@ -846,6 +846,15 @@ export default function App() {
         .metric-box { flex-direction: column; justify-content: space-between; padding: 11px 14px 10px; min-height: 100px; }
         .metric-label { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.25; color: rgba(255, 255, 255, 0.82); }
         .metric-value { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+        .metric-value-lg { font-size: 22px; }
+        @media (max-width: 1023px) {
+          .metric-pill { gap: 6px; padding: 5px 10px 5px 6px; }
+          .metric-pill svg { width: 28px; height: 28px; }
+          .metric-box { min-height: 68px; padding: 7px 9px; }
+          .metric-label { font-size: 7.5px; letter-spacing: 0.08em; }
+          .metric-value { font-size: 12.5px; }
+          .metric-value-lg { font-size: 15px; }
+        }
         .ring-fill { stroke-dashoffset: var(--off); animation: ring-fill 1.6s cubic-bezier(0.22, 1, 0.36, 1) 1.3s backwards; }
         @keyframes ring-fill { from { stroke-dashoffset: var(--c); } }
         .chart-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: chart-draw 1.8s ease-out 1.4s backwards; }
