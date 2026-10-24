@@ -819,7 +819,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
-        <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(180px,21vw,360px)]" style={{ animationDelay: '0.9s' }}>
+        <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(162px,18.9vw,324px)]" style={{ animationDelay: '0.9s' }}>
           <RobotCard />
         </div>
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
