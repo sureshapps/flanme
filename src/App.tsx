@@ -6,9 +6,9 @@ const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/head
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
 const NAV_LINKS = ['Module', 'Case Records', 'Biotech', 'Tiers', 'Live Demo'];
 const STATS = [
-  { radius: 330, start: -92, end: 16, dot: -46, number: '10', suffix: '+', label: 'YEARS REAL' },
-  { radius: 395, start: -56, end: 60, dot: 2, number: '40', suffix: '+', label: 'USE FORMS' },
-  { radius: 460, start: -14, end: 72, dot: 44, number: '95', suffix: '%', label: 'REPEAT MEMBERS' },
+  { radius: 330, start: -92, end: 16, dot: -46, number: '16', suffix: 'years', label: 'DESIGNER' },
+  { radius: 395, start: -56, end: 60, dot: 2, number: '120', suffix: 'months', label: 'DEVELOPER' },
+  { radius: 460, start: -14, end: 72, dot: 44, number: '2', suffix: 'decades', label: 'TECHNOLOGY' },
 ];
 
 function Logo() {
