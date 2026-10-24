@@ -158,79 +158,151 @@ function RobotCard() {
       const isLaughing = now < laughUntil;
       canvas.classList.toggle('robot-canvas-angry', isAngry);
 
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 90, 40 + Math.sin(time) * 5, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-
+      const glow = isAngry ? '#ff2d2d' : '#ff8a1f';
+      const glowSoft = isAngry ? 'rgba(255,45,45,' : 'rgba(255,138,31,';
       const floatY = Math.sin(time) * 8;
+      ctx.lineCap = 'round';
 
+      // ground glow
+      ctx.fillStyle = `${glowSoft}0.55)`;
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = glow;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 92, 38 + Math.sin(time) * 5, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // body
       const bodyX = cx + mouse.x * 5;
       const bodyY = cy + floatY + 30;
-
-      const bodyGrad = ctx.createRadialGradient(bodyX - 20, bodyY - 20, 10, bodyX, bodyY, 60);
+      const bodyGrad = ctx.createRadialGradient(bodyX - 18, bodyY - 20, 6, bodyX, bodyY, 60);
       bodyGrad.addColorStop(0, '#ffffff');
-      bodyGrad.addColorStop(1, '#d1d9e6');
-
+      bodyGrad.addColorStop(0.55, '#fbe9de');
+      bodyGrad.addColorStop(1, '#e8b79c');
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
       ctx.ellipse(bodyX, bodyY, 50, 45, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = `${glowSoft}0.7)`;
+      ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = glow;
+      ctx.stroke();
 
-      const logoX = bodyX + mouse.x * 10;
-      const logoY = bodyY + mouse.y * 5;
-      ctx.fillStyle = '#25d366';
+      // chest core + circuit lines
+      const logoX = bodyX + mouse.x * 6;
+      const logoY = bodyY - 2 + mouse.y * 3;
+      const pulse = 0.75 + 0.25 * Math.sin(time * 3);
+      ctx.strokeStyle = glow;
+      ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 6;
       ctx.beginPath();
-      ctx.arc(logoX, logoY, 15, 0, Math.PI * 2);
+      ctx.moveTo(logoX, logoY - 12); ctx.lineTo(logoX, bodyY - 38);
+      ctx.moveTo(logoX - 12, logoY); ctx.lineTo(bodyX - 38, logoY + 4);
+      ctx.moveTo(logoX + 12, logoY); ctx.lineTo(bodyX + 36, logoY - 6);
+      ctx.moveTo(logoX, logoY + 12); ctx.lineTo(logoX + 6, bodyY + 40);
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(logoX, logoY, 11, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = glow;
+      ctx.shadowBlur = 14 * pulse;
+      ctx.beginPath();
+      ctx.arc(logoX, logoY, 6, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = '#fff3d6';
+      ctx.shadowBlur = 0;
       ctx.beginPath();
-      ctx.arc(logoX - 3, logoY - 3, 4, 0, Math.PI * 2);
+      ctx.arc(logoX, logoY, 2.5, 0, Math.PI * 2);
       ctx.fill();
 
+      // head position
       const headX = cx + mouse.x * 25;
       const headY = cy + floatY - 50 + mouse.y * 15;
 
-      const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 20, headX, headY, 80);
-      headGrad.addColorStop(0, '#ffffff');
-      headGrad.addColorStop(1, '#cbd5e1');
+      // antennae (behind head)
+      const sway = mouse.x * 6;
+      ctx.strokeStyle = glow;
+      ctx.fillStyle = glow;
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = glow;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(headX + s * 40, headY - 40);
+        ctx.lineTo(headX + s * 55 + sway, headY - 68);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(headX + s * 55 + sway, headY - 70, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
+      // ear pads (behind head)
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.roundRect(headX - 70, headY - 16, 16, 38, 8);
+      ctx.roundRect(headX + 54, headY - 16, 16, 38, 8);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // head
+      const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 15, headX, headY, 80);
+      headGrad.addColorStop(0, '#ffffff');
+      headGrad.addColorStop(0.6, '#fbe9de');
+      headGrad.addColorStop(1, '#e8b79c');
       ctx.fillStyle = headGrad;
       ctx.beginPath();
       ctx.roundRect(headX - 60, headY - 45, 120, 90, 40);
       ctx.fill();
 
+      // visor
       const faceX = headX + mouse.x * 10;
       const faceY = headY + mouse.y * 8;
       const faceHeight = 60;
-
-      ctx.fillStyle = '#0f172a';
+      const visorGrad = ctx.createLinearGradient(0, faceY - 30, 0, faceY + 30);
+      visorGrad.addColorStop(0, '#3a140c');
+      visorGrad.addColorStop(1, '#140605');
+      ctx.fillStyle = visorGrad;
       ctx.beginPath();
       ctx.roundRect(faceX - 45, faceY - faceHeight / 2, 90, faceHeight, 22);
       ctx.fill();
+      ctx.strokeStyle = `${glowSoft}0.35)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
+      // eyes
       if (Math.random() > 0.98) blink = 1;
       if (blink > 0) blink -= 0.2;
 
       const eyeY = faceY + mouse.y * 5 - 2;
-      const eyeColor = isAngry ? '#ff4d4d' : '#25d366';
+      const eyeColor = glow;
+      ctx.strokeStyle = eyeColor;
       ctx.fillStyle = eyeColor;
+      ctx.lineWidth = 4;
       ctx.shadowBlur = 10;
       ctx.shadowColor = eyeColor;
 
       if (blink <= 0.2) {
-        ctx.beginPath();
-        ctx.ellipse(faceX - 22 + mouse.x * 5, eyeY, 7, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(faceX + 22 + mouse.x * 5, eyeY, 7, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
+        const ex = [faceX - 22 + mouse.x * 5, faceX + 22 + mouse.x * 5];
+        if (isAngry || mouthMode === 'wow' || mouthMode === 'oh') {
+          ex.forEach((x) => {
+            ctx.beginPath();
+            ctx.ellipse(x, eyeY, 7, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        } else {
+          // happy ^ ^ eyes
+          ex.forEach((x) => {
+            ctx.beginPath();
+            ctx.arc(x, eyeY + 6, 9, Math.PI * 1.1, Math.PI * 1.9);
+            ctx.stroke();
+          });
+        }
       }
-      ctx.shadowBlur = 0;
 
+      // mouth
       if (Date.now() > mouthUntil) mouthMode = 'smile';
-      ctx.strokeStyle = eyeColor;
-      ctx.lineWidth = 4;
       const baseY = faceY + 14 + mouse.y * 6;
       if (mouthMode === 'sad') {
         ctx.beginPath();
@@ -248,19 +320,11 @@ function RobotCard() {
       } else {
         const smileDepth = (isLaughing ? 12 : 8) + Math.abs(mouse.y * 4);
         ctx.beginPath();
-        ctx.moveTo(faceX - 18, baseY);
-        ctx.quadraticCurveTo(faceX, baseY + smileDepth, faceX + 18, baseY);
+        ctx.moveTo(faceX - 10, baseY);
+        ctx.quadraticCurveTo(faceX, baseY + smileDepth * 0.7, faceX + 10, baseY);
         ctx.stroke();
       }
-
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(headX - 40, headY - 40);
-      ctx.lineTo(headX - 55, headY - 65);
-      ctx.moveTo(headX + 40, headY - 40);
-      ctx.lineTo(headX + 55, headY - 65);
-      ctx.stroke();
+      ctx.shadowBlur = 0;
 
       frame = requestAnimationFrame(draw);
     };
@@ -627,16 +691,17 @@ export default function App() {
         /* Interactive canvas robot */
         .robot-card .robot-canvas {
           position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; cursor: pointer;
-          filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+          filter: drop-shadow(0 10px 20px rgba(255, 90, 20, 0.35));
         }
-        .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 70, 70, 0.35)); }
+        .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0.45)); }
+        .robot-card.glass { background: radial-gradient(120% 120% at 50% 20%, #ff4a1c 0%, #d81e0a 55%, #8f0d05 100%); }
         .robot-fx { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
         .robot-canvas-fun { animation: robot-bounce 0.6s ease; }
         .robot-canvas-collapse { animation: robot-collapse 1.2s ease forwards; }
         .robot-canvas-reappear { animation: robot-reappear 0.6s ease; }
         .robot-bubble {
           position: absolute; width: 10px; height: 10px; border-radius: 999px;
-          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(37, 211, 102, 0.2));
+          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 138, 31, 0.3));
           opacity: 0; pointer-events: none; animation: robot-bubble 0.9s ease forwards;
         }
         .robot-bubble.robot-bubble-angry { background: radial-gradient(circle at 30% 30%, rgba(255, 210, 210, 0.9), rgba(255, 70, 70, 0.35)); }
