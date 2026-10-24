@@ -412,7 +412,7 @@ export default function App() {
               type="button"
               onClick={() => openNotice('connect')}
               className="box start-btn"
-              style={{ '--w': '160px', '--h': '75px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
+              style={{ '--w': '160px', '--h': '55px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
             >
               <span className="fx-layer" aria-hidden="true" />
               <span className="btn-label">Jom Connect !</span>
