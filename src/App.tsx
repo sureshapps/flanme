@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { AudioLines, Flame, Home, Layers, LayoutGrid, Link2, Navigation, X } from 'lucide-react';
+import { AudioLines, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Layers, LayoutGrid, Link2, Navigation, Sun, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -172,13 +172,181 @@ function ExperienceCard() {
   );
 }
 
+function useNow(ms: number) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), ms);
+    return () => window.clearInterval(id);
+  }, [ms]);
+  return now;
+}
+
+const hBar = (y: number) => `M 4.5 ${y} L 6 ${y - 1.5} L 14 ${y - 1.5} L 15.5 ${y} L 14 ${y + 1.5} L 6 ${y + 1.5} Z`;
+const vBar = (x: number, y0: number, y1: number) => `M ${x} ${y0} L ${x + 1.5} ${y0 + 1.5} L ${x + 1.5} ${y1 - 1.5} L ${x} ${y1} L ${x - 1.5} ${y1 - 1.5} L ${x - 1.5} ${y0 + 1.5} Z`;
+const SEGMENTS: Record<string, string> = {
+  a: hBar(2), b: vBar(17, 3.5, 15.5), c: vBar(17, 18.5, 30.5), d: hBar(32), e: vBar(3, 18.5, 30.5), f: vBar(3, 3.5, 15.5), g: hBar(17),
+};
+const DIGIT_SEGMENTS: Record<string, string> = {
+  '0': 'abcdef', '1': 'bc', '2': 'abdeg', '3': 'abcdg', '4': 'bcfg', '5': 'acdfg', '6': 'acdefg', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg',
+};
+
+function SevenSeg({ digit }: { digit: string | null }) {
+  const lit = digit ? DIGIT_SEGMENTS[digit] : '';
+  return (
+    <svg viewBox="0 0 20 34" className="seg-digit" aria-hidden="true">
+      {Object.keys(SEGMENTS).map((key) => (
+        <path key={key} d={SEGMENTS[key]} className={lit.includes(key) ? 'seg-on' : 'seg-off'} />
+      ))}
+    </svg>
+  );
+}
+
+function ClockCard() {
+  const now = useNow(1000);
+  const hours = String(now.getHours() % 12 || 12);
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const label = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return (
+    <div className="glass metric-card info-card clock-card info-extra" style={{ '--r': '12px' } as CSSProperties} role="img" aria-label={`Time ${label}`}>
+      <span className="fx-layer" aria-hidden="true" />
+      <SevenSeg digit={hours.length > 1 ? hours[0] : null} />
+      <SevenSeg digit={hours[hours.length - 1]} />
+      <span className="clock-colon" aria-hidden="true"><i /><i /></span>
+      <SevenSeg digit={minutes[0]} />
+      <SevenSeg digit={minutes[1]} />
+    </div>
+  );
+}
+
+function CalendarCard() {
+  const now = useNow(60000);
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+  const lead = (new Date(year, month, 1).getDay() + 6) % 7;
+  const total = new Date(year, month + 1, 0).getDate();
+  const cells = [...Array<number>(lead).fill(0), ...Array.from({ length: total }, (_, i) => i + 1)];
+  return (
+    <div className="glass metric-card info-card cal-card" style={{ '--r': '14px' } as CSSProperties} role="img" aria-label={`Calendar, ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}>
+      <span className="fx-layer" aria-hidden="true" />
+      <p className="cal-title">{now.toLocaleDateString('en-US', { month: 'long' }).toUpperCase()}</p>
+      <div className="cal-grid" aria-hidden="true">
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => <span key={i} className="cal-head">{day}</span>)}
+        {cells.map((day, i) => day === 0
+          ? <span key={`blank-${i}`} />
+          : <span key={day} className={`cal-day${i % 7 > 4 ? ' cal-weekend' : ''}${day === today ? ' cal-today' : ''}`}>{day}</span>)}
+      </div>
+    </div>
+  );
+}
+
+type DayForecast = { name: string; min: number; max: number; code: number };
+type Weather = { temp: number; code: number; high: number; low: number; days: DayForecast[] };
+
+const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=3.139&longitude=101.6869&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FKuala_Lumpur&forecast_days=3';
+
+function weekday(offset: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+// shown until the live forecast arrives (or if it can't be fetched)
+const WEATHER_FALLBACK: Weather = {
+  temp: 27, code: 2, high: 32, low: 24,
+  days: [{ name: weekday(1), min: 25, max: 33, code: 0 }, { name: weekday(2), min: 24, max: 32, code: 0 }],
+};
+
+function weatherInfo(code: number): { label: string; Icon: LucideIcon } {
+  if (code === 0) return { label: 'Clear', Icon: Sun };
+  if (code === 1) return { label: 'Mostly Clear', Icon: CloudSun };
+  if (code === 2) return { label: 'Partly Cloudy', Icon: CloudSun };
+  if (code === 3) return { label: 'Overcast', Icon: Cloud };
+  if (code === 45 || code === 48) return { label: 'Foggy', Icon: CloudFog };
+  if (code >= 51 && code <= 57) return { label: 'Drizzle', Icon: CloudRain };
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return { label: 'Rain', Icon: CloudRain };
+  if (code >= 95) return { label: 'Thunderstorm', Icon: CloudLightning };
+  return { label: 'Cloudy', Icon: Cloud };
+}
+
+const barPct = (temp: number) => Math.min(100, Math.max(0, ((temp - 20) / 16) * 100));
+
+function WeatherCard() {
+  const [wx, setWx] = useState<Weather>(WEATHER_FALLBACK);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(WEATHER_URL, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        const daily = data.daily;
+        setWx({
+          temp: Math.round(data.current.temperature_2m),
+          code: data.current.weather_code,
+          high: Math.round(daily.temperature_2m_max[0]),
+          low: Math.round(daily.temperature_2m_min[0]),
+          days: [1, 2].map((i) => ({
+            name: new Date(`${daily.time[i]}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' }),
+            min: Math.round(daily.temperature_2m_min[i]),
+            max: Math.round(daily.temperature_2m_max[i]),
+            code: daily.weather_code[i],
+          })),
+        });
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  const { label, Icon } = weatherInfo(wx.code);
+  return (
+    <div className="glass metric-card info-card wx-card" style={{ '--r': '14px' } as CSSProperties} role="img" aria-label={`Kuala Lumpur, ${wx.temp} degrees, ${label}`}>
+      <span className="fx-layer" aria-hidden="true" />
+      <div className="wx-top">
+        <div>
+          <p className="wx-city">Kuala Lumpur</p>
+          <p className="wx-temp">{wx.temp}°</p>
+        </div>
+        <div className="wx-now">
+          <Icon size="1.8em" strokeWidth={1.5} />
+          <p>{label}</p>
+          <p>H:{wx.high}° L:{wx.low}°</p>
+        </div>
+      </div>
+      <div className="wx-days">
+        {wx.days.map((day) => {
+          const DayIcon = weatherInfo(day.code).Icon;
+          const left = Math.min(barPct(day.min), 85);
+          return (
+            <div key={day.name} className="wx-day">
+              <span>{day.name}</span>
+              <DayIcon size="1.3em" strokeWidth={1.6} />
+              <span className="wx-min">{day.min}°</span>
+              <span className="wx-bar"><i style={{ left: `${left}%`, width: `${Math.max(barPct(day.max) - left, 15)}%` }} /></span>
+              <span>{day.max}°</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Metrics() {
   return (
-    <div className="hero-rise pointer-events-none absolute right-3 top-[88px] z-[55] grid w-[60vw] max-w-[280px] grid-cols-2 gap-2 sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:grid lg:w-[clamp(340px,30vw,500px)] lg:max-w-none lg:gap-3" style={{ animationDelay: '1.1s' }}>
-      <RingPill id="skills" value={92} label="Skills Level" from="#7dff9b" to="#1fd45a" />
-      <RingPill id="creative" value={88} label="Creative Thinking" from="#ff7ad9" to="#b43cff" />
-      <SpeedCard />
-      <ExperienceCard />
+    <div className="hero-rise pointer-events-none absolute right-3 top-[88px] z-[55] w-[60vw] max-w-[280px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none" style={{ animationDelay: '1.1s' }}>
+      <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
+        <ClockCard />
+        <div className="info-extra grid grid-cols-2 gap-2 lg:gap-3">
+          <WeatherCard />
+          <CalendarCard />
+        </div>
+        <div className="grid grid-cols-2 gap-2 lg:gap-3">
+          <RingPill id="skills" value={92} label="Skills Level" from="#7dff9b" to="#1fd45a" />
+          <RingPill id="creative" value={88} label="Creative Thinking" from="#ff7ad9" to="#b43cff" />
+          <SpeedCard />
+          <ExperienceCard />
+        </div>
+      </div>
     </div>
   );
 }
@@ -565,6 +733,7 @@ function RobotCard() {
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
   const revealRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const patternRef = useRef<SVGPatternElement>(null);
@@ -673,6 +842,20 @@ export default function App() {
       window.removeEventListener('pointerdown', closeOnOutside);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!infoOpen) return;
+    const close = () => setInfoOpen(false);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+    };
+    window.addEventListener('click', close);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [infoOpen]);
 
   useEffect(() => {
     const root = signatureRef.current;
@@ -854,6 +1037,89 @@ export default function App() {
           .metric-label { font-size: 7.5px; letter-spacing: 0.08em; }
           .metric-value { font-size: 12.5px; }
           .metric-value-lg { font-size: 15px; }
+          .info-card { font-size: 6.6px; }
+        }
+        /* Info row: clock, weather, calendar */
+        .info-card { font-size: 9.5px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; }
+        .info-card p { margin: 0; }
+        .metrics-scale { transform-origin: bottom right; }
+        @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
+        @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
+        @media (max-width: 639px) and (max-height: 700px) { .info-extra { display: none !important; } }
+        .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.4em; padding: 0.8em 1.2em; }
+        .seg-digit { width: 1.5em; height: 2.55em; flex: none; filter: drop-shadow(0 0 2px rgba(255, 90, 90, 0.7)); }
+        .seg-on { fill: #ffd6d6; }
+        .seg-off { fill: rgba(70, 0, 0, 0.3); }
+        .clock-colon { display: flex; flex-direction: column; gap: 0.6em; }
+        .clock-colon i { width: 0.34em; height: 0.34em; border-radius: 50%; background: #ffd6d6; box-shadow: 0 0 4px rgba(255, 90, 90, 0.9); animation: colon-blink 1s steps(1) infinite; }
+        @keyframes colon-blink { 50% { opacity: 0.2; } }
+        .clock-card .fx-layer::after, .cal-card .fx-layer::after, .wx-card .fx-layer::after { padding: 5px; filter: blur(4px); }
+        .wx-card, .cal-card { flex-direction: column; padding: 0.95em 1.05em; }
+        .wx-card { justify-content: space-between; gap: 0.7em; }
+        .wx-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5em; }
+        .wx-city { font-size: 1em; opacity: 0.9; }
+        .wx-temp { font-size: 2.7em; font-weight: 400; line-height: 1.05; letter-spacing: -0.04em; }
+        .wx-now { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 0.2em; font-size: 0.9em; line-height: 1.25; }
+        .wx-days { display: flex; flex-direction: column; gap: 0.6em; border-top: 1px solid rgba(255, 255, 255, 0.28); padding-top: 0.65em; }
+        .wx-day { display: grid; grid-template-columns: 2.2em 1.4em 1.9em 1fr 1.9em; align-items: center; gap: 0.4em; font-size: 0.95em; }
+        .wx-min { text-align: right; opacity: 0.8; }
+        .wx-bar { position: relative; height: 0.36em; border-radius: 999px; background: rgba(255, 255, 255, 0.22); }
+        .wx-bar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #ffd98a, #ff8a1f); }
+        .cal-title { font-size: 1.15em; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.6em; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 0.25em; text-align: center; }
+        .cal-head { font-size: 0.85em; font-weight: 700; opacity: 0.85; padding-bottom: 0.2em; }
+        .cal-day { height: 1.7em; line-height: 1.7em; }
+        .cal-weekend { opacity: 0.55; }
+        .cal-today { width: 1.7em; margin: 0 auto; border-radius: 50%; background: #ffe6bd; color: #8a0f08; font-weight: 700; opacity: 1; box-shadow: 0 0 8px rgba(255, 214, 150, 0.7); }
+        /* Info button + mesh popup (pulls out of the button) */
+        .info-btn { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease; }
+        .info-btn:hover { transform: scale(1.06); }
+        .info-btn:active { transform: scale(0.95); }
+        .info-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
+        .info-btn.is-open { background: rgba(255, 255, 255, 0.18); }
+        .info-pop {
+          position: fixed; top: 88px; right: 20px; z-index: 65;
+          width: min(340px, calc(100vw - 2.5rem));
+          border-radius: 24px; overflow: hidden; isolation: isolate; color: #fff;
+          background: rgba(40, 6, 6, 0.18);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 60px rgba(0, 0, 0, 0.35);
+          transform-origin: top right;
+          clip-path: inset(0 0 100% 100% round 28px);
+          transform: translate(8px, -12px) scale(0.55);
+          opacity: 0; visibility: hidden; pointer-events: none;
+          transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s linear 0.6s;
+        }
+        .info-pop.is-open {
+          clip-path: inset(0 0 0 0 round 24px);
+          transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+          transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
+        }
+        @media (min-width: 640px) { .info-pop { top: 92px; right: 32px; } }
+        @media (min-width: 768px) { .info-pop { right: 48px; } }
+        .info-mesh {
+          position: absolute; inset: -25%; z-index: -1; filter: blur(14px);
+          background:
+            radial-gradient(45% 45% at 18% 15%, rgba(255, 170, 70, 0.75), transparent 70%),
+            radial-gradient(45% 45% at 85% 22%, rgba(255, 60, 100, 0.65), transparent 70%),
+            radial-gradient(50% 50% at 80% 88%, rgba(170, 70, 255, 0.55), transparent 70%),
+            radial-gradient(45% 45% at 15% 85%, rgba(255, 215, 130, 0.5), transparent 70%);
+          animation: mesh-drift 12s ease-in-out infinite alternate;
+        }
+        @keyframes mesh-drift { 0% { transform: translate(-4%, -3%) rotate(0deg) scale(1); } 100% { transform: translate(4%, 3%) rotate(14deg) scale(1.12); } }
+        .info-body { position: relative; padding: 20px 22px 18px; }
+        .info-kicker { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); }
+        .info-title { margin-top: 8px; font-size: 20px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.15; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3); }
+        .info-role { margin-top: 2px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
+        .info-text { margin-top: 12px; font-size: 12.5px; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
+        .info-list { margin: 14px 0 0; padding: 12px 0 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; gap: 8px; }
+        .info-list li { position: relative; padding-left: 16px; font-size: 11.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.88); }
+        .info-list li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: #ffd98a; box-shadow: 0 0 6px rgba(255, 190, 90, 0.9); }
+        .info-foot { margin-top: 14px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
+        @media (prefers-reduced-motion: reduce) {
+          .info-mesh, .clock-colon i { animation: none; }
+          .info-pop, .info-pop.is-open { transition-duration: 0.01s; }
         }
         .ring-fill { stroke-dashoffset: var(--off); animation: ring-fill 1.6s cubic-bezier(0.22, 1, 0.36, 1) 1.3s backwards; }
         @keyframes ring-fill { from { stroke-dashoffset: var(--c); } }
@@ -920,6 +1186,37 @@ export default function App() {
           </div>
         </div>
       </nav>
+
+      <div className="pointer-events-none fixed top-5 right-5 z-[70] sm:top-6 sm:right-8 md:right-12">
+        <button
+          type="button"
+          aria-label={infoOpen ? 'Close info' : 'About this module'}
+          aria-expanded={infoOpen}
+          aria-controls="info-popup"
+          onClick={(event) => { event.stopPropagation(); setInfoOpen((open) => !open); }}
+          className={`glass info-btn pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
+          style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
+        >
+          <span className="fx-layer" aria-hidden="true" />
+          <Info size={26} strokeWidth={1.75} />
+        </button>
+      </div>
+
+      <div id="info-popup" role="dialog" aria-label="About this module" aria-hidden={!infoOpen} className={`info-pop ${infoOpen ? 'is-open' : ''}`}>
+        <div className="info-mesh" aria-hidden="true" />
+        <div className="info-body">
+          <p className="info-kicker">About</p>
+          <h2 className="info-title">Suresh Kaleyannan</h2>
+          <p className="info-role">DevOps · Web Developer · MY</p>
+          <p className="info-text">React and TypeScript on the front end, Linux servers and cloud behind it. Code that ships and infrastructure that stays up.</p>
+          <ul className="info-list">
+            <li>Move your cursor to reveal the second layer.</li>
+            <li>Click the robot to say hi.</li>
+            <li>Open the menu at the top left to explore.</li>
+          </ul>
+          <p className="info-foot">Click anywhere to close</p>
+        </div>
+      </div>
 
       <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" style={{ opacity: 0.1 }} aria-hidden="true">
