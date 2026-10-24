@@ -98,12 +98,14 @@ type Mouth = 'smile' | 'sad' | 'wow' | 'oh';
 function RobotCard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fxRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const fx = fxRef.current;
+    const card = cardRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !fx || !ctx) return;
+    if (!canvas || !fx || !card || !ctx) return;
 
     const W = 280;
     const H = 320;
@@ -135,13 +137,36 @@ function RobotCard() {
       target.x = clamp((clientX - (rect.left + rect.width / 2)) / (rect.width / 2));
       target.y = clamp((clientY - (rect.top + rect.height / 2)) / (rect.height / 2));
     };
-    const onMove = (event: PointerEvent) => updateTarget(event.clientX, event.clientY);
-    const onLeave = () => { target.x = 0; target.y = 0; };
+    // follow-the-cursor: robot trails behind the mouse arrow (mouse only, not touch / reduced motion)
+    const follow = { x: 0, y: 0 };
+    let cursorPt: { x: number; y: number } | null = null;
+    const onMove = (event: PointerEvent) => {
+      updateTarget(event.clientX, event.clientY);
+      if (event.pointerType === 'mouse' && !reduced) cursorPt = { x: event.clientX, y: event.clientY };
+    };
+    const onLeave = () => { target.x = 0; target.y = 0; cursorPt = null; };
 
     const draw = () => {
       if (!reduced) time += 0.05;
       mouse.x += (target.x - mouse.x) * 0.1;
       mouse.y += (target.y - mouse.y) * 0.1;
+
+      if (card) {
+        const r = card.getBoundingClientRect();
+        const homeX = r.left + r.width / 2 - follow.x;
+        const homeY = r.top + r.height / 2 - follow.y;
+        let tx = 0;
+        let ty = 0;
+        if (cursorPt) {
+          const px = Math.min(Math.max(cursorPt.x + 50, 60), window.innerWidth - 60);
+          const py = Math.min(Math.max(cursorPt.y + 60, 60), window.innerHeight - 60);
+          tx = px - homeX;
+          ty = py - homeY;
+        }
+        follow.x += (tx - follow.x) * 0.08;
+        follow.y += (ty - follow.y) * 0.08;
+        card.style.transform = `translate(${follow.x}px, ${follow.y}px)`;
+      }
 
       const cx = W / 2;
       const cy = H / 2 + 20;
@@ -415,7 +440,14 @@ function RobotCard() {
     window.addEventListener('pointermove', onMove, { passive: true });
     document.documentElement.addEventListener('mouseleave', onLeave);
     window.addEventListener('blur', onLeave);
-    canvas.addEventListener('click', onClick);
+    // canvas ignores the mouse so the trailing robot never blocks the page; clicks near it still trigger reactions
+    const onWindowClick = (event: MouseEvent) => {
+      const r = canvas.getBoundingClientRect();
+      const dx = event.clientX - (r.left + r.width / 2);
+      const dy = event.clientY - (r.top + r.height / 2);
+      if (Math.hypot(dx, dy) < r.width * 0.45) onClick();
+    };
+    window.addEventListener('click', onWindowClick);
     frame = requestAnimationFrame(draw);
 
     return () => {
@@ -423,14 +455,15 @@ function RobotCard() {
       window.removeEventListener('pointermove', onMove);
       document.documentElement.removeEventListener('mouseleave', onLeave);
       window.removeEventListener('blur', onLeave);
-      canvas.removeEventListener('click', onClick);
+      window.removeEventListener('click', onWindowClick);
+      card.style.transform = '';
       timers.forEach((id) => window.clearTimeout(id));
       fx.replaceChildren();
     };
   }, []);
 
   return (
-    <div className="robot-card relative aspect-square w-full">
+    <div ref={cardRef} className="robot-card relative aspect-square w-full">
       <canvas ref={canvasRef} className="robot-canvas" role="img" aria-label="Interactive robot. Click it for a reaction." />
       <div ref={fxRef} className="robot-fx" aria-hidden="true" />
     </div>
@@ -689,7 +722,7 @@ export default function App() {
         }
         /* Interactive canvas robot */
         .robot-card .robot-canvas {
-          position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; cursor: pointer;
+          position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; pointer-events: none;
           filter: drop-shadow(0 10px 20px rgba(255, 90, 20, 0.35));
         }
         .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0.45)); }
