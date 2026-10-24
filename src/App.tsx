@@ -215,7 +215,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-      <nav className="pointer-events-none fixed top-0 left-0 right-0 z-50 flex justify-center p-4 sm:p-5" aria-label="Main navigation">
+      <nav className="pointer-events-none fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 sm:p-5" aria-label="Main navigation">
         <div
           ref={navRef}
           className="nav-drop pointer-events-auto relative h-14 overflow-hidden rounded-full border border-white/40 bg-white/15 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_0_14px_rgba(255,255,255,0.12),0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -261,6 +261,12 @@ export default function App() {
             </button>
           </div>
         </div>
+        <div className={`nav-drop pointer-events-auto transition-opacity duration-300 ${menuOpen ? 'max-sm:pointer-events-none max-sm:opacity-0' : ''}`}>
+          <button type="button" onClick={() => openNotice('reserve')} className="group relative h-14 overflow-hidden rounded-full bg-white px-6 text-sm font-semibold text-gray-900 shadow-lg shadow-black/20 transition-transform duration-300 hover:scale-[1.04] active:scale-95 sm:px-8">
+            <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" aria-hidden="true" />
+            <span className="relative">Reserve Now</span>
+          </button>
+        </div>
       </nav>
 
       <main id="module" className="relative h-[100dvh] overflow-hidden">
@@ -283,15 +289,9 @@ export default function App() {
           <h1 id="hero-title" className="hero-rise mb-5 text-4xl leading-[1.05] tracking-[-0.08em] text-white sm:text-5xl md:text-6xl" style={{ animationDelay: '0.3s' }}>
             A window<br />of coming<br />enhancements
           </h1>
-          <p className="hero-rise mb-7 text-sm leading-relaxed text-white/90 sm:text-base" style={{ animationDelay: '0.5s' }}>
+          <p className="hero-rise text-sm leading-relaxed text-white/90 sm:text-base" style={{ animationDelay: '0.5s' }}>
             A future where carbon fiber, titanium, and human instinct align. Not machine. Not human. Something wonderfully poised between.
           </p>
-          <div className="hero-rise inline-block" style={{ animationDelay: '0.7s' }}>
-            <button type="button" onClick={() => openNotice('reserve')} className="group relative overflow-hidden rounded-full bg-white px-7 py-3 text-sm font-semibold text-gray-900 shadow-lg shadow-black/20 transition-transform duration-300 hover:scale-[1.04] active:scale-95 sm:px-8 sm:py-3.5">
-              <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" aria-hidden="true" />
-              <span className="relative">Reserve Now</span>
-            </button>
-          </div>
         </section>
       </main>
 
