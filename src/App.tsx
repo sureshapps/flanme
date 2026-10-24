@@ -316,7 +316,7 @@ export default function App() {
           mask-composite: exclude;
           filter: blur(7px);
         }
-        .start-btn .btn-label { font-size: 17px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
+        .start-btn .btn-label { font-size: 13px; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35); }
         .start-btn .btn-icon {
           flex: none; display: flex; align-items: center; justify-content: center;
           width: 40px; height: 40px; border-radius: 9999px; background: #3e3e3e;
