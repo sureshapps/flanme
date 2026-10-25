@@ -1921,7 +1921,7 @@ export default function App() {
             <span className="title-code block">Code</span>
             <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
           </h1>
-          <div className="title hero-rise -mt-7 sm:-mt-10" style={{ animationDelay: '0.5s' }}>the digital signature of <span>Suresh</span></div>
+          <div className="title hero-rise -mt-7 sm:-mt-10" style={{ animationDelay: '0.5s' }}>the digital signature of 	&nbsp; <span>Suresh</span></div>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
             <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[100px] select-none sm:w-[150px] md:w-[180px]" />
             <p className="sig-line mt-3 text-[10px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
