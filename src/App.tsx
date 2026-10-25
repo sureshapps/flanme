@@ -208,7 +208,7 @@ function RingPill({ id, value, label, from, to }: { id: string; value: number; l
     <div className="glass metric-card metric-pill" style={{ '--r': '9999px' } as CSSProperties} role="img" aria-label={`${label} ${value} percent`}>
       <span className="fx-layer" aria-hidden="true" />
       <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0 -rotate-90" style={{ filter: `drop-shadow(0 0 4px ${to})` }}>
-        <defs>V
+        <defs>
           <linearGradient id={`ring-${id}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor={from} />
             <stop offset="100%" stopColor={to} />
@@ -1187,6 +1187,7 @@ export default function App() {
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
         @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
         @import url('https://fonts.cdnfonts.com/css/ngopie');
+        @import url('https://fonts.cdnfonts.com/css/anek-odia');
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
@@ -1664,6 +1665,8 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        /* Behance + GitHub popups use Anek Odia (CV popup keeps its own fonts) */
+        .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green * { font-family: 'Anek Odia', sans-serif; }
         @media (min-width: 640px) and (max-width: 1023px) {
           .case-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
