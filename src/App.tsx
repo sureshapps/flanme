@@ -1948,6 +1948,9 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
         <p className="curtain__word">Beyond Limits.</p>
       </div>
 
+      <p className="curtain__stack curtain__stack--top" aria-hidden="true">Code</p>
+      <p className="curtain__stack curtain__stack--bottom" aria-hidden="true">Beyond Limits.</p>
+
       <div ref={meterRef} className="curtain__center" role="progressbar" aria-label="Loading" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
         <span className="gauge-disc" aria-hidden="true" />
         <svg className="gauge-svg" viewBox="0 0 200 200" aria-hidden="true">
@@ -3175,9 +3178,21 @@ export default function App() {
           50% { box-shadow: inset 2px 2px 1px -1px rgba(255, 255, 255, 0.5), inset -2px -2px 1px -1px rgba(255, 255, 255, 0.18), inset 0 0 44px rgba(255, 0, 20, 0.34), 0 0 60px rgba(255, 0, 20, 0.42); }
         }
         @keyframes enter-ring { 0% { opacity: 0.85; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35); } }
+        /* phones: the side words move above and below the gauge / power button, which gets smaller */
+        .curtain__stack { display: none; }
         @media (max-width: 639px) {
-          .curtain { --g: min(64vw, 70dvh, 280px); }
+          .curtain { --g: min(52vw, 40dvh, 220px); }
           .curtain__word { display: none; }
+          .curtain__stack {
+            display: block; position: absolute; left: 50%; z-index: 3; margin: 0; width: max-content; max-width: calc(100vw - 2rem); text-align: center;
+            font-size: clamp(1.35rem, 7.2vw, 2rem); font-weight: 500; letter-spacing: 1px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.5s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+          }
+          .curtain__stack--top { top: calc(50% - var(--g) * 0.68 - 0.5rem); transform: translate(-50%, -100%); }
+          .curtain__stack--bottom { top: calc(50% + var(--g) * 0.68 + 0.5rem); transform: translate(-50%, 0); }
+          .curtain.is-open .curtain__stack { opacity: 0; }
+          .curtain.is-open .curtain__stack--top { transform: translate(-50%, -140%); }
+          .curtain.is-open .curtain__stack--bottom { transform: translate(-50%, 40%); }
         }
         @media (prefers-reduced-motion: reduce) {
           .curtain__panel, .curtain__center { transition-duration: 0.01s; }
