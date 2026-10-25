@@ -296,7 +296,7 @@ function RingPill({ id, value, label, from, to }: { id: string; value: number; l
   return (
     <div className="glass metric-card metric-pill" style={{ '--r': '9999px' } as CSSProperties} role="img" aria-label={`${label} ${value} percent`}>
       <span className="fx-layer" aria-hidden="true" />
-      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0 -rotate-90" style={{ filter: `drop-shadow(0 0 4px ${to})` }}>
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0 -rotate-90" style={{ filter: `drop-shadow(0 0 3px ${to}) drop-shadow(0 0 9px ${to})` }}>
         <defs>
           <linearGradient id={`ring-${id}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor={from} />
@@ -326,14 +326,14 @@ function SpeedCard() {
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full overflow-visible" aria-hidden="true">
         <defs>
           <linearGradient id="speed-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#7dff9b" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#7dff9b" stopOpacity="0" />
+            <stop offset="0%" stopColor="#b6ff2e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#b6ff2e" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={`${line} L ${W} ${H} L 0 ${H} Z`} fill="url(#speed-fill)" className="chart-area" />
-        <path d={line} pathLength={1} fill="none" stroke="#9dffb4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="chart-line" style={{ filter: 'drop-shadow(0 0 3px rgba(125,255,155,0.8))' }} />
+        <path d={line} pathLength={1} fill="none" stroke="#b6ff2e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="chart-line" style={{ filter: 'drop-shadow(0 0 2px #b6ff2e) drop-shadow(0 0 6px rgba(182,255,46,0.95))' }} />
         {pts.filter((_, i) => i % 3 === 1 || i === pts.length - 1).map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="2.2" fill="#fff" className="chart-area" />
+          <circle key={i} cx={x} cy={y} r="2.4" fill="#fff" className="chart-area" style={{ filter: 'drop-shadow(0 0 3px #b6ff2e)' }} />
         ))}
       </svg>
     </div>
@@ -348,7 +348,7 @@ function ExperienceCard() {
       <p className="metric-value metric-value-lg mt-1">16+</p>
       <div className="mt-1.5 flex h-5 items-end gap-[3px] lg:mt-2 lg:h-8" aria-hidden="true">
         {EXPERIENCE_BARS.map((h, i) => (
-          <span key={i} className="chart-bar flex-1 rounded-[2px]" style={{ height: `${h}%`, background: i % 3 === 1 ? '#ff7a1a' : 'rgba(255,255,255,0.9)', animationDelay: `${1.4 + i * 0.07}s` }} />
+          <span key={i} className="chart-bar flex-1 rounded-[2px]" style={{ height: `${h}%`, background: i % 3 === 1 ? '#ff8a1f' : '#fff', boxShadow: i % 3 === 1 ? '0 0 4px #ff8a1f, 0 0 10px rgba(255,122,26,0.9)' : '0 0 5px rgba(255,255,255,0.55)', animationDelay: `${1.4 + i * 0.07}s` }} />
         ))}
       </div>
     </div>
@@ -743,8 +743,8 @@ function Metrics({ open }: { open: boolean }) {
           <CalendarCard />
         </div>
         <div className="grid grid-cols-2 gap-2 lg:gap-3">
-          <RingPill id="skills" value={92} label="Skills Level" from="#7dff9b" to="#1fd45a" />
-          <RingPill id="creative" value={88} label="Creative Thinking" from="#ff7ad9" to="#b43cff" />
+          <RingPill id="skills" value={92} label="Skills Level" from="#fff27a" to="#ffd000" />
+          <RingPill id="creative" value={88} label="Creative Thinking" from="#ff8ae0" to="#ff1fa8" />
           <SpeedCard />
           <ExperienceCard />
         </div>
@@ -1695,33 +1695,34 @@ export default function App() {
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
         .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.5em; padding: 0.95em 1.4em; }
-        .seg-digit { width: 1.95em; height: 3.3em; flex: none; filter: drop-shadow(0 0 3px rgba(182, 255, 46, 0.6)); }
-        .seg-on { fill: #b6ff2e; }
-        .seg-off { fill: rgba(30, 60, 0, 0.3); }
+        .seg-digit { width: 1.95em; height: 3.3em; flex: none; overflow: visible; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 7px rgba(255, 255, 255, 0.55)); }
+        /* stroke fattens each segment so the digits read bold */
+        .seg-on { fill: #fff; stroke: #fff; stroke-width: 1.5; stroke-linejoin: round; }
+        .seg-off { fill: rgba(255, 255, 255, 0.1); }
         .clock-colon { display: flex; flex-direction: column; gap: 0.8em; }
-        .clock-colon i { width: 0.42em; height: 0.42em; border-radius: 50%; background: #b6ff2e; box-shadow: 0 0 5px rgba(182, 255, 46, 0.95); animation: colon-blink 1s steps(1) infinite; }
+        .clock-colon i { width: 0.5em; height: 0.5em; border-radius: 50%; background: #fff; box-shadow: 0 0 3px #fff, 0 0 9px rgba(255, 255, 255, 0.85); animation: colon-blink 1s steps(1) infinite; }
         @keyframes colon-blink { 50% { opacity: 0.2; } }
         .clock-ampm { display: flex; flex-direction: column; justify-content: center; gap: 0.35em; margin-left: 0.15em; }
-        .clock-ampm b { font-size: 1.05em; font-weight: 700; letter-spacing: 0.08em; line-height: 1; color: rgba(30, 60, 0, 0.45); }
-        .clock-ampm b.is-on { color: #b6ff2e; text-shadow: 0 0 6px rgba(182, 255, 46, 0.9); }
+        .clock-ampm b { font-size: 1.05em; font-weight: 800; letter-spacing: 0.08em; line-height: 1; color: rgba(255, 255, 255, 0.28); }
+        .clock-ampm b.is-on { color: #fff; text-shadow: 0 0 3px #fff, 0 0 9px rgba(255, 255, 255, 0.8); }
         .clock-card .fx-layer::after, .cal-card .fx-layer::after, .wx-card .fx-layer::after { padding: 5px; filter: blur(4px); }
         .wx-card, .cal-card { flex-direction: column; padding: 0.95em 1.05em; }
         .wx-card { justify-content: space-between; gap: 0.7em; }
         .wx-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5em; }
         .wx-city { font-size: 1em; opacity: 0.9; }
-        .wx-temp { font-size: 2.7em; font-weight: 400; line-height: 1.05; letter-spacing: -0.04em; }
+        .wx-temp { font-size: 2.7em; font-weight: 500; text-shadow: 0 0 10px rgba(255, 255, 255, 0.45); line-height: 1.05; letter-spacing: -0.04em; }
         .wx-now { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 0.2em; font-size: 0.9em; line-height: 1.25; }
         .wx-days { display: flex; flex-direction: column; gap: 0.6em; border-top: 1px solid rgba(255, 255, 255, 0.28); padding-top: 0.65em; }
         .wx-day { display: grid; grid-template-columns: 2.2em 1.4em 1.9em 1fr 1.9em; align-items: center; gap: 0.4em; font-size: 0.95em; }
         .wx-min { text-align: right; opacity: 0.8; }
         .wx-bar { position: relative; height: 0.36em; border-radius: 999px; background: rgba(255, 255, 255, 0.22); }
-        .wx-bar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #ffd98a, #ff8a1f); }
-        .cal-title { font-size: 1.15em; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 0.6em; }
+        .wx-bar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #ffe14d, #ff7a00); box-shadow: 0 0 4px #ff9d1f, 0 0 10px rgba(255, 138, 31, 0.85); }
+        .cal-title { font-size: 1.15em; font-weight: 800; letter-spacing: 0.08em; text-shadow: 0 0 8px rgba(255, 255, 255, 0.5); margin-bottom: 0.6em; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 0.25em; text-align: center; }
         .cal-head { font-size: 0.85em; font-weight: 700; opacity: 0.85; padding-bottom: 0.2em; }
         .cal-day { height: 1.7em; line-height: 1.7em; }
         .cal-weekend { opacity: 0.55; }
-        .cal-today { width: 1.7em; margin: 0 auto; border-radius: 50%; background: #ffe6bd; color: #8a0f08; font-weight: 700; opacity: 1; box-shadow: 0 0 8px rgba(255, 214, 150, 0.7); }
+        .cal-today { width: 1.7em; margin: 0 auto; border-radius: 50%; background: #ffd400; color: #5a2a00; font-weight: 800; opacity: 1; box-shadow: 0 0 4px #ffd400, 0 0 12px rgba(255, 196, 0, 0.9); }
         /* Mobile: every widget lives in one liquid-glass panel that slides in from the << button */
         .metrics-panel > .fx-layer { display: none; }
         @media (max-width: 639px) {
