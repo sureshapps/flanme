@@ -1780,7 +1780,7 @@ export default function App() {
         .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: 50% 28%; }
         .conn-body { grid-area: stack; z-index: 1; align-self: end; min-height: 0; padding: 1rem clamp(1rem, 5vw, 2rem); }
         .conn-header, .conn-header .conn-chips { font-family: 'Super Guardian', 'SuperGuardianBackup', sans-serif !important; }
-        .conn-header { margin: 0; font-size: 1.47em; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+        .conn-header { margin: 0; font-size: 2.47em; font-weight: 400; line-height: 1.15; letter-spacing: 1; }
         .conn-body p { margin-block: 0.7em 0.9em; font-size: 0.72em; line-height: 1.5; color: rgba(255, 255, 255, 0.92); }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
@@ -1790,10 +1790,10 @@ export default function App() {
         .conn-social { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; text-decoration: none; transition: transform 0.3s ease; }
         .conn-social:hover { transform: translateY(-3px) scale(1.12); }
         .conn-social .conn-icon { width: 1.7em; height: 1.7em; }
-        .glow-ig { color: #ff6ad5; filter: drop-shadow(0 0 3px #ff4fd8) drop-shadow(0 0 8px #c04bff) drop-shadow(0 0 14px #9b4dff); animation: glow-ig 2.6s ease-in-out infinite; }
-        .glow-fb { color: #8fdcff; filter: drop-shadow(0 0 3px #38bdf8) drop-shadow(0 0 8px #22d3ee) drop-shadow(0 0 14px #06b6d4); animation: glow-fb 2.6s ease-in-out infinite 0.3s; }
-        .glow-wa { color: #b8f23c; filter: drop-shadow(0 0 3px #a3e635) drop-shadow(0 0 8px #84cc16) drop-shadow(0 0 14px #facc15); animation: glow-wa 2.6s ease-in-out infinite 0.6s; }
-        .glow-em { color: #ffa24d; filter: drop-shadow(0 0 3px #fb923c) drop-shadow(0 0 8px #f97316) drop-shadow(0 0 14px #ea580c); animation: glow-em 2.6s ease-in-out infinite 0.9s; }
+        .glow-ig { color: #ba2020; filter: drop-shadow(0 0 1px #ff4fd8) drop-shadow(0 0 3px #c04bff) drop-shadow(0 0 4px #9b4dff); animation: glow-ig 2.6s ease-in-out infinite; }
+        .glow-fb { color: #8fdcff; filter: drop-shadow(0 0 1px #38bdf8) drop-shadow(0 0 3px #22d3ee) drop-shadow(0 0 4px #06b6d4); animation: glow-fb 2.6s ease-in-out infinite 0.3s; }
+        .glow-wa { color: #b8f23c; filter: drop-shadow(0 0 1px #a3e635) drop-shadow(0 0 3px #84cc16) drop-shadow(0 0 4px #facc15); animation: glow-wa 2.6s ease-in-out infinite 0.6s; }
+        .glow-em { color: #ffa24d; filter: drop-shadow(0 0 1px #fb923c) drop-shadow(0 0 3px #f97316) drop-shadow(0 0 4px #ea580c); animation: glow-em 2.6s ease-in-out infinite 0.9s; }
         @keyframes glow-ig { 50% { filter: drop-shadow(0 0 2px #ff4fd8) drop-shadow(0 0 5px #c04bff) drop-shadow(0 0 8px #9b4dff); } }
         @keyframes glow-fb { 50% { filter: drop-shadow(0 0 2px #38bdf8) drop-shadow(0 0 5px #22d3ee) drop-shadow(0 0 8px #06b6d4); } }
         @keyframes glow-wa { 50% { filter: drop-shadow(0 0 2px #a3e635) drop-shadow(0 0 5px #84cc16) drop-shadow(0 0 8px #facc15); } }
