@@ -6,6 +6,10 @@ const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/head
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
 const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const SIGNATURE = '/signature.png';
+// how far the robot trails the pointer (px); raise to keep it further from links
+const FOLLOW_GAP_X = 95;
+const FOLLOW_GAP_Y = 105;
+const FOLLOW_GAP_TOUCH = 115;
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
 const NAV_ITEMS = [
@@ -425,10 +429,17 @@ function RobotCard() {
         let tx = 0;
         let ty = 0;
         if (cursorPt) {
-          const px = Math.min(Math.max(cursorPt.x + (cursorPt.touch ? 0 : 50), 60), window.innerWidth - 60);
-          const py = Math.min(Math.max(cursorPt.y + (cursorPt.touch ? -80 : 60), 60), window.innerHeight - 60);
-          tx = px - homeX;
-          ty = py - homeY;
+          const onRobot = Math.hypot(cursorPt.x - (r.left + r.width / 2), cursorPt.y - (r.top + r.height / 2)) < r.width * 0.3;
+          if (onRobot) {
+            // pointer is on the robot: stay put so it can be clicked
+            tx = follow.x;
+            ty = follow.y;
+          } else {
+            const px = Math.min(Math.max(cursorPt.x + (cursorPt.touch ? 0 : FOLLOW_GAP_X), 60), window.innerWidth - 60);
+            const py = Math.min(Math.max(cursorPt.y + (cursorPt.touch ? -FOLLOW_GAP_TOUCH : FOLLOW_GAP_Y), 60), window.innerHeight - 60);
+            tx = px - homeX;
+            ty = py - homeY;
+          }
         }
         follow.x += (tx - follow.x) * 0.08;
         follow.y += (ty - follow.y) * 0.08;
@@ -713,7 +724,7 @@ function RobotCard() {
       const r = canvas.getBoundingClientRect();
       const dx = event.clientX - (r.left + r.width / 2);
       const dy = event.clientY - (r.top + r.height / 2);
-      if (Math.hypot(dx, dy) < r.width * 0.45) onClick();
+      if (Math.hypot(dx, dy) < r.width * 0.3) onClick();
     };
     window.addEventListener('click', onWindowClick);
     frame = requestAnimationFrame(draw);
@@ -1055,6 +1066,7 @@ export default function App() {
           .neon-fire { animation: none; filter: drop-shadow(0 0 2px #ffb23e) drop-shadow(0 0 6px #ff7a18); }
         }
         /* Interactive canvas robot */
+        .robot-card { pointer-events: none; }
         .robot-card .robot-canvas {
           position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; pointer-events: none;
           filter: drop-shadow(0 10px 20px rgba(255, 90, 20, 0.35));
@@ -1408,7 +1420,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
         <Metrics open={widgetsOpen} />
-        <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(162px,18.9vw,324px)]" style={{ animationDelay: '0.9s' }}>
+        <div className="hero-rise pointer-events-none absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(162px,18.9vw,324px)]" style={{ animationDelay: '0.9s' }}>
           <RobotCard />
         </div>
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
