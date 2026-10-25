@@ -55,7 +55,7 @@ function BehanceIcon({ size = 22, strokeWidth = 2, className = '' }: { size?: nu
 
 function CvIcon({ size = 22, strokeWidth = 1.5, className = '' }: { size?: number | string; strokeWidth?: number | string; className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-cv ${className}`} aria-hidden="true" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width={size} height={size} className={`neon-cv ${className}`} aria-hidden="true" fill="none">
       <path d="M13 9L15 15L17 9M10 15C9.06812 15 8.60218 15 8.23463 14.8478C7.74458 14.6448 7.35523 14.2554 7.15224 13.7654C7 13.3978 7 12.9319 7 12C7 11.0681 7 10.6022 7.15224 10.2346C7.35523 9.74458 7.74458 9.35523 8.23463 9.15224C8.60218 9 9.06812 9 10 9" stroke="currentColor" strokeWidth={Math.max(Number(strokeWidth), 1.4)} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
