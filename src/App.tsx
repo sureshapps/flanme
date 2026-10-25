@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, LayoutGrid, MessageCircle, Briefcase, Download, Play, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, LayoutGrid, MessageCircle, Briefcase, Download, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -388,16 +388,20 @@ function ClockCard() {
   const now = useNow(1000);
   const hours = String(now.getHours() % 12 || 12);
   const minutes = String(now.getMinutes()).padStart(2, '0');
-  const label = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const label = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
   const isAm = now.getHours() < 12;
   return (
-    <div className="glass metric-card info-card clock-card info-extra" style={{ '--r': '12px' } as CSSProperties} role="img" aria-label={`Time ${label}`}>
+    <div className="glass metric-card info-card clock-card info-extra" style={{ '--r': '14px' } as CSSProperties} role="img" aria-label={`Time ${label}`}>
       <span className="fx-layer" aria-hidden="true" />
       <SevenSeg digit={hours.length > 1 ? hours[0] : null} />
       <SevenSeg digit={hours[hours.length - 1]} />
       <span className="clock-colon" aria-hidden="true"><i /><i /></span>
       <SevenSeg digit={minutes[0]} />
       <SevenSeg digit={minutes[1]} />
+      <span className="clock-colon" aria-hidden="true"><i /><i /></span>
+      <SevenSeg digit={seconds[0]} />
+      <SevenSeg digit={seconds[1]} />
       <span className="clock-ampm" aria-hidden="true">
         <b className={isAm ? 'is-on' : ''}>AM</b>
         <b className={isAm ? '' : 'is-on'}>PM</b>
@@ -729,6 +733,135 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+type Song = { title: string; artist?: string; cover?: string; src: string };
+
+// songs are managed in /public/songs.js (window.MUSIC_PLAYLIST), so you can edit the playlist without rebuilding
+function usePlaylist() {
+  const [songs, setSongs] = useState<Song[]>([]);
+  useEffect(() => {
+    const read = () => {
+      const list = (window as unknown as { MUSIC_PLAYLIST?: Song[] }).MUSIC_PLAYLIST;
+      if (Array.isArray(list)) setSongs(list.filter((song) => song && song.src));
+    };
+    read();
+    if ((window as unknown as { MUSIC_PLAYLIST?: Song[] }).MUSIC_PLAYLIST) return;
+    let script = document.querySelector<HTMLScriptElement>('script[data-songs]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = '/songs.js';
+      script.async = true;
+      script.dataset.songs = 'true';
+      document.body.appendChild(script);
+    }
+    script.addEventListener('load', read);
+    return () => script?.removeEventListener('load', read);
+  }, []);
+  return songs;
+}
+
+function fmtTime(t: number) {
+  if (!Number.isFinite(t) || t < 0) return '0:00';
+  return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+}
+
+function MusicPlayer() {
+  const songs = usePlaylist();
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const wantPlay = useRef(true); // autoplay unless the person pauses it
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [time, setTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState(false);
+  const song = songs[index];
+
+  // autoplay whenever the track changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !song || !wantPlay.current) return;
+    audio.play().catch(() => { /* blocked by the browser: the first tap below starts it */ });
+  }, [song]);
+
+  // browsers block sound until the page gets a tap / key press, so start on the first one
+  useEffect(() => {
+    if (!song) return;
+    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
+    const start = (event: Event) => {
+      if ((event.target as Element | null)?.closest?.('.player-card')) return;
+      const audio = audioRef.current;
+      if (audio && wantPlay.current && audio.paused) audio.play().catch(() => {});
+    };
+    events.forEach((name) => window.addEventListener(name, start, { once: true }));
+    return () => events.forEach((name) => window.removeEventListener(name, start));
+  }, [song]);
+
+  const go = (dir: 1 | -1) => {
+    if (!songs.length) return;
+    wantPlay.current = true;
+    setIndex((i) => {
+      if (shuffle && songs.length > 1) {
+        let n = i;
+        while (n === i) n = Math.floor(Math.random() * songs.length);
+        return n;
+      }
+      return (i + dir + songs.length) % songs.length;
+    });
+    setTime(0);
+  };
+  const prev = () => {
+    const audio = audioRef.current;
+    if (audio && audio.currentTime > 3) { audio.currentTime = 0; return; }
+    go(-1);
+  };
+  const play = () => { wantPlay.current = true; audioRef.current?.play().catch(() => {}); };
+  const pause = () => { wantPlay.current = false; audioRef.current?.pause(); };
+  const seek = (value: number) => {
+    const audio = audioRef.current;
+    if (audio) { audio.currentTime = value; setTime(value); }
+  };
+  const pct = duration > 0 ? Math.min(100, (time / duration) * 100) : 0;
+
+  return (
+    <div className="glass metric-card info-card player-card" style={{ '--r': '14px' } as CSSProperties} role="group" aria-label="Music player">
+      <span className="fx-layer" aria-hidden="true" />
+      {song && (
+        <audio
+          ref={audioRef}
+          src={song.src}
+          preload="auto"
+          loop={repeat}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)}
+          onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+          onEnded={() => go(1)}
+        />
+      )}
+      <div className="pl-top">
+        {song?.cover ? <img className="pl-cover" src={song.cover} alt="" draggable={false} /> : <span className="pl-cover pl-cover-empty" aria-hidden="true" />}
+        <div className="pl-meta">
+          <p className="pl-title">{song ? song.title : 'No songs yet'}</p>
+          <p className="pl-artist">{song ? (song.artist ?? '') : 'Add tracks in /public/songs.js'}</p>
+        </div>
+        <button type="button" className={`pl-btn pl-round pl-play ${playing ? '' : 'is-active'}`} aria-label="Play" onClick={play} disabled={!song}><Play size={15} strokeWidth={2.2} fill="currentColor" /></button>
+        <button type="button" className={`pl-btn pl-round pl-pause ${playing ? 'is-active' : ''}`} aria-label="Pause" onClick={pause} disabled={!song}><Pause size={15} strokeWidth={2.2} fill="currentColor" /></button>
+      </div>
+      <div className="pl-seek">
+        <span className="pl-time">{fmtTime(time)}</span>
+        <input type="range" className="pl-range" min={0} max={duration || 0} step={0.1} value={Math.min(time, duration || 0)} onChange={(event) => seek(Number(event.target.value))} aria-label="Seek" style={{ '--p': `${pct}%` } as CSSProperties} disabled={!song} />
+        <span className="pl-time">{fmtTime(duration)}</span>
+      </div>
+      <div className="pl-ctrl">
+        <button type="button" className={`pl-btn pl-mini ${shuffle ? 'is-on' : ''}`} aria-label="Shuffle" aria-pressed={shuffle} onClick={() => setShuffle((v) => !v)}><Shuffle size={14} strokeWidth={2} /></button>
+        <button type="button" className="pl-btn pl-mini" aria-label="Previous song" onClick={prev} disabled={!song}><SkipBack size={14} strokeWidth={2} fill="currentColor" /></button>
+        <button type="button" className="pl-btn pl-mini" aria-label="Next song" onClick={() => go(1)} disabled={!song}><SkipForward size={14} strokeWidth={2} fill="currentColor" /></button>
+        <button type="button" className={`pl-btn pl-mini ${repeat ? 'is-on' : ''}`} aria-label="Repeat this song" aria-pressed={repeat} onClick={() => setRepeat((v) => !v)}><Repeat size={14} strokeWidth={2} /></button>
+      </div>
+    </div>
+  );
+}
+
 function Metrics({ open }: { open: boolean }) {
   const desktop = useMediaQuery('(min-width: 1024px)');
   return (
@@ -737,6 +870,7 @@ function Metrics({ open }: { open: boolean }) {
       <span className="fx-layer" aria-hidden="true" />
       <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
         {desktop && <GlassFrame className="glass-frame--desktop" />}
+        <MusicPlayer />
         <ClockCard />
         <div className="info-extra grid grid-cols-2 gap-2 lg:gap-3">
           <WeatherCard />
@@ -1694,8 +1828,8 @@ export default function App() {
         .glass-frame--mobile { position: absolute; z-index: 45; right: -7vw; top: 45%; width: 71vw; aspect-ratio: 1; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
-        .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.5em; padding: 0.95em 1.4em; }
-        .seg-digit { width: 1.95em; height: 3.3em; flex: none; overflow: visible; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 7px rgba(255, 255, 255, 0.55)); }
+        .clock-card { align-self: stretch; align-items: center; justify-content: space-between; gap: 0.4em; padding: 0.95em 1.2em; }
+        .seg-digit { width: 2.3em; height: 3.9em; flex: none; overflow: visible; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 7px rgba(255, 255, 255, 0.55)); }
         /* stroke fattens each segment so the digits read bold */
         .seg-on { fill: #fff; stroke: #fff; stroke-width: 1.5; stroke-linejoin: round; }
         .seg-off { fill: rgba(255, 255, 255, 0.1); }
@@ -1705,6 +1839,47 @@ export default function App() {
         .clock-ampm { display: flex; flex-direction: column; justify-content: center; gap: 0.35em; margin-left: 0.15em; }
         .clock-ampm b { font-size: 1.05em; font-weight: 800; letter-spacing: 0.08em; line-height: 1; color: rgba(255, 255, 255, 0.28); }
         .clock-ampm b.is-on { color: #fff; text-shadow: 0 0 3px #fff, 0 0 9px rgba(255, 255, 255, 0.8); }
+        /* Music player (full-width row, same width / radius / padding as the clock) */
+        .player-card.glass {
+          flex-direction: column; gap: 0.85em; padding: 0.95em 1.2em; color: #fff;
+          box-shadow:
+            inset 3px 3px 0.5px -3px rgba(255, 255, 255, 0.9),
+            inset -3px -3px 0.5px -3px rgba(255, 255, 255, 0.85),
+            inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.6),
+            inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
+            inset 0 0 3px -1px rgba(0, 0, 0, 0.8),
+            0 0 0 1px rgba(255, 110, 220, 0.4),
+            0 0 12px rgba(255, 60, 200, 0.35),
+            0 0 20px rgba(60, 220, 255, 0.22),
+            0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+        .player-card .fx-layer::after { padding: 5px; filter: blur(4px); }
+        .pl-top { display: flex; align-items: center; gap: 0.9em; min-width: 0; }
+        .pl-cover { width: 4.6em; height: 4.6em; flex: none; object-fit: cover; border-radius: 0.8em; display: block; box-shadow: 0 0 10px rgba(255, 60, 200, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.35); }
+        .pl-cover-empty { background: linear-gradient(135deg, #ff3df0, #3ad8ff); }
+        .pl-meta { flex: 1; min-width: 0; }
+        .pl-title { font-size: 1.5em; font-weight: 800; letter-spacing: 0.04em; line-height: 1.15; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 8px rgba(255, 255, 255, 0.45); }
+        .pl-artist { font-size: 1.05em; margin-top: 0.25em; color: #6ff3ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 6px rgba(60, 220, 255, 0.85); }
+        .pl-btn { display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: #fff; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease; }
+        .pl-btn:hover:not(:disabled) { transform: scale(1.08); }
+        .pl-btn:disabled { opacity: 0.4; cursor: default; }
+        .pl-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 2px; }
+        .pl-round { flex: none; width: max(3.6em, 28px); height: max(3.6em, 28px); border-radius: 50%; border: 1.5px solid; background: rgba(255, 255, 255, 0.06); }
+        .pl-play { border-color: #ff5cd6; color: #ffd0f3; }
+        .pl-pause { border-color: #4de6ff; color: #c9f8ff; }
+        .pl-play.is-active { background: rgba(255, 60, 200, 0.28); box-shadow: 0 0 5px #ff3dc8, 0 0 14px rgba(255, 60, 200, 0.8); }
+        .pl-pause.is-active { background: rgba(60, 220, 255, 0.25); box-shadow: 0 0 5px #3ad8ff, 0 0 14px rgba(60, 220, 255, 0.8); }
+        .pl-seek { display: flex; align-items: center; gap: 0.8em; }
+        .pl-time { flex: none; min-width: 2.6em; font-size: 1em; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); }
+        .pl-time:last-child { text-align: right; }
+        .pl-range { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 4px; margin: 0; border-radius: 999px; outline: none; cursor: pointer;
+          background: linear-gradient(90deg, #ff3df0 0%, #7a5cff var(--p, 0%), rgba(255, 255, 255, 0.22) var(--p, 0%)); box-shadow: 0 0 8px rgba(255, 60, 200, 0.45); }
+        .pl-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 4px #fff, 0 0 10px #3ad8ff; }
+        .pl-range::-moz-range-thumb { width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 4px #fff, 0 0 10px #3ad8ff; }
+        .pl-range:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
+        .pl-ctrl { display: flex; align-items: center; justify-content: space-between; padding: 0 1.2em; }
+        .pl-mini { width: 28px; height: 24px; color: rgba(255, 255, 255, 0.9); }
+        .pl-mini.is-on { color: #6ff3ff; filter: drop-shadow(0 0 4px #3ad8ff) drop-shadow(0 0 8px rgba(60, 220, 255, 0.8)); }
         .clock-card .fx-layer::after, .cal-card .fx-layer::after, .wx-card .fx-layer::after { padding: 5px; filter: blur(4px); }
         .wx-card, .cal-card { flex-direction: column; padding: 0.95em 1.05em; }
         .wx-card { justify-content: space-between; gap: 0.7em; }
