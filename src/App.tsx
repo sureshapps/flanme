@@ -597,11 +597,11 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
         const draw = () => renderer.render(scene, camera);
 
         // lights
-        scene.add(new THREE.AmbientLight(0xffffff, 0.05));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 0.2);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
         keyLight.position.set(6, 10, 8);
         scene.add(keyLight);
-        const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        const rimLight = new THREE.DirectionalLight(0xffffff, 2.6);
         rimLight.position.set(-6, 3, -10);
         scene.add(rimLight);
 
