@@ -8,7 +8,7 @@ const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads
 const SIGNATURE = '/signature.png';
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 // cover photo for the Jom Connect card; swap for your own portrait
-const CONNECT_COVER = 'https://images.unsplash.com/photo-1506366197612-8acc64095e53?q=80&w=480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+const CONNECT_COVER = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/me.webp';
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const NEON_URL = 'https://unpkg.com/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js';
