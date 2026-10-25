@@ -2198,7 +2198,7 @@ export default function App() {
           curvePoints: 10,
           curveLerp: 0.5,
           radius1: 4,
-          radius2: 20,
+          radius2: 5,
           velocityTreshold: 10,
           sleepRadiusX: 100,
           sleepRadiusY: 100,
