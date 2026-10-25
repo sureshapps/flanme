@@ -597,11 +597,11 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
         const draw = () => renderer.render(scene, camera);
 
         // lights
-        scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.05));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.2);
         keyLight.position.set(6, 10, 8);
         scene.add(keyLight);
-        const rimLight = new THREE.DirectionalLight(0xffffff, 2.6);
+        const rimLight = new THREE.DirectionalLight(0xffffff, 0.6);
         rimLight.position.set(-6, 3, -10);
         scene.add(rimLight);
 
@@ -631,7 +631,7 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
         scene.add(group);
 
         const glassMat = new THREE.MeshPhysicalMaterial({
-          color: new THREE.Color('#ffffff'), transmission: 1.0, opacity: 1.0, metalness: 0.0, roughness: 0.02, ior: 1.5, thickness: 1.2,
+          color: new THREE.Color('#ffffff'), transmission: 1.0, opacity: 0.5, metalness: 0.0, roughness: 0.02, ior: 1.5, thickness: 1.2,
           specularIntensity: 1.0, envMapIntensity: 1.2, clearcoat: 1.0, clearcoatRoughness: 0.0, transparent: true, side: THREE.DoubleSide, depthWrite: false,
         });
         const glassMesh = new THREE.Mesh(new RoundedBoxGeometry(2.1, 2.1, 1.0, 32, 0.26), glassMat);
