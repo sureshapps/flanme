@@ -1730,7 +1730,7 @@ export default function App() {
             position: relative; isolation: isolate; padding: 12px; border-radius: 28px;
             /* clear glassmorphism (like the reference): barely-there tint, heavy blur of what is behind, thin light edge */
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0.07) 100%);
-            -webkit-backdrop-filter: blur(36px) saturate(1.25); backdrop-filter: blur(36px) saturate(1.25);
+            -webkit-backdrop-filter: blur(66px) saturate(1.25); backdrop-filter: blur(66px) saturate(1.25);
             border: 1px solid rgba(255, 255, 255, 0.45);
             box-shadow:
               inset 0 1px 0 rgba(255, 255, 255, 0.35),
@@ -1739,11 +1739,11 @@ export default function App() {
             transform-origin: top right;
             transform: translateX(calc(100% + 24px)) scale(0.92);
             opacity: 0; visibility: hidden; pointer-events: none;
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s linear 0.6s;
+            transition: transform 0.6s cubic-bezier(0, 0, 0, 0), opacity 0.35s ease, visibility 0s linear 0.6s;
           }
           .metrics-panel.is-open {
             transform: none; opacity: 1; visibility: visible; pointer-events: auto;
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
+            transition: transform 0.6s cubic-bezier(0, 0, 0, 0), opacity 0.35s ease, visibility 0s;
           }
           .metrics-panel > .fx-layer { display: none; }
         }
