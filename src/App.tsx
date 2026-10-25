@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { AudioLines, ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, LayoutGrid, Link2, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, LayoutGrid, Link2, Download, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -12,6 +12,7 @@ const FOLLOW_GAP_Y = 105;
 const FOLLOW_GAP_TOUCH = 115;
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
+const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
@@ -51,10 +52,18 @@ function BehanceIcon({ size = 22, strokeWidth = 2, className = '' }: { size?: nu
   );
 }
 
-const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon }[] = [
+function CvIcon({ size = 22, strokeWidth = 1.5, className = '' }: { size?: number | string; strokeWidth?: number | string; className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-cv ${className}`} aria-hidden="true" fill="none">
+      <path d="M13 9L15 15L17 9M10 15C9.06812 15 8.60218 15 8.23463 14.8478C7.74458 14.6448 7.35523 14.2554 7.15224 13.7654C7 13.3978 7 12.9319 7 12C7 11.0681 7 10.6022 7.15224 10.2346C7.35523 9.74458 7.74458 9.35523 8.23463 9.15224C8.60218 9 9.06812 9 10 9" stroke="currentColor" strokeWidth={Math.max(Number(strokeWidth), 1.4)} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon | typeof CvIcon }[] = [
   { label: 'Module', Icon: Home },
   { label: 'Case Records', Icon: BehanceIcon },
-  { label: 'Biotech', Icon: AudioLines },
+  { label: 'CV', Icon: CvIcon },
   { label: 'Tiers', Icon: LayoutGrid },
   { label: 'Live Demo', Icon: Navigation },
 ];
@@ -798,6 +807,12 @@ export default function App() {
   const [projects, setProjects] = useState<BehanceProject[]>([]);
   const [projectsState, setProjectsState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const casePopRef = useRef<HTMLDivElement>(null);
+  const [cvOpen, setCvOpen] = useState(false);
+  const [cvState, setCvState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [cvUrl, setCvUrl] = useState('');
+  const cvPopRef = useRef<HTMLDivElement>(null);
+  const cvPagesRef = useRef<HTMLDivElement>(null);
+  const cvStarted = useRef(false);
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [soundOn, setSoundOn] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -994,6 +1009,64 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseOpen]);
 
+  async function loadCv() {
+    setCvState('loading');
+    try {
+      // the PDF and pdf.js are only fetched the first time the CV opens
+      const [res, pdfjs, { default: workerSrc }] = await Promise.all([
+        fetch(CV_URL),
+        import('pdfjs-dist'),
+        import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+      ]);
+      if (!res.ok) throw new Error('cv fetch failed');
+      pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      setCvUrl(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' })));
+      const doc = await pdfjs.getDocument({ data: bytes.slice() }).promise;
+      const host = cvPagesRef.current;
+      if (!host) throw new Error('no host');
+      host.innerHTML = '';
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssWidth = Math.max(host.clientWidth, 320);
+      for (let n = 1; n <= doc.numPages; n++) {
+        const page = await doc.getPage(n);
+        const base = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: (cssWidth / base.width) * dpr });
+        const canvas = document.createElement('canvas');
+        canvas.className = 'cv-page';
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        canvas.setAttribute('role', 'img');
+        canvas.setAttribute('aria-label', `CV page ${n} of ${doc.numPages}`);
+        host.appendChild(canvas);
+        await page.render({ canvas, viewport }).promise;
+        if (n === 1) setCvState('ready');
+      }
+      setCvState('ready');
+    } catch {
+      cvStarted.current = false;
+      setCvState('error');
+    }
+  }
+
+  useEffect(() => {
+    if (!cvOpen) return;
+    if (!cvStarted.current) { cvStarted.current = true; loadCv(); }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCvOpen(false);
+    };
+    const closeOnOutside = (event: PointerEvent) => {
+      if (cvPopRef.current && !cvPopRef.current.contains(event.target as Node)) setCvOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('pointerdown', closeOnOutside);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('pointerdown', closeOnOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cvOpen]);
+
   useEffect(() => {
     const root = signatureRef.current;
     if (!root) return;
@@ -1019,7 +1092,15 @@ export default function App() {
     if (label === 'Case Records') {
       setInfoOpen(false);
       setWidgetsOpen(false);
+      setCvOpen(false);
       setCaseOpen(true);
+      return;
+    }
+    if (label === 'CV') {
+      setInfoOpen(false);
+      setWidgetsOpen(false);
+      setCaseOpen(false);
+      setCvOpen(true);
       return;
     }
     if (label === 'Live Demo') {
@@ -1365,6 +1446,28 @@ export default function App() {
           0%, 100% { filter: drop-shadow(0 0 1.5px #3d4dff) drop-shadow(0 0 4px #0005f8); }
           50% { filter: drop-shadow(0 0 2px #c9d0ff) drop-shadow(0 0 6px #4a5bff) drop-shadow(0 0 13px #0005f8); }
         }
+
+        /* Neon CV icon (yellow) */
+        .neon-cv {
+          color: #ffe14d;
+          animation: neon-cv-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes neon-cv-pulse {
+          0%, 100% { filter: drop-shadow(0 0 1.5px #ffcc00) drop-shadow(0 0 4px #ff9d00); }
+          50% { filter: drop-shadow(0 0 2px #fff4b0) drop-shadow(0 0 6px #ffd400) drop-shadow(0 0 13px #ffb000); }
+        }
+        .cv-pop { width: min(900px, calc(100vw - 2.5rem)); height: min(88dvh, 880px); }
+        .cv-head-actions { display: flex; align-items: center; gap: 8px; }
+        .cv-pages { display: flex; flex-direction: column; gap: 14px; }
+        .cv-page { display: block; width: 100%; height: auto; border-radius: 10px; background: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+        @media (max-width: 639px) {
+          .cv-pop { width: calc(100vw - 1.5rem); height: 86dvh; }
+          .cv-pages { gap: 10px; }
+          .cv-page { border-radius: 6px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .neon-cv { animation: none; filter: drop-shadow(0 0 2px #ffd400) drop-shadow(0 0 6px #ffb000); }
+        }
         /* Behance popup: falls from the top, goes back up */
         .case-pop {
           position: fixed; left: 50%; top: 50%; z-index: 80;
@@ -1584,6 +1687,30 @@ export default function App() {
           )}
         </div>
         <p className="case-foot">Made with the Behance API</p>
+      </div>
+
+      <div ref={cvPopRef} id="cv-popup" role="dialog" aria-label="Curriculum vitae" aria-hidden={!cvOpen} className={`case-pop cv-pop ${cvOpen ? 'is-open' : ''}`}>
+        <div className="case-head">
+          <h2 className="case-title">Curriculum Vitae</h2>
+          <div className="cv-head-actions">
+            {cvUrl && (
+              <a className="case-close" href={cvUrl} download="Suresh_Kaleyannan_CV.pdf" aria-label="Download CV" title="Download CV" tabIndex={cvOpen ? 0 : -1}>
+                <Download size={17} strokeWidth={2} />
+              </a>
+            )}
+            <button type="button" className="case-close" aria-label="Close CV" tabIndex={cvOpen ? 0 : -1} onClick={() => setCvOpen(false)}>
+              <X size={18} strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+        <div className="case-scroll">
+          {cvState === 'error' && (
+            <p className="case-state">Couldn't load the CV. <button type="button" onClick={() => { cvStarted.current = true; loadCv(); }}>Retry</button></p>
+          )}
+          {cvState === 'loading' && <div className="case-skel" style={{ aspectRatio: '595 / 842' }} aria-hidden="true" />}
+          <div ref={cvPagesRef} className="cv-pages" style={{ display: cvState === 'error' ? 'none' : undefined }} />
+        </div>
+        <p className="case-foot">Suresh Kaleyannan · DevOps</p>
       </div>
 
       <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
