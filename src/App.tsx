@@ -12,6 +12,7 @@ const FOLLOW_GAP_Y = 105;
 const FOLLOW_GAP_TOUCH = 115;
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
+const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
@@ -1013,13 +1014,11 @@ export default function App() {
     setCvState('loading');
     try {
       // the PDF and pdf.js are only fetched the first time the CV opens
-      const [res, pdfjs, { default: workerSrc }] = await Promise.all([
-        fetch(CV_URL),
-        import('pdfjs-dist'),
-        import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-      ]);
-      if (!res.ok) throw new Error('cv fetch failed');
-      pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+      // pdf.js comes from the CDN (pinned), so no npm package is needed; the worker is wrapped in a same-origin blob
+      const pdfjs = await import(/* @vite-ignore */ `${PDFJS_BASE}/pdf.min.mjs`);
+      const [res, workerRes] = await Promise.all([fetch(CV_URL), fetch(`${PDFJS_BASE}/pdf.worker.min.mjs`)]);
+      if (!res.ok || !workerRes.ok) throw new Error('cv fetch failed');
+      pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([await workerRes.text()], { type: 'text/javascript' }));
       const bytes = new Uint8Array(await res.arrayBuffer());
       setCvUrl(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' })));
       const doc = await pdfjs.getDocument({ data: bytes.slice() }).promise;
@@ -1039,7 +1038,7 @@ export default function App() {
         canvas.setAttribute('role', 'img');
         canvas.setAttribute('aria-label', `CV page ${n} of ${doc.numPages}`);
         host.appendChild(canvas);
-        await page.render({ canvas, viewport }).promise;
+        await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise;
         if (n === 1) setCvState('ready');
       }
       setCvState('ready');
