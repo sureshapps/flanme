@@ -1253,7 +1253,7 @@ export default function App() {
         .title span:before {
           content: ''; position: absolute; top: 50%; left: 63%; translate: -50% 0;
           width: 250%; aspect-ratio: 1 / 1; z-index: -1;
-          border: 0.9em solid #a8de97; border-radius: 50%; opacity: 0.6;
+          border: 0.9em solid #000; border-radius: 50%; opacity: 1;
           transition: --mask-progress 0.5s; transition-delay: 0.3s;
           -webkit-mask-image: conic-gradient(from -27deg, #000 var(--mask-progress), #0000 0);
           mask-image: conic-gradient(from -27deg, #000 var(--mask-progress), #0000 0);
