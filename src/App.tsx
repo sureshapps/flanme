@@ -1451,11 +1451,16 @@ function MusicPlayer() {
   );
 }
 
-function Metrics({ open }: { open: boolean }) {
+function Metrics({ open, onClose }: { open: boolean; onClose: () => void }) {
   const desktop = useMediaQuery('(min-width: 1024px)');
   return (
     <div className={`${desktop ? 'hero-rise ' : ''}pointer-events-none absolute right-3 top-[148px] z-[55] w-[calc(100vw-1.5rem)] max-w-[300px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none`} style={{ animationDelay: '1.1s' }}>
       <div id="widgets-panel" className={`metrics-panel ${open ? 'is-open' : ''}`}>
+      <div className="panel-close-row">
+        <button type="button" className="case-close" aria-label="Close widgets" tabIndex={open ? 0 : -1} onClick={onClose}>
+          <X size={16} strokeWidth={2} />
+        </button>
+      </div>
       <span className="fx-layer" aria-hidden="true" />
       <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
         <MusicPlayer />
@@ -2184,20 +2189,6 @@ export default function App() {
   }, [menuOpen]);
 
   useEffect(() => {
-    if (!widgetsOpen) return;
-    const close = () => setWidgetsOpen(false);
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('click', close);
-    window.addEventListener('keydown', closeOnEscape);
-    return () => {
-      window.removeEventListener('click', close);
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [widgetsOpen]);
-
-  useEffect(() => {
     infoOpenRef.current = infoOpen;
     const video = videoRef.current;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2226,20 +2217,6 @@ export default function App() {
     if (videoRef.current) videoRef.current.muted = !soundOn;
   }, [soundOn]);
 
-  useEffect(() => {
-    if (!infoOpen) return;
-    const close = () => setInfoOpen(false);
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('click', close);
-    window.addEventListener('keydown', closeOnEscape);
-    return () => {
-      window.removeEventListener('click', close);
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [infoOpen]);
-
   function loadProjects() {
     setProjectsState('loading');
     fetchBehanceProjects()
@@ -2250,39 +2227,13 @@ export default function App() {
   useEffect(() => {
     if (!caseOpen) return;
     if (projectsState === 'idle') loadProjects();
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setCaseOpen(false);
-    };
-    // click or touch anywhere outside the box hides it
-    const closeOnOutside = (event: PointerEvent) => {
-      if (casePopRef.current && !casePopRef.current.contains(event.target as Node)) setCaseOpen(false);
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    window.addEventListener('pointerdown', closeOnOutside);
-    return () => {
-      window.removeEventListener('keydown', closeOnEscape);
-      window.removeEventListener('pointerdown', closeOnOutside);
-    };
+    // the popup stays open until its close button is pressed
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseOpen]);
 
   useEffect(() => {
-    if (!galOpen) { setLightbox(null); return; }
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (lightbox !== null) setLightbox(null); else setGalOpen(false);
-    };
-    const closeOnOutside = (event: PointerEvent) => {
-      if (lightbox !== null) return; // the lightbox has its own backdrop + close button
-      if (galPopRef.current && !galPopRef.current.contains(event.target as Node)) setGalOpen(false);
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    window.addEventListener('pointerdown', closeOnOutside);
-    return () => {
-      window.removeEventListener('keydown', closeOnEscape);
-      window.removeEventListener('pointerdown', closeOnOutside);
-    };
-  }, [galOpen, lightbox]);
+    if (!galOpen) setLightbox(null); // the gallery and its preview stay open until their close buttons are pressed
+  }, [galOpen]);
 
   async function loadCv() {
     setCvState('loading');
@@ -2325,36 +2276,8 @@ export default function App() {
   useEffect(() => {
     if (!cvOpen) return;
     if (!cvStarted.current) { cvStarted.current = true; loadCv(); }
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setCvOpen(false);
-    };
-    const closeOnOutside = (event: PointerEvent) => {
-      if (cvPopRef.current && !cvPopRef.current.contains(event.target as Node)) setCvOpen(false);
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    window.addEventListener('pointerdown', closeOnOutside);
-    return () => {
-      window.removeEventListener('keydown', closeOnEscape);
-      window.removeEventListener('pointerdown', closeOnOutside);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cvOpen]);
-
-  useEffect(() => {
-    if (!ghOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setGhOpen(false);
-    };
-    const closeOnOutside = (event: PointerEvent) => {
-      if (ghPopRef.current && !ghPopRef.current.contains(event.target as Node)) setGhOpen(false);
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    window.addEventListener('pointerdown', closeOnOutside);
-    return () => {
-      window.removeEventListener('keydown', closeOnEscape);
-      window.removeEventListener('pointerdown', closeOnOutside);
-    };
-  }, [ghOpen]);
 
   useEffect(() => {
     const root = signatureRef.current;
@@ -3083,6 +3006,13 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        /* close buttons for the info panel and the mobile widgets panel */
+        .info-close-row { display: flex; justify-content: flex-end; margin: -10px -12px 2px 0; }
+        .panel-close-row { display: none; }
+        @media (max-width: 639px) {
+          .panel-close-row { display: flex; justify-content: flex-end; position: sticky; top: 0; z-index: 6; margin: -2px 0 8px; }
+          .panel-close-row .case-close { background: rgba(255, 255, 255, 0.22); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+        }
         /* Curtain preloader: frosted-glass panels + speedometer */
         .curtain {
           --g: min(clamp(230px, 24vw, 340px), 70dvh);
@@ -3369,6 +3299,11 @@ export default function App() {
       <div id="info-popup" role="dialog" aria-label="About this module" aria-hidden={!infoOpen} className={`info-pop ${infoOpen ? 'is-open' : ''}`}>
         <div className="info-mesh" aria-hidden="true" />
         <div className="info-body">
+          <div className="info-close-row">
+            <button type="button" className="case-close" aria-label="Close info" tabIndex={infoOpen ? 0 : -1} onClick={() => setInfoOpen(false)}>
+              <X size={16} strokeWidth={2} />
+            </button>
+          </div>
           <div className="info-head">
             <div className="info-head-text">
               <p className="info-kicker">About</p>
@@ -3521,7 +3456,7 @@ export default function App() {
       </div>
 
       {lightbox !== null && GALLERY[lightbox] && (
-        <div className="lb" role="dialog" aria-modal="true" aria-label={GALLERY[lightbox].title} onClick={(event) => { if (event.target === event.currentTarget) setLightbox(null); }}>
+        <div className="lb" role="dialog" aria-modal="true" aria-label={GALLERY[lightbox].title}>
           <div className="lb-panel">
             <button type="button" className="case-close lb-close" aria-label="Close preview" autoFocus onClick={() => setLightbox(null)}>
               <X size={18} strokeWidth={2} />
@@ -3547,7 +3482,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
-        <Metrics open={widgetsOpen} />
+        <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
         {phone && <GlassFrame className="glass-frame--mobile hero-rise" style={{ animationDelay: '1.1s' }} />}
         {wide && <GlassFrame className="glass-frame--desktop hero-rise" style={{ animationDelay: '1.1s' }} />}
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
@@ -3584,7 +3519,7 @@ export default function App() {
 
       {curtainOn && <Curtain onReveal={() => setSiteReady(true)} onDone={() => setCurtainOn(false)} />}
 
-      <dialog ref={noticeRef} onCancel={() => setNotice(null)} onClick={(event) => { if (event.target === event.currentTarget) setNotice(null); }} className="connect-dialog" aria-labelledby="notice-title">
+      <dialog ref={noticeRef} onCancel={(event) => event.preventDefault()} onClose={(event) => { if (notice) event.currentTarget.showModal(); }} className="connect-dialog" aria-labelledby="notice-title">
         <div className="conn-card">
           <div className="conn-inner">
             <img className="conn-cover" src={CONNECT_COVER} alt="" draggable={false} />
