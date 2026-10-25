@@ -8,8 +8,7 @@ const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads
 const SIGNATURE = '/signature.png';
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 // cover photo for the Jom Connect card; swap for your own portrait
-const CONNECT_COVER = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/me.webp';
-const GITHUB_PROFILE = 'https://github.com/sureshapps';
+const CONNECT_COVER = 'https://images.unsplash.com/photo-1506366197612-8acc64095e53?q=80&w=480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const NEON_URL = 'https://unpkg.com/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js';
@@ -71,6 +70,39 @@ function GithubIcon({ size = 22, className = '' }: IconProps) {
     </svg>
   );
 }
+
+function InstagramIcon({ size = 22, className = '' }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M17.5 6.5h.01" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ size = 22, className = '' }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function WhatsappIcon({ size = 22, className = '' }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
+      <path d="M9 9.2c.2 2.6 3.2 5.6 5.8 5.8l1.4-1.2-2-1-.9.8c-.9-.4-1.9-1.4-2.3-2.3l.8-.9-1-2z" />
+    </svg>
+  );
+}
+
+const CONTACTS: { name: string; handle: string; href: string; Icon: typeof InstagramIcon }[] = [
+  { name: 'Instagram', handle: '@sureshksmy', href: 'https://www.instagram.com/sureshksmy', Icon: InstagramIcon },
+  { name: 'Facebook', handle: '/mesurreshks', href: 'https://www.facebook.com/mesurreshks', Icon: FacebookIcon },
+  { name: 'WhatsApp', handle: '+60104368680', href: 'https://wa.me/60104368680', Icon: WhatsappIcon },
+];
 
 type Repo = { slug: string; title: string; description: string; tech: string[]; live: string };
 const REPOS: Repo[] = [
@@ -1127,8 +1159,8 @@ export default function App() {
           shaderPoints: 16,
           curvePoints: 80,
           curveLerp: 0.5,
-          radius1: 4,
-          radius2: 20,
+          radius1: 5,
+          radius2: 30,
           velocityTreshold: 10,
           sleepRadiusX: 100,
           sleepRadiusY: 100,
@@ -1193,6 +1225,7 @@ export default function App() {
         @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
         @import url('https://fonts.cdnfonts.com/css/ngopie');
         @import url('https://fonts.cdnfonts.com/css/anek-odia');
+        @import url('https://fonts.cdnfonts.com/css/double-pivot');
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
@@ -1689,7 +1722,8 @@ export default function App() {
         .conn-card {
           --cr: clamp(1.75rem, 8vw, 4rem); --ci: clamp(1.25rem, 6vw, 3rem); --pad: clamp(0.6rem, 2.4vw, 1rem);
           position: relative; overflow: clip; padding: var(--pad); border-radius: var(--cr);
-          font-size: clamp(0.8rem, min(4.2vw, 2.9dvh), 1.5rem); font-weight: 200; color: #fff;
+          font-family: 'Anek Odia', sans-serif;
+          font-size: clamp(0.8rem, min(4.2vw, 2.9dvh), 1.5rem); font-weight: 300; color: #fff;
           /* same liquid-glass recipe as the info / Behance / GitHub popups */
           background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 60%), rgba(40, 6, 6, 0.2);
           -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
@@ -1709,19 +1743,13 @@ export default function App() {
         }
         .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: 50% 28%; }
         .conn-body { grid-area: stack; z-index: 1; align-self: end; min-height: 0; padding: 1rem clamp(1rem, 5vw, 2rem); }
-        .conn-header { margin: 0; font-size: 1.47em; font-weight: 300; line-height: 1.15; letter-spacing: -0.02em; }
-        .conn-body p { margin-block: 1rem; }
+        .conn-header { margin: 0; font-family: 'Double Pivot', sans-serif; font-size: 1.47em; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+        .conn-body p { margin-block: 0.7em 0.9em; font-size: 0.72em; line-height: 1.5; color: rgba(255, 255, 255, 0.92); }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
         .conn-icon { width: 1em; height: 1em; flex: none; }
-        .conn-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
-        .conn-button {
-          display: flex; align-items: center; gap: 0.5rem; padding: 0.75em 1.25em; border-radius: 5rem;
-          background: #fff; color: #151515; font: inherit; font-weight: 500; text-decoration: none;
-          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .conn-button:hover { transform: scale(1.05); }
-        .conn-button:focus-visible, .conn-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
+        .conn-list { display: flex; flex-direction: column; align-items: flex-start; gap: 0.45em; margin: 0; padding: 0; list-style: none; font-size: 0.8em; }
+        .conn-chips:focus-visible, .conn-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
         .conn-close {
           position: absolute; top: clamp(0.7rem, 3vw, 1.1rem); right: clamp(0.7rem, 3vw, 1.1rem); z-index: 2; display: grid; place-items: center;
           width: clamp(2rem, 7vw, 2.4rem); height: clamp(2rem, 7vw, 2.4rem); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; cursor: pointer; color: #fff;
@@ -1730,7 +1758,7 @@ export default function App() {
           transition: background-color 0.3s ease;
         }
         .conn-close:hover { background: rgba(255, 255, 255, 0.26); }
-        @media (prefers-reduced-motion: reduce) { .connect-dialog[open] .conn-card { animation: none; } .conn-button { transition: none; } }
+        @media (prefers-reduced-motion: reduce) { .connect-dialog[open] .conn-card { animation: none; } }
         /* Behance + GitHub popups use Anek Odia (CV popup keeps its own fonts) */
         .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green * { font-family: 'Anek Odia', sans-serif; }
         @media (min-width: 640px) and (max-width: 1023px) {
@@ -2015,7 +2043,6 @@ export default function App() {
 
       <dialog ref={noticeRef} onCancel={() => setNotice(null)} onClick={(event) => { if (event.target === event.currentTarget) setNotice(null); }} className="connect-dialog" aria-labelledby="notice-title">
         <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
-          <symbol id="icon-plus" viewBox="0 -960 960 960" fill="currentColor"><path d="M453-140v-313H140v-54h313v-313h54v313h313v54H507v313h-54Z" /></symbol>
           <symbol id="icon-check" viewBox="0 -960 960 960" fill="currentColor"><path d="m443-429 169-169-38-39-131 132-57-56-38 38 95 94ZM222-160v-578q0-36.72 24.64-61.36Q271.27-824 308-824h344q36.72 0 61.36 24.64T738-738v578L480-270 222-160Zm54-82 204-87.66L684-242v-496q0-12-10-22t-22-10H308q-12 0-22 10t-10 22v496Zm0-528h408-408Z" /></symbol>
         </svg>
         <div className="conn-card">
@@ -2026,14 +2053,14 @@ export default function App() {
               <h2 id="notice-title" className="conn-header">
                 <span className="conn-chips">Suresh Kaleyannan <svg className="conn-icon" style={{ width: '1.1em', height: '1.1em' }} aria-hidden="true"><use href="#icon-check" /></svg></span>
               </h2>
-              <p>Where today's technology meets tomorrow's imagination.</p>
-              <div className="conn-row">
-                <a className="conn-chips" href={BEHANCE_PROFILE} target="_blank" rel="noopener noreferrer"><BehanceIcon size={20} />Behance</a>
-                <a className="conn-chips" href={GITHUB_PROFILE} target="_blank" rel="noopener noreferrer"><GithubIcon size={20} />GitHub</a>
-                <a className="conn-button" href={BEHANCE_PROFILE} target="_blank" rel="noopener noreferrer">Follow
-                  <svg className="conn-icon" aria-hidden="true"><use href="#icon-plus" /></svg>
-                </a>
-              </div>
+              <p>Crafting responsive, high-performance websites with custom animations, interactive experiences, and modern frontend technologies—turning creative designs into reality.</p>
+              <ul className="conn-list">
+                {CONTACTS.map(({ name, handle, href, Icon }) => (
+                  <li key={name}>
+                    <a className="conn-chips" href={href} target="_blank" rel="noopener noreferrer"><Icon size={20} className="conn-icon" />{name} ({handle})</a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
