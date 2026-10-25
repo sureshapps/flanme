@@ -1762,15 +1762,22 @@ export default function App() {
           .metrics-panel {
             --tr: 15%;
             position: relative; isolation: isolate; padding: 12px; border-radius: 28px;
-            background: rgba(255, 255, 255, 0.07);
-            -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+            /* forest glass: deep green tint, sunlit canopy glow top-right, shaded undergrowth bottom-left */
+            background:
+              radial-gradient(120% 70% at 95% 0%, rgba(190, 242, 100, 0.2), transparent 60%),
+              radial-gradient(110% 80% at 0% 100%, rgba(2, 44, 24, 0.5), transparent 65%),
+              linear-gradient(150deg, rgba(74, 222, 128, 0.16), rgba(16, 90, 56, 0.14) 55%, rgba(4, 36, 22, 0.3)),
+              rgba(6, 42, 28, 0.32);
+            -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+            border: 1px solid rgba(134, 239, 172, 0.34);
             box-shadow:
-              inset 3px 3px 0.5px -3px rgba(255, 255, 255, 0.9),
-              inset -3px -3px 0.5px -3px rgba(255, 255, 255, 0.85),
-              inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.6),
-              inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
-              inset 0 0 3px -1px rgba(0, 0, 0, 0.8),
-              0 18px 44px rgba(0, 0, 0, 0.3);
+              inset 3px 3px 0.5px -3px rgba(220, 255, 232, 0.9),
+              inset -3px -3px 0.5px -3px rgba(180, 250, 205, 0.8),
+              inset 1px 1px 1px -0.5px rgba(200, 255, 220, 0.6),
+              inset -1px -1px 1px -0.5px rgba(150, 240, 185, 0.5),
+              inset 0 0 3px -1px rgba(0, 20, 10, 0.8),
+              0 18px 44px rgba(0, 0, 0, 0.35),
+              0 0 34px rgba(34, 197, 94, 0.14);
             transform-origin: top right;
             transform: translateX(calc(100% + 24px)) scale(0.92);
             opacity: 0; visibility: hidden; pointer-events: none;
@@ -1781,6 +1788,7 @@ export default function App() {
             transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
           }
           .metrics-panel > .fx-layer { display: block; }
+          .metrics-panel > .fx-layer::after { background: linear-gradient(135deg, rgba(205, 255, 220, 0.9) 0%, transparent var(--tr), transparent calc(100% - var(--tr)), rgba(140, 240, 175, 0.8) 100%); }
         }
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
         .widgets-btn.is-open svg { transform: rotate(180deg); }
@@ -1806,6 +1814,21 @@ export default function App() {
           -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
         }
         .ring-btn > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)); }
+        /* info + << buttons: same liquid-glass look as the logo menu button, with a periodic shine sweep */
+        .shine-btn { overflow: hidden; }
+        .shine-btn::after {
+          content: ''; position: absolute; top: -25%; bottom: -25%; left: -60%; width: 45%; z-index: 2; pointer-events: none;
+          background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 75%, transparent 100%);
+          transform: translateX(0) skewX(-18deg); opacity: 0;
+          animation: btn-shine 3.4s ease-in-out infinite;
+        }
+        .widgets-btn.shine-btn::after { animation-delay: 1.4s; }
+        @keyframes btn-shine {
+          0%, 52% { transform: translateX(0) skewX(-18deg); opacity: 0; }
+          58% { opacity: 1; }
+          88% { opacity: 1; }
+          100% { transform: translateX(430%) skewX(-18deg); opacity: 0; }
+        }
         .info-btn { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease; }
         .info-btn:hover { transform: scale(1.06); }
         .info-btn:active { transform: scale(0.95); }
@@ -1960,6 +1983,7 @@ export default function App() {
         }
         @media (prefers-reduced-motion: reduce) {
           .neon-cv { animation: none; filter: drop-shadow(0 0 2px #ffd400) drop-shadow(0 0 6px #ffb000); }
+          .shine-btn::after { animation: none; opacity: 0; }
           .neon-gallery { animation: none; filter: drop-shadow(0 0 2px #a855f7) drop-shadow(0 0 6px #7c3aed); }
           .lb, .lb-panel { animation: none; }
         }
@@ -2293,7 +2317,7 @@ export default function App() {
           aria-expanded={infoOpen}
           aria-controls="info-popup"
           onClick={(event) => { event.stopPropagation(); setWidgetsOpen(false); setInfoOpen((open) => !open); }}
-          className={`glass ring-btn info-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
+          className={`glass shine-btn info-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
         >
           <span className="fx-layer" aria-hidden="true" />
@@ -2308,7 +2332,7 @@ export default function App() {
           aria-expanded={widgetsOpen}
           aria-controls="widgets-panel"
           onClick={(event) => { event.stopPropagation(); setInfoOpen(false); setWidgetsOpen((open) => !open); }}
-          className={`glass ring-btn info-btn widgets-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${widgetsOpen ? 'is-open' : ''}`}
+          className={`glass shine-btn info-btn widgets-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${widgetsOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
         >
           <span className="fx-layer" aria-hidden="true" />
