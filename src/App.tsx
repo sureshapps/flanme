@@ -1728,22 +1728,14 @@ export default function App() {
           .metrics-panel {
             --tr: 15%;
             position: relative; isolation: isolate; padding: 12px; border-radius: 28px;
-            /* forest glass: deep green tint, sunlit canopy glow top-right, shaded undergrowth bottom-left */
-            background:
-              radial-gradient(120% 70% at 95% 0%, rgba(190, 242, 100, 0.2), transparent 60%),
-              radial-gradient(110% 80% at 0% 100%, rgba(2, 44, 24, 0.5), transparent 65%),
-              linear-gradient(150deg, rgba(74, 222, 128, 0.16), rgba(16, 90, 56, 0.14) 55%, rgba(4, 36, 22, 0.3)),
-              rgba(6, 42, 28, 0.32);
-            -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
-            border: 1px solid rgba(134, 239, 172, 0.34);
+            /* neutral frosted glass: no colour tint */
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 60%), rgba(255, 255, 255, 0.08);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+            border: 1px solid rgba(255, 255, 255, 0.35);
             box-shadow:
-              inset 3px 3px 0.5px -3px rgba(220, 255, 232, 0.9),
-              inset -3px -3px 0.5px -3px rgba(180, 250, 205, 0.8),
-              inset 1px 1px 1px -0.5px rgba(200, 255, 220, 0.6),
-              inset -1px -1px 1px -0.5px rgba(150, 240, 185, 0.5),
-              inset 0 0 3px -1px rgba(0, 20, 10, 0.8),
-              0 18px 44px rgba(0, 0, 0, 0.35),
-              0 0 34px rgba(34, 197, 94, 0.14);
+              inset 1px 1px 1px rgba(255, 255, 255, 0.5),
+              inset -1px -1px 1px rgba(255, 255, 255, 0.2),
+              0 18px 44px rgba(0, 0, 0, 0.3);
             transform-origin: top right;
             transform: translateX(calc(100% + 24px)) scale(0.92);
             opacity: 0; visibility: hidden; pointer-events: none;
@@ -1754,7 +1746,7 @@ export default function App() {
             transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
           }
           .metrics-panel > .fx-layer { display: block; }
-          .metrics-panel > .fx-layer::after { background: linear-gradient(135deg, rgba(205, 255, 220, 0.9) 0%, transparent var(--tr), transparent calc(100% - var(--tr)), rgba(140, 240, 175, 0.8) 100%); }
+          .metrics-panel > .fx-layer::after { background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, transparent var(--tr), transparent calc(100% - var(--tr)), rgba(255, 255, 255, 0.6) 100%); }
         }
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
         .widgets-btn.is-open svg { transform: rotate(180deg); }
