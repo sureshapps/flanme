@@ -6,10 +6,6 @@ const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/head
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
 const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const SIGNATURE = '/signature.png';
-// how far the robot trails the pointer (px); raise to keep it further from links
-const FOLLOW_GAP_X = 95;
-const FOLLOW_GAP_Y = 105;
-const FOLLOW_GAP_TOUCH = 115;
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 // cover photo for the Jom Connect card; swap for your own portrait
 const CONNECT_COVER = 'https://images.unsplash.com/photo-1506366197612-8acc64095e53?q=80&w=480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
@@ -492,43 +488,14 @@ function RobotCard() {
       target.x = clamp((clientX - (rect.left + rect.width / 2)) / (rect.width / 2));
       target.y = clamp((clientY - (rect.top + rect.height / 2)) / (rect.height / 2));
     };
-    // follow the pointer: trails behind the mouse arrow, or sits above the finger on touch (skipped for reduced motion)
-    const follow = { x: 0, y: 0 };
-    let cursorPt: { x: number; y: number; touch: boolean } | null = null;
-    const onMove = (event: PointerEvent) => {
-      updateTarget(event.clientX, event.clientY);
-      if (!reduced) cursorPt = { x: event.clientX, y: event.clientY, touch: event.pointerType !== 'mouse' };
-    };
-    const onLeave = () => { target.x = 0; target.y = 0; cursorPt = null; };
+    // the robot floats in place next to the button; only its eyes glance toward the pointer
+    const onMove = (event: PointerEvent) => updateTarget(event.clientX, event.clientY);
+    const onLeave = () => { target.x = 0; target.y = 0; };
 
     const draw = () => {
       if (!reduced) time += 0.05;
       mouse.x += (target.x - mouse.x) * 0.1;
       mouse.y += (target.y - mouse.y) * 0.1;
-
-      if (card) {
-        const r = card.getBoundingClientRect();
-        const homeX = r.left + r.width / 2 - follow.x;
-        const homeY = r.top + r.height / 2 - follow.y;
-        let tx = 0;
-        let ty = 0;
-        if (cursorPt) {
-          const onRobot = Math.hypot(cursorPt.x - (r.left + r.width / 2), cursorPt.y - (r.top + r.height / 2)) < r.width * 0.3;
-          if (onRobot) {
-            // pointer is on the robot: stay put so it can be clicked
-            tx = follow.x;
-            ty = follow.y;
-          } else {
-            const px = Math.min(Math.max(cursorPt.x + (cursorPt.touch ? 0 : FOLLOW_GAP_X), 60), window.innerWidth - 60);
-            const py = Math.min(Math.max(cursorPt.y + (cursorPt.touch ? -FOLLOW_GAP_TOUCH : FOLLOW_GAP_Y), 60), window.innerHeight - 60);
-            tx = px - homeX;
-            ty = py - homeY;
-          }
-        }
-        follow.x += (tx - follow.x) * 0.08;
-        follow.y += (ty - follow.y) * 0.08;
-        card.style.transform = `translate(${follow.x}px, ${follow.y}px)`;
-      }
 
       const cx = W / 2;
       const cy = H / 2 + 20;
@@ -820,7 +787,6 @@ function RobotCard() {
       document.documentElement.removeEventListener('mouseleave', onLeave);
       window.removeEventListener('blur', onLeave);
       window.removeEventListener('click', onWindowClick);
-      card.style.transform = '';
       timers.forEach((id) => window.clearTimeout(id));
       fx.replaceChildren();
     };
@@ -1721,23 +1687,26 @@ export default function App() {
         .connect-dialog[open] .conn-card { animation: conn-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
         @keyframes conn-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
         .conn-card {
-          position: relative; overflow: clip; padding: 1rem; border-radius: 4rem;
-          font-size: clamp(1rem, 4.4vw, 1.5rem); font-weight: 200; color: #e5e5e5;
-          background: #35353566;
-          box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55, 0 24px 70px rgba(0, 0, 0, 0.5);
-          -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+          --cr: clamp(1.75rem, 8vw, 4rem); --ci: clamp(1.25rem, 6vw, 3rem);
+          position: relative; overflow: clip; padding: clamp(0.6rem, 2.4vw, 1rem); border-radius: var(--cr);
+          font-size: clamp(0.8rem, min(4.2vw, 4dvh), 1.5rem); font-weight: 200; color: #fff;
+          /* same liquid-glass recipe as the info / Behance / GitHub popups */
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 60%), rgba(40, 6, 6, 0.2);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4);
         }
         .conn-inner {
-          position: relative; display: grid; grid-template-areas: "stack"; overflow: clip; border-radius: 3rem;
-          box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55;
+          position: relative; display: grid; grid-template-areas: "stack"; overflow: clip; border-radius: var(--ci);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), inset -1px -1px 1px rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.12);
         }
         .conn-inner::after {
-          content: ''; position: absolute; inset: 0; border-radius: 3rem; pointer-events: none;
+          content: ''; position: absolute; inset: 0; border-radius: var(--ci); pointer-events: none;
           -webkit-backdrop-filter: blur(100px); backdrop-filter: blur(100px);
           -webkit-mask: linear-gradient(-14deg, black 30%, transparent 66%); mask: linear-gradient(-14deg, black 30%, transparent 66%);
         }
-        .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 22em; object-fit: cover; }
-        .conn-body { grid-area: stack; z-index: 1; margin-top: auto; padding: 1rem 2rem; }
+        .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: min(22em, 52dvh); object-fit: cover; }
+        .conn-body { grid-area: stack; z-index: 1; margin-top: auto; padding: 1rem clamp(1rem, 5vw, 2rem); }
         .conn-header { margin: 0; font-size: 1.47em; font-weight: 300; line-height: 1.15; letter-spacing: -0.02em; }
         .conn-body p { margin-block: 1rem; }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
@@ -1752,12 +1721,14 @@ export default function App() {
         .conn-button:hover { transform: scale(1.05); }
         .conn-button:focus-visible, .conn-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
         .conn-close {
-          position: absolute; top: 1.1rem; right: 1.1rem; z-index: 2; display: grid; place-items: center;
-          width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; cursor: pointer; color: #fff;
-          background: rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+          position: absolute; top: clamp(0.7rem, 3vw, 1.1rem); right: clamp(0.7rem, 3vw, 1.1rem); z-index: 2; display: grid; place-items: center;
+          width: clamp(2rem, 7vw, 2.4rem); height: clamp(2rem, 7vw, 2.4rem); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; cursor: pointer; color: #fff;
+          background: rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4);
           transition: background-color 0.3s ease;
         }
-        .conn-close:hover { background: rgba(0, 0, 0, 0.55); }
+        .conn-close:hover { background: rgba(255, 255, 255, 0.26); }
+        @media (max-height: 520px) { .connect-dialog { overflow-y: auto; } .conn-cover { min-height: 14em; } }
         @media (prefers-reduced-motion: reduce) { .connect-dialog[open] .conn-card { animation: none; } .conn-button { transition: none; } }
         /* Behance + GitHub popups use Anek Odia (CV popup keeps its own fonts) */
         .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green * { font-family: 'Anek Odia', sans-serif; }
@@ -2010,9 +1981,6 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
         <Metrics open={widgetsOpen} />
-        <div className="hero-rise pointer-events-none absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(162px,18.9vw,324px)]" style={{ animationDelay: '0.9s' }}>
-          <RobotCard />
-        </div>
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
             <span className="title-code block">Code</span>
@@ -2024,7 +1992,7 @@ export default function App() {
             <p className="sig-line mt-3 text-[10px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
             <p className="sig-line mt-1 text-[8px] font-normal tracking-[0.16em] text-white/90 sm:text-xs">DevOps - MY</p>
           </div>
-          <div className="hero-rise inline-block" style={{ animationDelay: '0.7s' }}>
+          <div className="hero-rise relative inline-block" style={{ animationDelay: '0.7s' }}>
             <button
               type="button"
               onClick={() => openNotice('connect')}
@@ -2037,6 +2005,9 @@ export default function App() {
                 <Flame className="neon-fire" strokeWidth={1.8} />
               </span>
             </button>
+            <div className="pointer-events-none absolute left-full top-1/2 -mt-2 w-[100px] -translate-y-1/2 sm:w-[120px]">
+              <RobotCard />
+            </div>
           </div>
         </section>
       </main>
