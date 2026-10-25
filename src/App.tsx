@@ -1241,6 +1241,7 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
+        @font-face { font-family: 'SuperGuardianBackup'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://fonts.cdnfonts.com/s/106144/SuperGuardian-MV1Ap.woff') format('woff'); }
         .title-code {
           font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
           font-weight: 400;
@@ -1755,7 +1756,8 @@ export default function App() {
         }
         .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: 50% 28%; }
         .conn-body { grid-area: stack; z-index: 1; align-self: end; min-height: 0; padding: 1rem clamp(1rem, 5vw, 2rem); }
-        .conn-header { margin: 0; font-family: 'Super Guardian', sans-serif; font-size: 1.47em; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+        .conn-header, .conn-header .conn-chips { font-family: 'Super Guardian', 'SuperGuardianBackup', sans-serif !important; }
+        .conn-header { margin: 0; font-size: 1.47em; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
         .conn-body p { margin-block: 0.7em 0.9em; font-size: 0.72em; line-height: 1.5; color: rgba(255, 255, 255, 0.92); }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
