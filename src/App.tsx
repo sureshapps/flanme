@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, LayoutGrid, Briefcase, Download, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -199,7 +199,6 @@ const REPOS: Repo[] = [
 ];
 
 const NAV_ITEMS: { label: string; Icon: LucideIcon }[] = [
-  
   { label: 'Case Records', Icon: Briefcase },
   { label: 'CV', Icon: FileText },
   { label: 'GitHub', Icon: Code2 },
@@ -2396,7 +2395,7 @@ export default function App() {
         <div
           ref={navRef}
           className="glass nav-drop pointer-events-auto relative h-14 overflow-hidden text-white transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{ width: menuOpen ? 'min(300px, calc(100vw - 2.5rem))' : '56px' }}
+          style={{ width: menuOpen ? 'min(260px, calc(100vw - 2.5rem))' : '56px' }}
         >
           <span className="fx-layer" aria-hidden="true" />
           <button
