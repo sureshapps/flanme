@@ -1146,6 +1146,11 @@ export default function App() {
     let cancelled = false;
     let cursor: { dispose?: () => void } | undefined;
     const existing = new Set(Array.from(el.querySelectorAll('canvas')));
+    // the trail only shows while the pointer is over the page (otherwise the library wanders on its own)
+    const show = () => el.classList.add('neon-on');
+    const hide = () => el.classList.remove('neon-on');
+    el.addEventListener('pointermove', show);
+    el.addEventListener('pointerleave', hide);
     (async () => {
       try {
         // loaded from the CDN on demand, so no npm package is needed
@@ -1170,6 +1175,9 @@ export default function App() {
     })();
     return () => {
       cancelled = true;
+      el.removeEventListener('pointermove', show);
+      el.removeEventListener('pointerleave', hide);
+      hide();
       cursor?.dispose?.();
       el.querySelectorAll('canvas').forEach((canvas) => { if (!existing.has(canvas)) canvas.remove(); });
     };
@@ -1696,8 +1704,14 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
-        /* neon cursor trail: full-screen overlay that never blocks clicks */
-        .neon-host > canvas { position: fixed; inset: 0; width: 100% !important; height: 100% !important; z-index: 90; pointer-events: none; }
+        /* neon cursor trail: the library paints an opaque black canvas with a faint purple haze, so
+           contrast() crushes the haze to black and screen-blend makes black transparent: only the trail remains */
+        .neon-host > canvas {
+          position: fixed; inset: 0; width: 100% !important; height: 100% !important; z-index: 90; pointer-events: none;
+          mix-blend-mode: screen; filter: contrast(2);
+          opacity: 0; transition: opacity 0.35s ease;
+        }
+        .neon-host.neon-on > canvas { opacity: 1; }
         /* Jom Connect card popup */
         .connect-dialog {
           width: min(30rem, calc(100vw - 2.5rem)); max-width: none; max-height: calc(100dvh - 2rem);
