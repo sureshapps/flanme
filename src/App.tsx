@@ -1487,7 +1487,7 @@ export default function App() {
         }
         .title span { position: relative; font-family: 'Vanilla Creamy', cursive; font-size: 1.9em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
         .title span:before {
-          content: ''; position: absolute; top: 50%; left: 63%; translate: -50% 0;
+          content: ''; position: absolute; top: 70%; left: 63%; translate: -50% 0;
           width: 250%; aspect-ratio: 1 / 1; z-index: -1;
           border: 0.9em solid #eb0027; border-radius: 50%; opacity: 1;
           transition: --mask-progress 0.5s; transition-delay: 0.3s;
