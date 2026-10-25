@@ -1127,8 +1127,8 @@ export default function App() {
           shaderPoints: 16,
           curvePoints: 80,
           curveLerp: 0.5,
-          radius1: 2,
-          radius2: 10,
+          radius1: 5,
+          radius2: 30,
           velocityTreshold: 10,
           sleepRadiusX: 100,
           sleepRadiusY: 100,
@@ -1687,9 +1687,9 @@ export default function App() {
         .connect-dialog[open] .conn-card { animation: conn-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
         @keyframes conn-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
         .conn-card {
-          --cr: clamp(1.75rem, 8vw, 4rem); --ci: clamp(1.25rem, 6vw, 3rem);
-          position: relative; overflow: clip; padding: clamp(0.6rem, 2.4vw, 1rem); border-radius: var(--cr);
-          font-size: clamp(0.8rem, min(4.2vw, 4dvh), 1.5rem); font-weight: 200; color: #fff;
+          --cr: clamp(1.75rem, 8vw, 4rem); --ci: clamp(1.25rem, 6vw, 3rem); --pad: clamp(0.6rem, 2.4vw, 1rem);
+          position: relative; overflow: clip; padding: var(--pad); border-radius: var(--cr);
+          font-size: clamp(0.8rem, min(4.2vw, 2.9dvh), 1.5rem); font-weight: 200; color: #fff;
           /* same liquid-glass recipe as the info / Behance / GitHub popups */
           background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 60%), rgba(40, 6, 6, 0.2);
           -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
@@ -1697,7 +1697,9 @@ export default function App() {
           box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4);
         }
         .conn-inner {
-          position: relative; display: grid; grid-template-areas: "stack"; overflow: clip; border-radius: var(--ci);
+          position: relative; display: grid; grid-template-areas: "stack"; grid-template-rows: minmax(0, 1fr); overflow: clip; border-radius: var(--ci);
+          /* portrait (2:3) when there is room, otherwise capped so the whole card always fits the screen */
+          height: min(calc((min(30rem, 100vw - 2.5rem) - 2 * var(--pad)) * 1.5), calc(100dvh - 2rem - 2 * var(--pad) - 2px));
           box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), inset -1px -1px 1px rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.12);
         }
         .conn-inner::after {
@@ -1705,8 +1707,8 @@ export default function App() {
           -webkit-backdrop-filter: blur(100px); backdrop-filter: blur(100px);
           -webkit-mask: linear-gradient(-14deg, black 30%, transparent 66%); mask: linear-gradient(-14deg, black 30%, transparent 66%);
         }
-        .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: min(22em, 52dvh); object-fit: cover; }
-        .conn-body { grid-area: stack; z-index: 1; margin-top: auto; padding: 1rem clamp(1rem, 5vw, 2rem); }
+        .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: 50% 28%; }
+        .conn-body { grid-area: stack; z-index: 1; align-self: end; min-height: 0; padding: 1rem clamp(1rem, 5vw, 2rem); }
         .conn-header { margin: 0; font-size: 1.47em; font-weight: 300; line-height: 1.15; letter-spacing: -0.02em; }
         .conn-body p { margin-block: 1rem; }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
@@ -1728,7 +1730,6 @@ export default function App() {
           transition: background-color 0.3s ease;
         }
         .conn-close:hover { background: rgba(255, 255, 255, 0.26); }
-        @media (max-height: 520px) { .connect-dialog { overflow-y: auto; } .conn-cover { min-height: 14em; } }
         @media (prefers-reduced-motion: reduce) { .connect-dialog[open] .conn-card { animation: none; } .conn-button { transition: none; } }
         /* Behance + GitHub popups use Anek Odia (CV popup keeps its own fonts) */
         .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green * { font-family: 'Anek Odia', sans-serif; }
