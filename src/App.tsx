@@ -150,6 +150,12 @@ const GALLERY_SOURCES: { src: string; title: string }[] = [
   { src: 'https://picsum.photos/id/1020/900/700.webp', title: 'Brown bear' },
   { src: 'https://picsum.photos/id/1043/900/700.jpg', title: 'Forest road' },
   { src: 'https://youtu.be/YE7VzlLtp-4', title: 'Big Buck Bunny (short link)' },
+  { src: 'https://picsum.photos/id/1025/900/700.jpg', title: 'Pug portrait' },
+  { src: 'https://vimeo.com/76979871', title: 'Vimeo player demo' },
+  { src: 'https://picsum.photos/id/1035/900/700.jpg', title: 'Waterfall' },
+  { src: 'https://picsum.photos/id/1020/900/700.webp', title: 'Brown bear' },
+  { src: 'https://picsum.photos/id/1043/900/700.jpg', title: 'Forest road' },
+  { src: 'https://youtu.be/YE7VzlLtp-4', title: 'Big Buck Bunny (short link)' },
 ];
 const GALLERY = GALLERY_SOURCES.map((item) => ({ ...item, media: parseMedia(item.src) }));
 type GalleryEntry = (typeof GALLERY)[number];
