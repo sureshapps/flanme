@@ -1549,14 +1549,22 @@ export default function App() {
           .neon-cv { animation: none; filter: drop-shadow(0 0 2px #ffd400) drop-shadow(0 0 6px #ffb000); }
         }
         /* GitHub showcase popup (glassmorphic, same look as the showcase page) */
-        .case-pop.gh-pop {
-          width: min(1240px, calc(100vw - 2.5rem)); height: min(88dvh, 860px);
-          background:
-            radial-gradient(circle at 8% 0%, rgba(122, 92, 255, 0.32), transparent 22rem),
-            radial-gradient(circle at 100% 12%, rgba(0, 198, 255, 0.2), transparent 20rem),
-            radial-gradient(circle at 60% 100%, rgba(255, 79, 187, 0.16), transparent 22rem),
-            rgba(9, 11, 22, 0.55);
-          border-color: rgba(255, 255, 255, 0.14);
+        .case-pop.gh-pop { width: min(1240px, calc(100vw - 2.5rem)); height: min(88dvh, 860px); }
+        /* minimal tint per popup, matching its nav icon glow */
+        .case-pop.pop-pink {
+          background: linear-gradient(145deg, rgba(255, 92, 207, 0.1), rgba(255, 31, 168, 0.03) 60%), rgba(40, 6, 20, 0.2);
+          border-color: rgba(255, 123, 213, 0.38);
+          box-shadow: inset 1px 1px 1px rgba(255, 210, 240, 0.45), inset -1px -1px 1px rgba(255, 123, 213, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4), 0 0 38px rgba(255, 31, 168, 0.12);
+        }
+        .case-pop.pop-yellow {
+          background: linear-gradient(145deg, rgba(255, 214, 0, 0.09), rgba(255, 176, 0, 0.03) 60%), rgba(40, 24, 4, 0.2);
+          border-color: rgba(255, 225, 77, 0.38);
+          box-shadow: inset 1px 1px 1px rgba(255, 244, 176, 0.45), inset -1px -1px 1px rgba(255, 225, 77, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4), 0 0 38px rgba(255, 176, 0, 0.12);
+        }
+        .case-pop.pop-green {
+          background: linear-gradient(145deg, rgba(0, 255, 136, 0.09), rgba(0, 204, 106, 0.03) 60%), rgba(4, 22, 14, 0.3);
+          border-color: rgba(0, 255, 136, 0.34);
+          box-shadow: inset 1px 1px 1px rgba(185, 255, 224, 0.45), inset -1px -1px 1px rgba(0, 255, 136, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4), 0 0 38px rgba(0, 255, 136, 0.12);
         }
         .gh-title { font-size: clamp(20px, 3.2vw, 34px); font-weight: 800; letter-spacing: -0.06em; line-height: 1; }
         .gh-title span { color: transparent; background: linear-gradient(100deg, #ffffff, #a58aff 45%, #67dcff); -webkit-background-clip: text; background-clip: text; }
@@ -1590,29 +1598,36 @@ export default function App() {
           border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 9px; background: rgba(8, 10, 21, 0.55);
           -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; font-size: 10px; font-weight: 800;
         }
-        /* forest blur glass: the repo image, blurred, under a deep-green tint */
+        /* transparent liquid glass: dimmed blurred repo image behind a clear, light-catching surface */
         .gh-body {
           position: relative; isolation: isolate; overflow: hidden; display: flex; flex: 1; flex-direction: column; padding: 16px;
-          background: linear-gradient(160deg, rgba(34, 110, 66, 0.55), rgba(6, 38, 24, 0.82));
-          border-top: 1px solid rgba(160, 255, 200, 0.28);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -18px 40px rgba(0, 20, 10, 0.35);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.08));
+          border-top: 1px solid rgba(255, 255, 255, 0.35);
+          box-shadow:
+            inset 2px 2px 0.5px -2px rgba(255, 255, 255, 0.9),
+            inset -2px -2px 0.5px -2px rgba(255, 255, 255, 0.7),
+            inset 0 0 16px rgba(255, 255, 255, 0.06);
         }
         .gh-body::before {
-          content: ''; position: absolute; inset: -24px; z-index: -1;
+          content: ''; position: absolute; inset: -24px; z-index: -2;
           background: var(--img) center / cover no-repeat;
-          filter: blur(22px) saturate(1.4); opacity: 0.55;
+          filter: blur(18px) saturate(1.6) brightness(0.42);
         }
-        .gh-name { color: #f2fff7; margin-bottom: 8px; font-size: 16px; line-height: 1.25; letter-spacing: -0.04em; font-weight: 700; }
-        .gh-desc { min-height: 60px; color: #c4dccb; font-size: 12.5px; line-height: 1.6; }
+        .gh-body::after {
+          content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+          background: linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0%, transparent 28%, transparent 72%, rgba(255, 255, 255, 0.1) 100%);
+        }
+        .gh-name { color: #fff; margin-bottom: 8px; font-size: 16px; line-height: 1.25; letter-spacing: -0.04em; font-weight: 700; }
+        .gh-desc { min-height: 60px; color: rgba(255, 255, 255, 0.78); font-size: 12.5px; line-height: 1.6; }
         .gh-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
-        .gh-tag { padding: 5px 9px; border: 1px solid rgba(150, 255, 190, 0.3); border-radius: 999px; background: rgba(120, 255, 170, 0.1); color: #c6f7d9; font-size: 10px; font-weight: 700; }
+        .gh-tag { padding: 5px 9px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 999px; background: rgba(255, 255, 255, 0.1); color: #fff; font-size: 10px; font-weight: 700; }
         .gh-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
-        .gh-src { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8fb59c; font-size: 10.5px; }
+        .gh-src { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.55); font-size: 10.5px; }
         .gh-live {
-          flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid rgba(150, 255, 190, 0.34); border-radius: 10px;
-          background: rgba(120, 255, 170, 0.12); color: #c6ffdc; font-size: 11px; font-weight: 700; text-decoration: none; transition: 0.25s ease;
+          flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 10px;
+          background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 11px; font-weight: 700; text-decoration: none; transition: 0.25s ease;
         }
-        .gh-live:hover { background: rgba(120, 255, 170, 0.24); color: #fff; transform: translateX(2px); }
+        .gh-live:hover { background: rgba(255, 255, 255, 0.26); color: #fff; transform: translateX(2px); }
         @media (min-width: 640px) and (max-width: 1179px) {
           .gh-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
@@ -1817,7 +1832,7 @@ export default function App() {
         </div>
       </div>
 
-      <div ref={casePopRef} id="case-popup" role="dialog" aria-label="Behance portfolio" aria-hidden={!caseOpen} className={`case-pop ${caseOpen ? 'is-open' : ''}`}>
+      <div ref={casePopRef} id="case-popup" role="dialog" aria-label="Behance portfolio" aria-hidden={!caseOpen} className={`case-pop pop-pink ${caseOpen ? 'is-open' : ''}`}>
         <div className="case-head">
           <h2 className="case-title">Behance Portfolio</h2>
           <button type="button" className="case-close" aria-label="Close portfolio" tabIndex={caseOpen ? 0 : -1} onClick={() => setCaseOpen(false)}>
@@ -1849,7 +1864,7 @@ export default function App() {
         <p className="case-foot">Made with the Behance API</p>
       </div>
 
-      <div ref={cvPopRef} id="cv-popup" role="dialog" aria-label="Curriculum vitae" aria-hidden={!cvOpen} className={`case-pop cv-pop ${cvOpen ? 'is-open' : ''}`}>
+      <div ref={cvPopRef} id="cv-popup" role="dialog" aria-label="Curriculum vitae" aria-hidden={!cvOpen} className={`case-pop cv-pop pop-yellow ${cvOpen ? 'is-open' : ''}`}>
         <div className="case-head">
           <h2 className="case-title">Curriculum Vitae</h2>
           <div className="cv-head-actions">
@@ -1873,7 +1888,7 @@ export default function App() {
         <p className="case-foot">Suresh Kaleyannan · DevOps</p>
       </div>
 
-      <div ref={ghPopRef} id="github-popup" role="dialog" aria-label="GitHub showcase" aria-hidden={!ghOpen} className={`case-pop gh-pop ${ghOpen ? 'is-open' : ''}`}>
+      <div ref={ghPopRef} id="github-popup" role="dialog" aria-label="GitHub showcase" aria-hidden={!ghOpen} className={`case-pop gh-pop pop-green ${ghOpen ? 'is-open' : ''}`}>
         <div className="case-head">
           <h2 className="gh-title">Ideas worth <span>exploring.</span></h2>
           <button type="button" className="case-close" aria-label="Close GitHub showcase" tabIndex={ghOpen ? 0 : -1} onClick={() => setGhOpen(false)}>
