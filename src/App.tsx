@@ -1247,6 +1247,34 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const phone = useMediaQuery('(max-width: 639px)');
   const wide = useMediaQuery('(min-width: 1024px)');
+
+  // track the real visible height (mobile browser bars change it, which left a white strip under the page)
+  // and block pinch / gesture zoom (double-tap zoom is off through touch-action: manipulation)
+  useEffect(() => {
+    const setHeight = () => document.documentElement.style.setProperty('--app-h', `${window.innerHeight}px`);
+    setHeight();
+    const stop = (event: Event) => event.preventDefault();
+    const multiTouch = (event: TouchEvent) => { if (event.touches.length > 1) event.preventDefault(); };
+    const ctrlWheel = (event: WheelEvent) => { if (event.ctrlKey) event.preventDefault(); };
+    window.addEventListener('resize', setHeight);
+    window.addEventListener('orientationchange', setHeight);
+    window.visualViewport?.addEventListener('resize', setHeight);
+    document.addEventListener('gesturestart', stop);
+    document.addEventListener('gesturechange', stop);
+    document.addEventListener('gestureend', stop);
+    document.addEventListener('touchmove', multiTouch, { passive: false });
+    document.addEventListener('wheel', ctrlWheel, { passive: false });
+    return () => {
+      window.removeEventListener('resize', setHeight);
+      window.removeEventListener('orientationchange', setHeight);
+      window.visualViewport?.removeEventListener('resize', setHeight);
+      document.removeEventListener('gesturestart', stop);
+      document.removeEventListener('gesturechange', stop);
+      document.removeEventListener('gestureend', stop);
+      document.removeEventListener('touchmove', multiTouch);
+      document.removeEventListener('wheel', ctrlWheel);
+    };
+  }, []);
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [widgetsOpen, setWidgetsOpen] = useState(false);
@@ -1660,7 +1688,7 @@ export default function App() {
   }
 
   return (
-    <div ref={appRef} className="neon-host min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+    <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
         @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
@@ -1693,6 +1721,11 @@ export default function App() {
           .title-code { font-size: 22vw; }
           .title-sub { font-size: 9vw; }
         }
+        /* page never scrolls or zooms; only the widget panel scrolls */
+        html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; background: #820d16; }
+        html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body { position: fixed; inset: 0; -webkit-tap-highlight-color: transparent; }
+        .app-root { position: fixed; inset: 0; width: 100%; height: var(--app-h, 100dvh); overflow: hidden; background: #820d16; }
         /* Liquid-glass surface (shared by the button and the nav) */
         .glass {
           --r: 9999px; --tr: 15%;
@@ -1905,7 +1938,11 @@ export default function App() {
           .metrics-panel {
             --tr: 15%;
             position: relative; isolation: isolate; padding: 12px;
-            border-radius: 24px; overflow: hidden; color: #fff;
+            border-radius: 24px; overflow-x: hidden; overflow-y: auto; color: #fff;
+            /* only this panel scrolls: it stops at the bottom of the screen and keeps its own scroll */
+            max-height: calc(var(--app-h, 100dvh) - 148px - 16px);
+            overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
             /* same glass recipe as .info-pop */
             background: rgba(40, 6, 6, 0.18);
             -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
@@ -1923,6 +1960,7 @@ export default function App() {
             transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
           }
           .metrics-panel > .fx-layer { display: none; }
+          .metrics-panel::-webkit-scrollbar { display: none; }
         }
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
         .widgets-btn.is-open svg { transform: rotate(180deg); }
@@ -2598,7 +2636,7 @@ export default function App() {
         </div>
       )}
 
-      <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
+      <main id="module" className="relative h-full touch-none overflow-hidden">
         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" style={{ opacity: 0.1 }} aria-hidden="true">
           <defs>
             <pattern ref={patternRef} id="hero-grid" width="48" height="48" patternUnits="userSpaceOnUse">
