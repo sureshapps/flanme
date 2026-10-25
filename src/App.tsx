@@ -207,6 +207,7 @@ function ClockCard() {
   const hours = String(now.getHours() % 12 || 12);
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const label = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const isAm = now.getHours() < 12;
   return (
     <div className="glass metric-card info-card clock-card info-extra" style={{ '--r': '12px' } as CSSProperties} role="img" aria-label={`Time ${label}`}>
       <span className="fx-layer" aria-hidden="true" />
@@ -215,6 +216,10 @@ function ClockCard() {
       <span className="clock-colon" aria-hidden="true"><i /><i /></span>
       <SevenSeg digit={minutes[0]} />
       <SevenSeg digit={minutes[1]} />
+      <span className="clock-ampm" aria-hidden="true">
+        <b className={isAm ? 'is-on' : ''}>AM</b>
+        <b className={isAm ? '' : 'is-on'}>PM</b>
+      </span>
     </div>
   );
 }
@@ -948,6 +953,8 @@ export default function App() {
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
         @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
         .title-code {
           font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
           font-weight: 400;
@@ -1097,13 +1104,16 @@ export default function App() {
         .metrics-scale { transform-origin: bottom right; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
-        .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.4em; padding: 0.8em 1.2em; }
-        .seg-digit { width: 1.5em; height: 2.55em; flex: none; filter: drop-shadow(0 0 2px rgba(255, 90, 90, 0.7)); }
-        .seg-on { fill: #ffd6d6; }
-        .seg-off { fill: rgba(70, 0, 0, 0.3); }
-        .clock-colon { display: flex; flex-direction: column; gap: 0.6em; }
-        .clock-colon i { width: 0.34em; height: 0.34em; border-radius: 50%; background: #ffd6d6; box-shadow: 0 0 4px rgba(255, 90, 90, 0.9); animation: colon-blink 1s steps(1) infinite; }
+        .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.5em; padding: 0.95em 1.4em; }
+        .seg-digit { width: 1.95em; height: 3.3em; flex: none; filter: drop-shadow(0 0 3px rgba(182, 255, 46, 0.6)); }
+        .seg-on { fill: #b6ff2e; }
+        .seg-off { fill: rgba(30, 60, 0, 0.3); }
+        .clock-colon { display: flex; flex-direction: column; gap: 0.8em; }
+        .clock-colon i { width: 0.42em; height: 0.42em; border-radius: 50%; background: #b6ff2e; box-shadow: 0 0 5px rgba(182, 255, 46, 0.95); animation: colon-blink 1s steps(1) infinite; }
         @keyframes colon-blink { 50% { opacity: 0.2; } }
+        .clock-ampm { display: flex; flex-direction: column; justify-content: center; gap: 0.35em; margin-left: 0.15em; }
+        .clock-ampm b { font-size: 1.05em; font-weight: 700; letter-spacing: 0.08em; line-height: 1; color: rgba(30, 60, 0, 0.45); }
+        .clock-ampm b.is-on { color: #b6ff2e; text-shadow: 0 0 6px rgba(182, 255, 46, 0.9); }
         .clock-card .fx-layer::after, .cal-card .fx-layer::after, .wx-card .fx-layer::after { padding: 5px; filter: blur(4px); }
         .wx-card, .cal-card { flex-direction: column; padding: 0.95em 1.05em; }
         .wx-card { justify-content: space-between; gap: 0.7em; }
@@ -1232,6 +1242,24 @@ export default function App() {
         .chart-bar { transform-origin: bottom; animation: bar-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
         @keyframes bar-grow { from { transform: scaleY(0); } }
         @media (prefers-reduced-motion: reduce) { .ring-fill, .chart-line, .chart-area, .chart-bar { animation: none; } }
+        /* "the digital signature of Suresh" tagline */
+        @property --mask-progress { syntax: '<percentage>'; inherits: false; initial-value: 12%; }
+        .title {
+          overflow: hidden; padding: 0.9em 0.2em; color: #fff;
+          font-family: 'Poppins', sans-serif; font-weight: 300; letter-spacing: 0.02em;
+          font-size: clamp(0.72rem, 0.6vw + 0.5rem, 0.98rem);
+        }
+        .title span { position: relative; font-family: 'Playwrite IS', cursive; font-size: 1.4em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+        .title span:before {
+          content: ''; position: absolute; top: 50%; left: 63%; translate: -50% 0;
+          width: 250%; aspect-ratio: 1 / 1; z-index: -1;
+          border: 0.9em solid #a8de97; border-radius: 50%; opacity: 0.6;
+          transition: --mask-progress 0.5s; transition-delay: 0.3s;
+          -webkit-mask-image: conic-gradient(from -27deg, #000 var(--mask-progress), #0000 0);
+          mask-image: conic-gradient(from -27deg, #000 var(--mask-progress), #0000 0);
+        }
+        @starting-style { .title span:before { --mask-progress: 0%; } }
+        @media (max-width: 768px) { .title span:before { border-width: 0.6em; } }
         .sig-img {
           --p: 0%;
           -webkit-mask-image: linear-gradient(90deg, #000 calc(var(--p) - 18%), transparent var(--p));
@@ -1388,6 +1416,7 @@ export default function App() {
             <span className="title-code block">Code</span>
             <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
           </h1>
+          <div className="title hero-rise -mt-4 sm:-mt-6" style={{ animationDelay: '0.5s' }}>the digital signature of <span>Suresh</span></div>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
             <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[100px] select-none sm:w-[150px] md:w-[180px]" />
             <p className="sig-line mt-3 text-[10px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
