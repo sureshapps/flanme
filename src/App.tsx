@@ -73,35 +73,46 @@ function GithubIcon({ size = 22, className = '' }: IconProps) {
 
 function InstagramIcon({ size = 22, className = '' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2.5" y="2.5" width="19" height="19" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <path d="M17.5 6.5h.01" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width={size} height={size} className={className} aria-hidden="true" fill="currentColor">
+      <path d="M11 0H5a5 5 0 0 0-5 5v6a5 5 0 0 0 5 5h6a5 5 0 0 0 5-5V5a5 5 0 0 0-5-5zm3.5 11c0 1.93-1.57 3.5-3.5 3.5H5c-1.93 0-3.5-1.57-3.5-3.5V5c0-1.93 1.57-3.5 3.5-3.5h6c1.93 0 3.5 1.57 3.5 3.5v6z" />
+      <path d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 6.5A2.503 2.503 0 0 1 5.5 8c0-1.379 1.122-2.5 2.5-2.5s2.5 1.121 2.5 2.5c0 1.378-1.122 2.5-2.5 2.5z" />
+      <circle cx="12.3" cy="3.7" r=".533" />
     </svg>
   );
 }
 
 function FacebookIcon({ size = 22, className = '' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144.083 144" width={size} height={size} className={className} aria-hidden="true" fill="currentColor">
+      <path d="M72.041 11.166c-33.543 0-60.833 27.29-60.833 60.834 0 33.545 27.29 60.834 60.833 60.834 33.544 0 60.835-27.289 60.835-60.834-.001-33.544-27.292-60.834-60.835-60.834zm0 115.668c-30.235 0-54.833-24.598-54.833-54.834 0-30.235 24.598-54.834 54.833-54.834S126.876 41.765 126.876 72c-.001 30.236-24.6 54.834-54.835 54.834z" />
+      <path d="M90.792 36.304H77.596a.877.877 0 0 0-.09.004c-13.323.042-15.063 9.345-15.07 17.476a1.014 1.014 0 0 0-.028.235v5.708H53.29a1 1 0 0 0-1 1v14.077a1 1 0 0 0 1 1h9.118v30.891a1 1 0 0 0 1 1h13.307a1 1 0 0 0 1-1v-30.89h13.076a1 1 0 0 0 1-1V60.728a1 1 0 0 0-1-1H76.715v-7.567h14.076a1 1 0 0 0 1-1V37.304a.999.999 0 0 0-.999-1z" />
     </svg>
   );
 }
 
 function WhatsappIcon({ size = 22, className = '' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z" />
-      <path d="M9 9.2c.2 2.6 3.2 5.6 5.8 5.8l1.4-1.2-2-1-.9.8c-.9-.4-1.9-1.4-2.3-2.3l.8-.9-1-2z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width={size} height={size} className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeMiterlimit="10">
+      <path d="M8.002.5h-.004C3.863.5.5 3.864.5 8c0 1.64.529 3.161 1.428 4.396l-.935 2.787 2.883-.921A7.448 7.448 0 0 0 8.002 15.5c4.135 0 7.498-3.364 7.498-7.5S12.137.5 8.002.5z" />
+      <path d="M12.175 10.931c-.172.484-.858.884-1.405 1.001-.374.079-.862.142-2.507-.534-2.103-.863-3.457-2.982-3.562-3.119-.1-.138-.849-1.122-.849-2.139 0-1.017.522-1.514.732-1.726.172-.175.458-.254.732-.254.088 0 .168.004.24.008.21.008.315.021.454.35.172.413.593 1.43.643 1.534.05.104.101.246.029.384-.067.142-.126.204-.231.325-.105.121-.206.213-.311.342-.097.113-.206.234-.084.442.122.204.542.884 1.161 1.43.799.705 1.447.93 1.678 1.026.172.071.378.054.505-.079.16-.171.358-.454.559-.734.143-.2.324-.225.513-.154.193.067 1.215.567 1.426.671.21.104.349.154.4.242.049.087.049.5-.123.984z" />
     </svg>
   );
 }
 
-const CONTACTS: { name: string; handle: string; href: string; Icon: typeof InstagramIcon }[] = [
-  { name: 'Instagram', handle: '@sureshksmy', href: 'https://www.instagram.com/sureshksmy', Icon: InstagramIcon },
-  { name: 'Facebook', handle: '/mesurreshks', href: 'https://www.facebook.com/mesurreshks', Icon: FacebookIcon },
-  { name: 'WhatsApp', handle: '+60104368680', href: 'https://wa.me/60104368680', Icon: WhatsappIcon },
+function EmailIcon({ size = 22, className = '' }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="currentColor">
+      <path fillRule="evenodd" clipRule="evenodd" d="M2.25 7C2.25 4.37665 4.37665 2.25 7 2.25H17C19.6234 2.25 21.75 4.37665 21.75 7V17C21.75 19.6234 19.6234 21.75 17 21.75H7C4.37665 21.75 2.25 19.6234 2.25 17V7ZM7 3.75C5.20507 3.75 3.75 5.20507 3.75 7V17C3.75 18.7949 5.20507 20.25 7 20.25H17C18.7949 20.25 20.25 18.7949 20.25 17V7C20.25 5.20507 18.7949 3.75 17 3.75H7Z" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M6.25 12C6.25 8.82412 8.82412 6.25 12 6.25C15.1759 6.25 17.75 8.82412 17.75 12V12.8333C17.75 14.0148 16.7925 14.9722 15.6111 14.9722C14.9573 14.9722 14.3721 14.679 13.9798 14.2169C13.4541 14.6866 12.7604 14.9722 12 14.9722C10.3586 14.9722 9.02778 13.6414 9.02778 12C9.02778 10.3586 10.3586 9.02778 12 9.02778C13.6414 9.02778 14.9722 10.3586 14.9722 12V12.8333C14.9722 13.1863 15.2581 13.4722 15.6111 13.4722C15.9641 13.4722 16.25 13.1863 16.25 12.8333V12C16.25 9.65255 14.3475 7.75 12 7.75C9.65255 7.75 7.75 9.65255 7.75 12C7.75 14.3475 9.65255 16.25 12 16.25C12.543 16.25 13.094 16.1471 13.6262 15.9266C13.9099 15.809 14.1751 15.6603 14.4234 15.4876C14.7634 15.2511 15.2308 15.335 15.4674 15.6751C15.7039 16.0151 15.62 16.4825 15.2799 16.719C14.9516 16.9474 14.5924 17.1499 14.2005 17.3123C13.4805 17.6106 12.7337 17.75 12 17.75C8.82412 17.75 6.25 15.1759 6.25 12ZM13.4722 12C13.4722 11.187 12.813 10.5278 12 10.5278C11.187 10.5278 10.5278 11.187 10.5278 12C10.5278 12.813 11.187 13.4722 12 13.4722C12.813 13.4722 13.4722 12.813 13.4722 12Z" />
+    </svg>
+  );
+}
+
+const CONTACTS: { name: string; href: string; Icon: typeof InstagramIcon; glow: string; external: boolean }[] = [
+  { name: 'Instagram', href: 'https://www.instagram.com/sureshksmy', Icon: InstagramIcon, glow: 'glow-ig', external: true },
+  { name: 'Facebook', href: 'https://www.facebook.com/mesurreshks', Icon: FacebookIcon, glow: 'glow-fb', external: true },
+  { name: 'WhatsApp', href: 'https://wa.me/60104368680', Icon: WhatsappIcon, glow: 'glow-wa', external: true },
+  { name: 'Email', href: 'mailto:hello@suresh.app', Icon: EmailIcon, glow: 'glow-em', external: false },
 ];
 
 type Repo = { slug: string; title: string; description: string; tech: string[]; live: string };
@@ -1226,6 +1237,7 @@ export default function App() {
         @import url('https://fonts.cdnfonts.com/css/ngopie');
         @import url('https://fonts.cdnfonts.com/css/anek-odia');
         @import url('https://fonts.cdnfonts.com/css/double-pivot');
+        @import url('https://fonts.cdnfonts.com/css/super-guardian');
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
@@ -1743,12 +1755,24 @@ export default function App() {
         }
         .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: 50% 28%; }
         .conn-body { grid-area: stack; z-index: 1; align-self: end; min-height: 0; padding: 1rem clamp(1rem, 5vw, 2rem); }
-        .conn-header { margin: 0; font-family: 'Double Pivot', sans-serif; font-size: 1.47em; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+        .conn-header { margin: 0; font-family: 'Super Guardian', sans-serif; font-size: 1.47em; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
         .conn-body p { margin-block: 0.7em 0.9em; font-size: 0.72em; line-height: 1.5; color: rgba(255, 255, 255, 0.92); }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
         .conn-icon { width: 1em; height: 1em; flex: none; }
-        .conn-list { display: flex; flex-direction: column; align-items: flex-start; gap: 0.45em; margin: 0; padding: 0; list-style: none; font-size: 0.8em; }
+        .conn-list { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 1.1em; margin: 0; padding: 0.35em 0 0.2em; list-style: none; font-size: 1em; }
+        .conn-social { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; text-decoration: none; transition: transform 0.3s ease; }
+        .conn-social:hover { transform: translateY(-3px) scale(1.12); }
+        .conn-social .conn-icon { width: 1.7em; height: 1.7em; }
+        .glow-ig { color: #ff6ad5; filter: drop-shadow(0 0 3px #ff4fd8) drop-shadow(0 0 8px #c04bff) drop-shadow(0 0 14px #9b4dff); animation: glow-ig 2.6s ease-in-out infinite; }
+        .glow-fb { color: #8fdcff; filter: drop-shadow(0 0 3px #38bdf8) drop-shadow(0 0 8px #22d3ee) drop-shadow(0 0 14px #06b6d4); animation: glow-fb 2.6s ease-in-out infinite 0.3s; }
+        .glow-wa { color: #b8f23c; filter: drop-shadow(0 0 3px #a3e635) drop-shadow(0 0 8px #84cc16) drop-shadow(0 0 14px #facc15); animation: glow-wa 2.6s ease-in-out infinite 0.6s; }
+        .glow-em { color: #ffa24d; filter: drop-shadow(0 0 3px #fb923c) drop-shadow(0 0 8px #f97316) drop-shadow(0 0 14px #ea580c); animation: glow-em 2.6s ease-in-out infinite 0.9s; }
+        @keyframes glow-ig { 50% { filter: drop-shadow(0 0 2px #ff4fd8) drop-shadow(0 0 5px #c04bff) drop-shadow(0 0 8px #9b4dff); } }
+        @keyframes glow-fb { 50% { filter: drop-shadow(0 0 2px #38bdf8) drop-shadow(0 0 5px #22d3ee) drop-shadow(0 0 8px #06b6d4); } }
+        @keyframes glow-wa { 50% { filter: drop-shadow(0 0 2px #a3e635) drop-shadow(0 0 5px #84cc16) drop-shadow(0 0 8px #facc15); } }
+        @keyframes glow-em { 50% { filter: drop-shadow(0 0 2px #fb923c) drop-shadow(0 0 5px #f97316) drop-shadow(0 0 8px #ea580c); } }
+        @media (prefers-reduced-motion: reduce) { .glow-ig, .glow-fb, .glow-wa, .glow-em { animation: none; } }
         .conn-chips:focus-visible, .conn-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
         .conn-close {
           position: absolute; top: clamp(0.7rem, 3vw, 1.1rem); right: clamp(0.7rem, 3vw, 1.1rem); z-index: 2; display: grid; place-items: center;
@@ -2053,11 +2077,19 @@ export default function App() {
               <h2 id="notice-title" className="conn-header">
                 <span className="conn-chips">Suresh Kaleyannan <svg className="conn-icon" style={{ width: '1.1em', height: '1.1em' }} aria-hidden="true"><use href="#icon-check" /></svg></span>
               </h2>
-              <p>Crafting responsive, high-performance websites with custom animations, interactive experiences, and modern frontend technologies—turning creative designs into reality.</p>
+              <p>Building interactive websites with modern frontend technologies, smooth animations, and creative experiences.</p>
               <ul className="conn-list">
-                {CONTACTS.map(({ name, handle, href, Icon }) => (
+                {CONTACTS.map(({ name, href, Icon, glow, external }) => (
                   <li key={name}>
-                    <a className="conn-chips" href={href} target="_blank" rel="noopener noreferrer"><Icon size={20} className="conn-icon" />{name} ({handle})</a>
+                    <a
+                      className="conn-social"
+                      href={href}
+                      aria-label={name}
+                      title={name}
+                      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    >
+                      <Icon className={`conn-icon ${glow}`} />
+                    </a>
                   </li>
                 ))}
               </ul>
