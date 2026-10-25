@@ -16,21 +16,21 @@
 */
 window.MUSIC_PLAYLIST = [
   {
-    title: 'Night Drive',
-    artist: 'Vaporwave Collective',
-    cover: 'https://picsum.photos/seed/nightdrive/300/300',
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    title: 'One Sun One Moon',
+    artist: 'Anirudh',
+    cover: 'https://www.masstamilan.dev/w/jailer-2-tamil-2026.webp',
+    src: '/music/onesunonemoon.mp3',
   },
   {
-    title: 'Neon Skyline',
-    artist: 'Synth Rider',
-    cover: 'https://picsum.photos/seed/neonskyline/300/300',
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    title: 'One Sun One Moon',
+    artist: 'Anirudh',
+    cover: 'https://www.masstamilan.dev/w/jailer-2-tamil-2026.webp',
+    src: '/music/onesunonemoon.mp3',
   },
   {
-    title: 'Midnight Code',
-    artist: 'Suresh',
-    cover: 'https://picsum.photos/seed/midnightcode/300/300',
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+   title: 'One Sun One Moon',
+    artist: 'Anirudh',
+    cover: 'https://www.masstamilan.dev/w/jailer-2-tamil-2026.webp',
+    src: '/music/onesunonemoon.mp3',
   },
 ];
