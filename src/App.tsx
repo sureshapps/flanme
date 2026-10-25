@@ -418,6 +418,29 @@ const sfx = (() => {
       tone({ f: 175, type: 'square', t: 0.11, d: 0.14, g: 0.05, lp: 800 });
     },
 
+    /* ---- curtain preloader ---- */
+    // soft tick while the speedometer counts: the pitch climbs with the number, like an engine revving
+    curtainTick: (p) => {
+      tone({ f: 640 + p * 9, type: 'triangle', d: 0.035, g: 0.04, lp: 4200, send: 0.12 });
+      noise({ type: 'highpass', f: 5000, d: 0.01, g: 0.015, send: 0 });
+    },
+    // the gauge hits 100
+    curtainReady: () => {
+      glass({ f: hz(7, 79), g: 0.06, d: 0.6 });
+      glass({ f: hz(9, 79), t: 0.09, g: 0.06, d: 0.8 });
+      glass({ f: hz(10, 79), t: 0.18, g: 0.05, d: 1.0, send: 0.5 });
+    },
+    // the two glass panels slide apart (CSS: 1.2 s), one air sweep per side, then a glass chord as the site is revealed
+    curtainOpen: () => {
+      tone({ f: 140, to: 60, d: 0.12, g: 0.14, send: 0.1 });
+      noise({ type: 'highpass', f: 4000, d: 0.02, g: 0.06, send: 0.2 });
+      noise({ type: 'bandpass', f: 300, to: 5200, q: 0.9, a: 0.35, d: 0.85, g: 0.13, pan: -0.2, panTo: -0.9, send: 0.35 });
+      noise({ type: 'bandpass', f: 260, to: 4600, q: 0.9, a: 0.35, d: 0.85, g: 0.13, pan: 0.2, panTo: 0.9, send: 0.35 });
+      tone({ f: 70, to: 190, a: 0.3, d: 0.9, g: 0.1, send: 0.2 });
+      [0, 2, 4, 7, 9].forEach((n, k) => glass({ f: hz(n, 72), t: 0.35 + k * 0.08, g: 0.06, d: 1.1, pan: -0.6 + k * 0.3, send: 0.6 }));
+      noise({ type: 'highpass', f: 5000, t: 1.15, d: 0.03, g: 0.05, send: 0.2 });
+    },
+
     /* ---- the robot ---- */
     robotHappy: () => {
       const k = Math.floor(Math.random() * 5);
@@ -1805,8 +1828,156 @@ function RobotCard() {
   );
 }
 
+/* ---------- Curtain preloader ----------
+   Two frosted-glass panels cover the site while a speedometer counts 0 to 100 between them (CURTAIN_MS).
+   At 100 the panels slide apart with a sound effect and the site, already loaded behind the glass, is revealed.
+   The counter, needle and arc are driven straight from requestAnimationFrame (no React re-renders), so it stays smooth. */
+const CURTAIN_MS = 15000; // how long the speedometer takes to reach 100
+const CURTAIN_HOLD_MS = 450; // short pause at 100 before the panels open
+const CURTAIN_REMOVE_MS = 1700; // the panels need 1.2 s to slide away; then the curtain is removed from the page
+const GAUGE_FROM = -135; // needle angle at 0 (degrees from straight up)
+const GAUGE_SWEEP = 270;
+const GAUGE_ARC = 'M 43.43 156.57 A 80 80 0 1 1 156.57 156.57';
+const curtainCurve = (t: number) => 0.85 * t * t * (3 - 2 * t) + 0.15 * t; // revs up, cruises, eases into 100
+
+const GAUGE_TICKS = Array.from({ length: 51 }, (_, i) => {
+  const a = ((135 + (270 * i) / 50) * Math.PI) / 180;
+  const major = i % 5 === 0;
+  const r1 = major ? 66 : 70;
+  const r2 = 74;
+  return { i, major, x1: 100 + r1 * Math.cos(a), y1: 100 + r1 * Math.sin(a), x2: 100 + r2 * Math.cos(a), y2: 100 + r2 * Math.sin(a) };
+});
+const GAUGE_LABELS = [0, 20, 40, 60, 80, 100].map((v) => {
+  const a = ((135 + (270 * v) / 100) * Math.PI) / 180;
+  return { v, x: 100 + 58 * Math.cos(a), y: 100 + 58 * Math.sin(a) };
+});
+
+function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [hint, setHint] = useState(() => sfx.isEnabled());
+  const needleRef = useRef<SVGGElement>(null);
+  const arcRef = useRef<SVGPathElement>(null);
+  const leadRef = useRef<HTMLSpanElement>(null);
+  const valRef = useRef<HTMLSpanElement>(null);
+  const meterRef = useRef<HTMLDivElement>(null);
+  const cb = useRef({ onReveal, onDone });
+  cb.current = { onReveal, onDone };
+
+  // browsers only allow sound after a tap / key press: the first one also hides the "tap for sound" hint
+  useEffect(() => {
+    if (!hint) return;
+    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
+    const off = () => setHint(false);
+    events.forEach((name) => window.addEventListener(name, off, { once: true, passive: true }));
+    return () => events.forEach((name) => window.removeEventListener(name, off));
+  }, [hint]);
+
+  useEffect(() => {
+    // the page behind the glass can't be clicked or tabbed into until the curtain opens
+    const root = document.querySelector('.app-root');
+    const behind = root ? Array.from(root.children).filter((el) => !el.classList.contains('curtain') && el.tagName !== 'STYLE') : [];
+    behind.forEach((el) => el.setAttribute('inert', ''));
+    const release = () => behind.forEach((el) => el.removeAttribute('inert'));
+
+    const timers: number[] = [];
+    let raf = 0;
+    let lastStep = 0;
+
+    const paint = (p: number) => {
+      const n = Math.floor(p * 100);
+      const digits = String(n);
+      needleRef.current?.setAttribute('transform', `rotate(${GAUGE_FROM + GAUGE_SWEEP * p} 100 100)`);
+      const arc = arcRef.current;
+      if (arc) {
+        arc.style.strokeDashoffset = String(100 - p * 100);
+        arc.style.opacity = p > 0.002 ? '1' : '0';
+      }
+      if (leadRef.current) leadRef.current.textContent = '0'.repeat(3 - digits.length);
+      if (valRef.current) valRef.current.textContent = digits;
+      meterRef.current?.setAttribute('aria-valuenow', digits);
+    };
+
+    const finish = () => {
+      paint(1);
+      sfx.play('curtainReady');
+      timers.push(window.setTimeout(() => {
+        release();
+        setOpen(true); // panels slide apart
+        sfx.play('curtainOpen');
+        cb.current.onReveal(); // the site starts its entrance animations while the panels move
+        timers.push(window.setTimeout(() => cb.current.onDone(), CURTAIN_REMOVE_MS));
+      }, CURTAIN_HOLD_MS));
+    };
+
+    const start = performance.now();
+    const frame = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - start) / CURTAIN_MS));
+      const p = curtainCurve(t);
+      paint(p);
+      const step = Math.floor(p * 20); // a tick every 5 %
+      if (step > lastStep && step < 20) { lastStep = step; sfx.play('curtainTick', step * 5); }
+      if (t < 1) raf = requestAnimationFrame(frame); else finish();
+    };
+    paint(0);
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach((id) => window.clearTimeout(id));
+      release();
+    };
+  }, []);
+
+  return (
+    <div className={`curtain${open ? ' is-open' : ''}`} aria-hidden={open}>
+      <div className="curtain__panel curtain__panel--left" aria-hidden="true">
+        <p className="curtain__word">Code</p>
+      </div>
+      <div className="curtain__panel curtain__panel--right" aria-hidden="true">
+        <p className="curtain__word">Beyond Limits.</p>
+      </div>
+
+      <div ref={meterRef} className="curtain__center" role="progressbar" aria-label="Loading" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
+        <span className="gauge-disc" aria-hidden="true" />
+        <svg className="gauge-svg" viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#ffe14d" />
+              <stop offset="55%" stopColor="#ff8a1f" />
+              <stop offset="100%" stopColor="#ff2b6a" />
+            </linearGradient>
+          </defs>
+          <path className="gauge-track" d={GAUGE_ARC} />
+          <path ref={arcRef} className="gauge-arc" d={GAUGE_ARC} pathLength={100} strokeDasharray="100" strokeDashoffset="100" />
+          {GAUGE_TICKS.map((tick) => (
+            <line key={tick.i} className={tick.major ? 'gauge-tick gauge-tick--major' : 'gauge-tick'} x1={tick.x1} y1={tick.y1} x2={tick.x2} y2={tick.y2} />
+          ))}
+          {GAUGE_LABELS.map((label) => (
+            <text key={label.v} className="gauge-label" x={label.x} y={label.y}>{label.v}</text>
+          ))}
+          <g ref={needleRef} transform={`rotate(${GAUGE_FROM} 100 100)`}>
+            <polygon className="gauge-needle" points="100,50 103,100 100,109 97,100" />
+          </g>
+          <circle className="gauge-hub" cx="100" cy="100" r="7.5" />
+          <circle className="gauge-hub-dot" cx="100" cy="100" r="2.6" />
+        </svg>
+        <div className="gauge-readout" aria-hidden="true">
+          <span className="gauge-num"><span ref={leadRef} className="gauge-lead">00</span><span ref={valRef}>0</span></span>
+          <span className="gauge-unit">%</span>
+        </div>
+        <p className="gauge-caption" aria-hidden="true">Loading</p>
+      </div>
+
+      <p className={`curtain__hint${hint && !open ? '' : ' is-hidden'}`} aria-hidden="true">Tap anywhere for sound</p>
+    </div>
+  );
+}
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  // curtain preloader: siteReady flips when the panels start to open (site animations begin), curtainOn when they are gone
+  const [siteReady, setSiteReady] = useState(false);
+  const [curtainOn, setCurtainOn] = useState(true);
   const phone = useMediaQuery('(max-width: 639px)');
   const wide = useMediaQuery('(min-width: 1024px)');
 
@@ -2158,7 +2329,7 @@ export default function App() {
 
   useEffect(() => {
     const root = signatureRef.current;
-    if (!root) return;
+    if (!root || !siteReady) return; // the signature is written once the curtain starts to open
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const ctx = gsap.context(() => {
       if (reduced) {
@@ -2174,7 +2345,7 @@ export default function App() {
       gsap.to('.sig-img', { filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.55))', duration: 2.4, yoyo: true, repeat: -1, ease: 'sine.inOut', delay: 5 });
     }, root);
     return () => ctx.revert();
-  }, []);
+  }, [siteReady]);
 
   useEffect(() => {
     const el = appRef.current;
@@ -2266,7 +2437,7 @@ export default function App() {
   }
 
   return (
-    <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+    <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" data-site={siteReady ? 'ready' : 'loading'} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
         @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
@@ -2883,6 +3054,85 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        /* Curtain preloader: frosted-glass panels + speedometer */
+        .curtain {
+          --g: min(clamp(230px, 24vw, 340px), 70dvh);
+          position: fixed; inset: 0; z-index: 200; overflow: hidden; color: #fff;
+          font-family: 'Poppins', sans-serif; letter-spacing: normal;
+        }
+        .curtain.is-open { pointer-events: none; }
+        .curtain__panel {
+          display: flex; align-items: center; position: absolute; top: 0; width: 50%; height: 100%; z-index: 2;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.12));
+          -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.12);
+          color: #fff;
+          transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), backdrop-filter 1.2s ease, -webkit-backdrop-filter 1.2s ease;
+          will-change: transform;
+        }
+        .curtain__panel--left { left: 0; justify-content: flex-end; padding-right: calc(var(--g) / 2 + 1.75rem); border-right: 1px solid rgba(255, 255, 255, 0.4); }
+        .curtain__panel--right { right: 0; justify-content: flex-start; padding-left: calc(var(--g) / 2 + 1.75rem); border-left: 1px solid rgba(255, 255, 255, 0.4); }
+        .curtain__panel::before {
+          content: ''; position: absolute; inset: 0; pointer-events: none;
+          background: linear-gradient(115deg, rgba(255, 255, 255, 0.14), transparent 35%, transparent 70%, rgba(255, 255, 255, 0.08));
+        }
+        .curtain.is-open .curtain__panel { -webkit-backdrop-filter: blur(6px) saturate(140%); backdrop-filter: blur(6px) saturate(140%); }
+        .curtain.is-open .curtain__panel--left { transform: translateX(-100%); }
+        .curtain.is-open .curtain__panel--right { transform: translateX(100%); }
+        .curtain__word {
+          position: relative; z-index: 1; margin: 0; white-space: nowrap;
+          font-size: clamp(1.2rem, 2.5vw, 2.5rem); font-weight: 500; letter-spacing: 1px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+        .curtain__center {
+          position: absolute; left: 50%; top: 50%; z-index: 3; width: var(--g); aspect-ratio: 1; transform: translate(-50%, -50%);
+          transition: opacity 0.5s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .curtain.is-open .curtain__center { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
+        .gauge-disc {
+          position: absolute; inset: 0; border-radius: 50%;
+          background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.12), rgba(24, 4, 8, 0.4) 72%);
+          -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.32);
+          box-shadow: inset 2px 2px 1px -1px rgba(255, 255, 255, 0.55), inset -2px -2px 1px -1px rgba(255, 255, 255, 0.2), inset 0 0 22px rgba(0, 0, 0, 0.35), 0 18px 50px rgba(0, 0, 0, 0.35), 0 0 44px rgba(255, 138, 31, 0.2);
+        }
+        .gauge-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .gauge-track { fill: none; stroke: rgba(255, 255, 255, 0.16); stroke-width: 5; stroke-linecap: round; }
+        .gauge-arc { fill: none; stroke: url(#gauge-grad); stroke-width: 5; stroke-linecap: round; opacity: 0; filter: drop-shadow(0 0 3px rgba(255, 138, 31, 0.95)) drop-shadow(0 0 8px rgba(255, 90, 20, 0.7)); }
+        .gauge-tick { stroke: rgba(255, 255, 255, 0.4); stroke-width: 0.9; stroke-linecap: round; }
+        .gauge-tick--major { stroke: rgba(255, 255, 255, 0.95); stroke-width: 1.7; }
+        .gauge-label { fill: rgba(255, 255, 255, 0.85); font-family: 'Josefin Sans', sans-serif; font-size: 7.5px; text-anchor: middle; dominant-baseline: central; }
+        .gauge-needle { fill: #ff8a1f; filter: drop-shadow(0 0 2px #ff8a1f) drop-shadow(0 0 7px rgba(255, 90, 20, 0.95)); }
+        .gauge-hub { fill: #2a0a0c; stroke: #ffb347; stroke-width: 1.6; filter: drop-shadow(0 0 4px rgba(255, 138, 31, 0.9)); }
+        .gauge-hub-dot { fill: #fff3d6; }
+        .gauge-readout { position: absolute; left: 50%; top: 71%; transform: translate(-50%, -50%); display: flex; align-items: baseline; gap: 0.12em; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .gauge-num { font-size: calc(var(--g) * 0.15); font-weight: 600; letter-spacing: -0.02em; text-shadow: 0 0 12px rgba(255, 255, 255, 0.5); }
+        .gauge-lead { opacity: 0.22; }
+        .gauge-unit { font-size: calc(var(--g) * 0.06); opacity: 0.8; }
+        .gauge-caption { position: absolute; left: 50%; top: 87%; margin: 0; transform: translateX(-50%); font-family: 'Josefin Sans', sans-serif; font-size: calc(var(--g) * 0.036); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
+        .curtain__hint {
+          position: absolute; left: 50%; bottom: max(4dvh, 24px); z-index: 3; margin: 0; transform: translateX(-50%); white-space: nowrap;
+          font-family: 'Josefin Sans', sans-serif; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8);
+          animation: curtain-hint 2.2s ease-in-out infinite; transition: opacity 0.4s ease;
+        }
+        .curtain__hint.is-hidden { opacity: 0; animation: none; }
+        @keyframes curtain-hint { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.95; } }
+        @media (max-width: 639px) {
+          .curtain { --g: min(64vw, 70dvh, 280px); }
+          .curtain__word { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .curtain__panel, .curtain__center { transition-duration: 0.01s; }
+          .curtain__hint { animation: none; opacity: 0.8; }
+        }
+        /* the site waits behind the glass: every animation is held until the curtain starts to open */
+        .app-root[data-site="loading"] > :not(.curtain),
+        .app-root[data-site="loading"] > :not(.curtain)::before,
+        .app-root[data-site="loading"] > :not(.curtain)::after,
+        .app-root[data-site="loading"] > :not(.curtain) *,
+        .app-root[data-site="loading"] > :not(.curtain) *::before,
+        .app-root[data-site="loading"] > :not(.curtain) *::after { animation-play-state: paused !important; }
+        .app-root[data-site="loading"] .title span:before { --mask-progress: 0%; transition: none; }
         /* neon cursor trail: the library paints an opaque black canvas with a faint purple haze, so
            contrast() crushes the haze to black and screen-blend makes black transparent: only the trail remains */
         .neon-host > canvas {
@@ -3258,6 +3508,8 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {curtainOn && <Curtain onReveal={() => setSiteReady(true)} onDone={() => setCurtainOn(false)} />}
 
       <dialog ref={noticeRef} onCancel={() => setNotice(null)} onClick={(event) => { if (event.target === event.currentTarget) setNotice(null); }} className="connect-dialog" aria-labelledby="notice-title">
         <div className="conn-card">
