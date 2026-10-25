@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { AudioLines, ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Layers, LayoutGrid, Link2, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { AudioLines, ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, LayoutGrid, Link2, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -12,9 +12,48 @@ const FOLLOW_GAP_Y = 105;
 const FOLLOW_GAP_TOUCH = 115;
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
-const NAV_ITEMS = [
+const BEHANCE_USER = 'sureshksmy';
+const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
+const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
+
+type BehanceProject = {
+  id: number;
+  name: string;
+  url: string;
+  covers: Record<string, string>;
+  stats: { views: number; appreciations: number };
+};
+
+// Behance v2 only answers JSONP (same as the old $.getJSON(...&callback=?) call)
+function fetchBehanceProjects(): Promise<BehanceProject[]> {
+  return new Promise((resolve, reject) => {
+    const cb = `__behance_cb_${Date.now()}`;
+    const bag = window as unknown as Record<string, unknown>;
+    const script = document.createElement('script');
+    const cleanup = () => {
+      window.clearTimeout(timer);
+      delete bag[cb];
+      script.remove();
+    };
+    const timer = window.setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 15000);
+    bag[cb] = (data: { projects?: BehanceProject[] }) => { cleanup(); resolve(data.projects ?? []); };
+    script.onerror = () => { cleanup(); reject(new Error('network')); };
+    script.src = `https://www.behance.net/v2/users/${BEHANCE_USER}/projects?api_key=${BEHANCE_KEY}&callback=${cb}`;
+    document.body.appendChild(script);
+  });
+}
+
+function BehanceIcon({ size = 22, strokeWidth = 2, className = '' }: { size?: number | string; strokeWidth?: number | string; className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-behance ${className}`} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={Math.max(Number(strokeWidth), 1.9)} strokeLinecap="round" strokeLinejoin="round">
+      <path fillRule="evenodd" d="M7 12a3 3 0 0 0 0-6H2v12h6a3 3 0 0 0 0-6H7zm8 2h7a4 4 0 1 0-4 4 3.99 3.99 0 0 0 2.638-1M2 12h6M15 6h6" />
+    </svg>
+  );
+}
+
+const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon }[] = [
   { label: 'Module', Icon: Home },
-  { label: 'Case Records', Icon: Layers },
+  { label: 'Case Records', Icon: BehanceIcon },
   { label: 'Biotech', Icon: AudioLines },
   { label: 'Tiers', Icon: LayoutGrid },
   { label: 'Live Demo', Icon: Navigation },
@@ -755,6 +794,10 @@ export default function App() {
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [widgetsOpen, setWidgetsOpen] = useState(false);
+  const [caseOpen, setCaseOpen] = useState(false);
+  const [projects, setProjects] = useState<BehanceProject[]>([]);
+  const [projectsState, setProjectsState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const casePopRef = useRef<HTMLDivElement>(null);
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [soundOn, setSoundOn] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -925,6 +968,32 @@ export default function App() {
     };
   }, [infoOpen]);
 
+  function loadProjects() {
+    setProjectsState('loading');
+    fetchBehanceProjects()
+      .then((list) => { setProjects(list); setProjectsState('ready'); })
+      .catch(() => setProjectsState('error'));
+  }
+
+  useEffect(() => {
+    if (!caseOpen) return;
+    if (projectsState === 'idle') loadProjects();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCaseOpen(false);
+    };
+    // click or touch anywhere outside the box hides it
+    const closeOnOutside = (event: PointerEvent) => {
+      if (casePopRef.current && !casePopRef.current.contains(event.target as Node)) setCaseOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('pointerdown', closeOnOutside);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('pointerdown', closeOnOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseOpen]);
+
   useEffect(() => {
     const root = signatureRef.current;
     if (!root) return;
@@ -947,6 +1016,12 @@ export default function App() {
 
   function navigate(label: string) {
     setMenuOpen(false);
+    if (label === 'Case Records') {
+      setInfoOpen(false);
+      setWidgetsOpen(false);
+      setCaseOpen(true);
+      return;
+    }
     if (label === 'Live Demo') {
       cursorTarget.current = { x: window.innerWidth * 0.62, y: window.innerHeight * 0.42 };
     }
@@ -1280,6 +1355,80 @@ export default function App() {
           filter: drop-shadow(0 0 6px rgba(255,255,255,0.55));
         }
         .sig-line { opacity: 0; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; text-transform: uppercase; }
+
+        /* Neon Behance icon */
+        .neon-behance {
+          color: #7f8bff;
+          animation: neon-behance-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes neon-behance-pulse {
+          0%, 100% { filter: drop-shadow(0 0 1.5px #3d4dff) drop-shadow(0 0 4px #0005f8); }
+          50% { filter: drop-shadow(0 0 2px #c9d0ff) drop-shadow(0 0 6px #4a5bff) drop-shadow(0 0 13px #0005f8); }
+        }
+        /* Behance popup: falls from the top, goes back up */
+        .case-pop {
+          position: fixed; left: 50%; top: 50%; z-index: 80;
+          width: min(1180px, calc(100vw - 2.5rem)); height: min(78dvh, 720px);
+          display: flex; flex-direction: column;
+          border-radius: 26px; overflow: hidden; isolation: isolate; color: #fff;
+          background: rgba(40, 6, 6, 0.2);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4);
+          transform: translate(-50%, calc(-50% - 115dvh));
+          opacity: 0; visibility: hidden; pointer-events: none;
+          transition: transform 0.55s cubic-bezier(0.55, -0.25, 0.85, 0.45), opacity 0.4s ease 0.15s, visibility 0s linear 0.6s;
+        }
+        .case-pop.is-open {
+          transform: translate(-50%, -50%);
+          opacity: 1; visibility: visible; pointer-events: auto;
+          transition: transform 0.85s cubic-bezier(0.34, 1.5, 0.64, 1), opacity 0.25s ease, visibility 0s;
+        }
+        .case-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px 6px; }
+        .case-title { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255, 255, 255, 0.92); }
+        .case-close {
+          display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 0; border-radius: 50%; cursor: pointer;
+          color: #fff; background: rgba(255, 255, 255, 0.14); transition: background-color 0.25s ease;
+        }
+        .case-close:hover { background: rgba(255, 255, 255, 0.28); }
+        .case-scroll {
+          flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+          padding: 10px 20px 14px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+        }
+        .case-scroll::-webkit-scrollbar { width: 6px; }
+        .case-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.35); border-radius: 6px; }
+        .case-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+        .case-card {
+          display: flex; flex-direction: column; overflow: hidden; border-radius: 16px; color: #fff; text-decoration: none;
+          background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.28);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.22);
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+        }
+        .case-card:hover, .case-card:focus-visible { transform: translateY(-4px); background: rgba(255, 255, 255, 0.16); outline: none; }
+        .case-card img { display: block; width: 100%; aspect-ratio: 404 / 316; object-fit: cover; background: rgba(255, 255, 255, 0.1); }
+        .case-card-title { padding: 10px 12px 4px; font-size: 12.5px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .case-card-stats { padding: 0 12px 11px; font-size: 10.5px; color: rgba(255, 255, 255, 0.72); }
+        .case-skel { aspect-ratio: 404 / 330; border-radius: 16px; background: linear-gradient(110deg, rgba(255,255,255,0.06) 20%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.06) 80%); background-size: 200% 100%; animation: video-shimmer 1.4s linear infinite; }
+        .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
+        .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
+        .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .case-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 639px) {
+          .case-pop { width: calc(100vw - 1.5rem); height: 82dvh; border-radius: 22px; }
+          .case-head { padding: 14px 14px 4px; }
+          .case-scroll { padding: 8px 12px 12px; }
+          .case-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .case-card { border-radius: 13px; }
+          .case-card-title { font-size: 11px; padding: 8px 9px 3px; }
+          .case-card-stats { font-size: 9.5px; padding: 0 9px 9px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .neon-behance { animation: none; filter: drop-shadow(0 0 2px #4a5bff) drop-shadow(0 0 6px #0005f8); }
+          .case-pop, .case-pop.is-open { transition-duration: 0.01s; }
+          .case-skel { animation: none; }
+        }
       `}</style>
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
@@ -1403,6 +1552,38 @@ export default function App() {
           </ul>
           <p className="info-foot">www.suresh.app</p>
         </div>
+      </div>
+
+      <div ref={casePopRef} id="case-popup" role="dialog" aria-label="Behance portfolio" aria-hidden={!caseOpen} className={`case-pop ${caseOpen ? 'is-open' : ''}`}>
+        <div className="case-head">
+          <h2 className="case-title">Behance Portfolio</h2>
+          <button type="button" className="case-close" aria-label="Close portfolio" tabIndex={caseOpen ? 0 : -1} onClick={() => setCaseOpen(false)}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="case-scroll">
+          {projectsState === 'error' ? (
+            <p className="case-state">
+              Couldn't load projects. <button type="button" onClick={loadProjects}>Retry</button> or{' '}
+              <a href={BEHANCE_PROFILE} target="_blank" rel="noopener noreferrer">open Behance</a>.
+            </p>
+          ) : projectsState === 'ready' && projects.length === 0 ? (
+            <p className="case-state">No projects yet.</p>
+          ) : (
+            <div className="case-grid">
+              {projectsState === 'ready'
+                ? projects.map((project) => (
+                    <a key={project.id} className="case-card" href={project.url.trim()} target="_blank" rel="noopener noreferrer" tabIndex={caseOpen ? 0 : -1}>
+                      <img src={project.covers['404'] ?? project.covers['230'] ?? project.covers.original} alt="" loading="lazy" draggable={false} />
+                      <span className="case-card-title">{project.name}</span>
+                      <span className="case-card-stats">{project.stats.views} views and {project.stats.appreciations} likes</span>
+                    </a>
+                  ))
+                : Array.from({ length: 10 }, (_, i) => <div key={i} className="case-skel" aria-hidden="true" />)}
+            </div>
+          )}
+        </div>
+        <p className="case-foot">Made with the Behance API</p>
       </div>
 
       <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
