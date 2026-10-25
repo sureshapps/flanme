@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -453,6 +453,16 @@ const sfx = (() => {
       tone({ f: 70, to: 190, a: 0.3, d: 0.9, g: 0.1, send: 0.2 });
       [0, 2, 4, 7, 9].forEach((n, k) => glass({ f: hz(n, 72), t: 0.35 + k * 0.08, g: 0.06, d: 1.1, pan: -0.6 + k * 0.3, send: 0.6 }));
       noise({ type: 'highpass', f: 5000, t: 1.15, d: 0.03, g: 0.05, send: 0.2 });
+    },
+
+    /* ---- chat ---- */
+    chatSend: () => {
+      tone({ f: 520, to: 980, type: 'triangle', d: 0.08, g: 0.06, lp: 4200, send: 0.2 });
+      glass({ f: hz(7, 83), t: 0.05, g: 0.03, d: 0.18 });
+    },
+    chatReceive: () => {
+      glass({ f: hz(5, 79), g: 0.05, d: 0.3 });
+      glass({ f: hz(9, 79), t: 0.08, g: 0.045, d: 0.45 });
     },
 
     /* ---- the robot ---- */
@@ -1489,7 +1499,9 @@ function Metrics({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 type Mouth = 'smile' | 'sad' | 'wow' | 'oh' | 'talk';
 
-function RobotCard() {
+function RobotCard({ onTouch }: { onTouch: () => void }) {
+  const touchRef = useRef(onTouch);
+  touchRef.current = onTouch;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fxRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -1894,6 +1906,7 @@ function RobotCard() {
         emitBubbles(4);
         if (!ROBOT_WEBHOOK_URL) emitPop(pick(funTexts), 1200);
         else if (!asking && !speaking) void askWebhook(clickCount);
+        touchRef.current(); // touching the robot opens the chat
         sfx.play(mouthMode === 'wow' ? 'robotWow' : 'robotHappy');
       }
 
@@ -1909,6 +1922,7 @@ function RobotCard() {
     window.addEventListener('blur', onLeave);
     // canvas ignores the mouse so the trailing robot never blocks the page; clicks near it still trigger reactions
     const onWindowClick = (event: MouseEvent) => {
+      if (document.querySelector('.curtain')) return; // the robot ignores touches while the curtain is still there
       const r = canvas.getBoundingClientRect();
       const dx = event.clientX - (r.left + r.width / 2);
       const dy = event.clientY - (r.top + r.height / 2);
@@ -2106,11 +2120,175 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
   );
 }
 
+/* ---------- Chat with the robot ----------
+   Touching the robot opens a small chat next to it. Answers come from an AI proxy (CHAT_API_URL, see chat-worker.js) that knows
+   everything on this page. With no URL set, or if the proxy can't be reached, the built-in answers below are used instead.
+   The proxy keeps the API key on the server: never put an API key in this file. */
+const CHAT_API_URL = ''; // e.g. 'https://suresh-chat.your-name.workers.dev'
+type ChatAction = 'Case Records' | 'CV' | 'GitHub' | 'Gallery' | 'Connect';
+type ChatMsg = { id: number; role: 'user' | 'bot'; text: string; actions?: ChatAction[] };
+type ChatAnswer = { text: string; actions: ChatAction[] };
+const CHAT_GREETING = "Hi, I'm Suresh Assit! Ask me anything about this page: Suresh's work, CV, GitHub, gallery or how to reach him.";
+const CHAT_SUGGESTIONS = ['Who is Suresh?', 'Show me his work', 'How can I contact him?', 'What can I do on this page?'];
+const CHAT_ACTION_RE = /\[\[open:(Case Records|CV|GitHub|Gallery|Connect)\]\]/g;
+const CHAT_ACTION_LABEL: Record<ChatAction, string> = { 'Case Records': 'Open Case Records', CV: 'Open CV', GitHub: 'Open GitHub', Gallery: 'Open Gallery', Connect: 'Jom Connect' };
+
+const CHAT_KB: { keys: RegExp; text: string; actions?: ChatAction[] }[] = [
+  { keys: /^\s*(hi|hello|hey|hai|salam|hola)\b/i, text: "Hello! I'm Suresh Assit. What would you like to know about this page?" },
+  { keys: /contact|reach|e-?mail|whatsapp|phone|call|instagram|facebook|hire|connect|jom/i, text: 'You can reach Suresh on WhatsApp (+60 10-436 8680), by email at hello@suresh.app, or on Instagram (@sureshksmy) and Facebook. The Jom Connect button on the home screen has all the links.', actions: ['Connect'] },
+  { keys: /\bcv\b|resume|curriculum|experience|years|career/i, text: 'Suresh has 16+ years of experience as a DevOps engineer and web developer in Malaysia. Open the CV to read it or download it as a PDF.', actions: ['CV'] },
+  { keys: /work|portfolio|behance|case|project|design/i, text: "Case Records shows Suresh's Behance portfolio: his latest design projects with their views and likes.", actions: ['Case Records'] },
+  { keys: /github|repo|source|open.?source|stack|tech|framework/i, text: `The GitHub popup showcases ${REPOS.length} featured repositories and tools, such as React, Next.js, Vite, Three.js and FastAPI, each with a "See live" link.`, actions: ['GitHub'] },
+  { keys: /gallery|photo|video|picture|image|gif/i, text: 'The Gallery has photos, GIFs and videos. Tap any thumbnail to preview it full size.', actions: ['Gallery'] },
+  { keys: /skill|good at|strength|speed|creativ|devops|level/i, text: 'Suresh rates his skills at 92% and creative thinking at 88%, with 16+ years of experience across DevOps and web development.' },
+  { keys: /music|song|player|weather|clock|calendar|widget|time\b/i, text: 'The widget panel has a music player (play, pause, shuffle, repeat), a clock, the Kuala Lumpur weather and a calendar. On a phone, open it with the << button at the top right.' },
+  { keys: /menu|navigat|how|where|what can|page|use|feature/i, text: "Tap the round logo at the top left to open the menu: Case Records, CV, GitHub and Gallery. The (i) button at the top right opens Suresh's intro, and Jom Connect has his contact links." },
+  { keys: /sound|audio|mute|noise|volume/i, text: 'All sounds on this page are generated live in your browser, and the music starts after your first tap or key press.' },
+  { keys: /robot|bot|assist|your name|yourself|you\b/i, text: "I'm Suresh Assit, the little robot on the home screen. I follow your cursor with my eyes, and if you poke me too many times I get grumpy!" },
+  { keys: /who|about|suresh|intro|bio/i, text: "Suresh Kaleyannan is a DevOps engineer and web developer from Malaysia with 16+ years of experience. He builds interactive websites with modern frontend technologies, smooth animations and creative experiences. His site: www.suresh.app." },
+];
+const CHAT_FALLBACK: ChatAnswer = { text: 'I can help with questions about this page: Suresh\'s work, CV, GitHub, gallery, widgets or contact details. Try one of the suggestions!', actions: [] };
+
+function localChatAnswer(question: string): ChatAnswer {
+  const hit = CHAT_KB.find((entry) => entry.keys.test(question));
+  return hit ? { text: hit.text, actions: hit.actions ?? [] } : CHAT_FALLBACK;
+}
+
+async function askChat(history: ChatMsg[], signal: AbortSignal): Promise<ChatAnswer> {
+  const question = history[history.length - 1]?.text ?? '';
+  if (CHAT_API_URL) {
+    const controller = new AbortController();
+    const stop = () => controller.abort();
+    signal.addEventListener('abort', stop);
+    const timeout = window.setTimeout(stop, 20000);
+    try {
+      const messages = history.filter((m) => m.id !== 0).slice(-12).map((m) => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text }));
+      const res = await fetch(CHAT_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages }), signal: controller.signal });
+      if (!res.ok) throw new Error(`chat ${res.status}`);
+      const data = await res.json();
+      const raw: unknown = data?.reply ?? data?.text ?? data?.content?.[0]?.text;
+      if (typeof raw !== 'string' || !raw.trim()) throw new Error('empty reply');
+      const actions = Array.from(new Set(Array.from(raw.matchAll(CHAT_ACTION_RE), (m) => m[1] as ChatAction)));
+      return { text: raw.replace(CHAT_ACTION_RE, '').trim(), actions };
+    } catch {
+      if (signal.aborted) return CHAT_FALLBACK;
+      /* the proxy is down or slow: fall through to the built-in answers */
+    } finally {
+      window.clearTimeout(timeout);
+      signal.removeEventListener('abort', stop);
+    }
+  }
+  await new Promise((resolve) => window.setTimeout(resolve, 450 + Math.random() * 450)); // a short "typing" pause
+  return localChatAnswer(question);
+}
+
+function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => void; onAction: (action: ChatAction) => void }) {
+  const phone = useMediaQuery('(max-width: 639px)');
+  const [messages, setMessages] = useState<ChatMsg[]>([{ id: 0, role: 'bot', text: CHAT_GREETING }]);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [pos, setPos] = useState<CSSProperties>({});
+  const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const nextId = useRef(1);
+  const lifeRef = useRef<AbortController | null>(null);
+
+  // on desktop the chat sits right next to the robot; on a phone it is a sheet at the bottom
+  useEffect(() => {
+    if (!open || phone) { setPos({}); return; }
+    const place = () => {
+      const r = document.querySelector('.robot-card')?.getBoundingClientRect();
+      if (!r) return;
+      const left = Math.min(Math.max(12, r.right + 8), window.innerWidth - 340 - 12);
+      const bottom = Math.max(16, window.innerHeight - r.bottom - 8);
+      setPos({ left, bottom, '--cb': `${bottom}px` } as CSSProperties);
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [open, phone]);
+
+  useEffect(() => {
+    if (!open || phone) return;
+    const id = window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
+    return () => window.clearTimeout(id);
+  }, [open, phone]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [messages, busy, open]);
+
+  useEffect(() => {
+    const life = new AbortController();
+    lifeRef.current = life;
+    return () => life.abort();
+  }, []);
+
+  async function send(raw: string) {
+    const text = raw.trim().slice(0, 300);
+    const life = lifeRef.current;
+    if (!text || busy || !life) return;
+    const history: ChatMsg[] = [...messages, { id: nextId.current++, role: 'user', text }];
+    setMessages(history);
+    setDraft('');
+    setBusy(true);
+    sfx.play('chatSend');
+    const answer = await askChat(history, life.signal);
+    if (life.signal.aborted) return;
+    setMessages((list) => [...list, { id: nextId.current++, role: 'bot', text: answer.text, actions: answer.actions }]);
+    setBusy(false);
+    sfx.play('chatReceive');
+  }
+
+  return (
+    <div id="chat-popup" role="dialog" aria-label="Chat with Suresh Assit" aria-hidden={!open} className={`chat-pop${open ? ' is-open' : ''}`} style={pos}>
+      <div className="chat-head">
+        <span className="chat-dot" aria-hidden="true" />
+        <div className="chat-title">
+          <p className="chat-name">Suresh Assit</p>
+          <p className="chat-sub">Ask me about this page</p>
+        </div>
+        <button type="button" className="case-close" aria-label="Close chat" tabIndex={open ? 0 : -1} onClick={onClose}>
+          <X size={18} strokeWidth={2} />
+        </button>
+      </div>
+      <div ref={listRef} className="chat-list" aria-live="polite">
+        {messages.map((m) => (
+          <div key={m.id} className={`chat-msg chat-msg--${m.role}`}>
+            <p>{m.text}</p>
+            {m.actions && m.actions.length > 0 && (
+              <div className="chat-actions">
+                {m.actions.map((action) => (
+                  <button key={action} type="button" className="chat-chip" tabIndex={open ? 0 : -1} onClick={() => onAction(action)}>{CHAT_ACTION_LABEL[action]}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        {busy && <div className="chat-msg chat-msg--bot chat-typing" role="status" aria-label="Typing"><i /><i /><i /></div>}
+        {messages.length === 1 && !busy && (
+          <div className="chat-actions chat-suggest">
+            {CHAT_SUGGESTIONS.map((q) => (
+              <button key={q} type="button" className="chat-chip" data-sfx="none" tabIndex={open ? 0 : -1} onClick={() => void send(q)}>{q}</button>
+            ))}
+          </div>
+        )}
+      </div>
+      <form className="chat-form" onSubmit={(event) => { event.preventDefault(); void send(draft); }}>
+        <input ref={inputRef} className="chat-input" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Type your question..." maxLength={300} autoComplete="off" enterKeyHint="send" aria-label="Your message" tabIndex={open ? 0 : -1} />
+        <button type="submit" className="chat-send" data-sfx="none" aria-label="Send" disabled={!draft.trim() || busy} tabIndex={open ? 0 : -1}><Send size={16} strokeWidth={2} /></button>
+      </form>
+    </div>
+  );
+}
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   // curtain preloader: siteReady flips when the panels start to open (site animations begin), curtainOn when they are gone
   const [siteReady, setSiteReady] = useState(false);
   const [curtainOn, setCurtainOn] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
   const wide = useMediaQuery('(min-width: 1024px)');
 
@@ -2183,6 +2361,7 @@ export default function App() {
   useOpenSfx(galOpen, 'drop', 3);
   useOpenSfx(notice !== null, 'notice');
   useOpenSfx(lightbox !== null, 'lightbox');
+  useOpenSfx(chatOpen, 'lightbox');
   useStatusSfx(projectsState);
   useStatusSfx(cvState);
 
@@ -2479,6 +2658,12 @@ export default function App() {
       setGhOpen(false);
       setGalOpen(true);
     }
+  }
+
+  // buttons inside the chat open the same popups as the menu (on a phone the chat steps aside first)
+  function chatAction(action: ChatAction) {
+    if (phone) setChatOpen(false);
+    if (action === 'Connect') openNotice('connect'); else navigate(action);
   }
 
   function openNotice(value: 'reserve' | 'connect') {
@@ -3114,6 +3299,72 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        /* Chat popup next to the robot */
+        .chat-pop {
+          position: fixed; left: 360px; bottom: 24px; z-index: 85; width: 340px; height: min(72dvh, 500px);
+          max-height: calc(var(--app-h, 100dvh) - var(--cb, 24px) - 16px);
+          display: flex; flex-direction: column; overflow: hidden; isolation: isolate; color: #fff;
+          font-family: 'Poppins', sans-serif; letter-spacing: normal; border-radius: 24px;
+          background: linear-gradient(145deg, rgba(255, 138, 31, 0.16), rgba(255, 255, 255, 0.04) 60%), rgba(36, 8, 6, 0.4);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(255, 196, 130, 0.42);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 190, 120, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4), 0 0 38px rgba(255, 138, 31, 0.14);
+          transform-origin: bottom left; transform: translateY(18px) scale(0.92);
+          opacity: 0; visibility: hidden; pointer-events: none;
+          transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, visibility 0s linear 0.5s;
+        }
+        .chat-pop.is-open { transform: none; opacity: 1; visibility: visible; pointer-events: auto; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, visibility 0s; }
+        .chat-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.18); }
+        .chat-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #6dff9a; box-shadow: 0 0 6px #6dff9a, 0 0 14px rgba(109, 255, 154, 0.7); }
+        .chat-title { flex: 1; min-width: 0; }
+        .chat-name { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.2; }
+        .chat-sub { margin: 2px 0 0; font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.72); }
+        .chat-list {
+          flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+          display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 8px; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+        }
+        .chat-list::-webkit-scrollbar { width: 5px; }
+        .chat-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.35); border-radius: 5px; }
+        .chat-msg { max-width: 88%; padding: 9px 12px; border-radius: 16px; font-size: 13px; line-height: 1.5; animation: chat-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .chat-msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .chat-msg--bot { align-self: flex-start; border-bottom-left-radius: 5px; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.28); }
+        .chat-msg--user { align-self: flex-end; border-bottom-right-radius: 5px; background: linear-gradient(135deg, rgba(255, 150, 50, 0.7), rgba(255, 60, 40, 0.6)); border: 1px solid rgba(255, 210, 160, 0.5); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+        .chat-typing { display: flex; gap: 5px; padding: 12px 14px; }
+        .chat-typing i { width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0.4; animation: chat-dot 1.1s ease-in-out infinite; }
+        .chat-typing i:nth-child(2) { animation-delay: 0.15s; }
+        .chat-typing i:nth-child(3) { animation-delay: 0.3s; }
+        .chat-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .chat-suggest { margin-top: 2px; }
+        .chat-chip {
+          padding: 6px 11px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11.5px; color: #fff;
+          background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.3);
+          transition: background-color 0.25s ease, transform 0.25s ease;
+        }
+        .chat-chip:hover { background: rgba(255, 255, 255, 0.26); transform: translateY(-1px); }
+        .chat-chip:focus-visible, .chat-send:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 2px; }
+        .chat-form { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        .chat-input {
+          flex: 1; min-width: 0; padding: 10px 14px; border-radius: 999px; outline: none; font: inherit; font-size: 13px; color: #fff;
+          background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.35); transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .chat-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+        .chat-input:focus { border-color: rgba(255, 200, 140, 0.9); box-shadow: 0 0 0 3px rgba(255, 150, 50, 0.22); }
+        .chat-send {
+          flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: #fff;
+          background: linear-gradient(135deg, #ff9a2f, #ff3b30); box-shadow: 0 0 10px rgba(255, 90, 30, 0.6); transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .chat-send:hover:not(:disabled) { transform: scale(1.08); }
+        .chat-send:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+        @keyframes chat-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+        @keyframes chat-dot { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+        @media (max-width: 639px) {
+          .chat-pop { left: 12px; right: 12px; bottom: 12px; width: auto; height: min(64dvh, 520px); max-height: calc(var(--app-h, 100dvh) - 24px); border-radius: 22px; transform-origin: bottom center; }
+          .chat-input { font-size: 16px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .chat-pop, .chat-pop.is-open { transition-duration: 0.01s; }
+          .chat-msg, .chat-typing i { animation: none; }
+        }
         /* close buttons for the info panel and the mobile widgets panel */
         .info-close-row { display: flex; justify-content: flex-end; margin: -10px -12px 2px 0; }
         .panel-close-row { display: none; }
@@ -3619,11 +3870,13 @@ export default function App() {
               </span>
             </button>
             <div className="pointer-events-none absolute left-full top-1/2 -mt-2 w-[100px] -translate-y-1/2 sm:w-[120px]">
-              <RobotCard />
+              <RobotCard onTouch={() => setChatOpen(true)} />
             </div>
           </div>
         </section>
       </main>
+
+      <ChatPopup open={chatOpen} onClose={() => setChatOpen(false)} onAction={chatAction} />
 
       {curtainOn && <Curtain onReveal={() => setSiteReady(true)} onDone={() => setCurtainOn(false)} />}
 
