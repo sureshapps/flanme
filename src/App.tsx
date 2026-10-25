@@ -856,7 +856,6 @@ export default function App() {
   const cvPagesRef = useRef<HTMLDivElement>(null);
   const cvStarted = useRef(false);
   const [ghOpen, setGhOpen] = useState(false);
-  const [ghQuery, setGhQuery] = useState('');
   const ghPopRef = useRef<HTMLDivElement>(null);
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [soundOn, setSoundOn] = useState(false);
@@ -1176,9 +1175,6 @@ export default function App() {
       cursorTarget.current = { x: window.innerWidth * 0.62, y: window.innerHeight * 0.42 };
     }
   }
-
-  const ghTerm = ghQuery.toLowerCase().trim();
-  const ghRepos = REPOS.filter((repo) => [repo.title, repo.description, repo.slug, ...repo.tech].join(' ').toLowerCase().includes(ghTerm));
 
   function openNotice(value: 'reserve' | 'connect') {
     setMenuOpen(false);
@@ -1897,11 +1893,8 @@ export default function App() {
         </div>
        
         <div className="case-scroll">
-          {ghRepos.length === 0 ? (
-            <p className="case-state">No repositories match your search.</p>
-          ) : (
-            <div className="gh-grid">
-              {ghRepos.map((repo, index) => (
+          <div className="gh-grid">
+              {REPOS.map((repo, index) => (
                 <article key={repo.slug} className="gh-card" style={{ animationDelay: `${Math.min(index, 12) * 45}ms`, '--img': `url("https://opengraph.githubassets.com/1/${repo.slug}")` } as CSSProperties}>
                   <div className="gh-img">
                     <span className="gh-num">{String(index + 1).padStart(2, '0')}</span>
@@ -1921,7 +1914,6 @@ export default function App() {
                 </article>
               ))}
             </div>
-          )}
         </div>
       </div>
 
