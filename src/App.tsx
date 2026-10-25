@@ -2194,7 +2194,7 @@ export default function App() {
         if (cancelled) return;
         cursor = neonCursor({
           el,
-          shaderPoints: 1,
+          shaderPoints: 4,
           curvePoints: 10,
           curveLerp: 0.5,
           radius1: 4,
