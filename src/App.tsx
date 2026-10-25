@@ -28,6 +28,12 @@ const GLASS_PHOTO = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/he
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
+/* Robot webhook: when a URL is set, touching the robot POSTs a small JSON event to it and the robot shows (and speaks) the reply.
+   The endpoint must allow CORS from this site. Never put secret keys in the URL: everything in this file is public.
+   Accepted replies: JSON { "reply" | "text" | "message" | "output": "...", "audio_url"?: "...", "lang"?: "en-US" } (a one-item array works too),
+   plain text, or an audio file (Content-Type: audio/*). Leave empty to keep the built-in random phrases. */
+const ROBOT_WEBHOOK_URL = '';
+const ROBOT_SPEAK = true; // read text replies aloud with the browser's built-in voice (when the reply has no audio)
 
 /* ---------- Sound design ----------
    Every sound is synthesised live with the Web Audio API: no audio files to host, download or license.
@@ -1481,7 +1487,7 @@ function Metrics({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-type Mouth = 'smile' | 'sad' | 'wow' | 'oh';
+type Mouth = 'smile' | 'sad' | 'wow' | 'oh' | 'talk';
 
 function RobotCard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1516,6 +1522,10 @@ function RobotCard() {
     let collapseUntil = 0;
     let laughUntil = 0;
     let mouthMode: Mouth = 'smile';
+    let speaking = false; // the robot is talking: its mouth moves
+    let asking = false; // a webhook request is in flight
+    let voice: HTMLAudioElement | null = null;
+    let webhookAbort: AbortController | null = null;
     let mouthUntil = 0;
     let frame = 0;
 
@@ -1694,6 +1704,7 @@ function RobotCard() {
 
       // mouth
       if (Date.now() > mouthUntil) mouthMode = 'smile';
+      if (speaking) { mouthMode = 'talk'; mouthUntil = Date.now() + 150; }
       const baseY = faceY + 14 + mouse.y * 6;
       if (mouthMode === 'sad') {
         ctx.beginPath();
@@ -1703,6 +1714,10 @@ function RobotCard() {
       } else if (mouthMode === 'wow') {
         ctx.beginPath();
         ctx.arc(faceX, baseY + 4, 6, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (mouthMode === 'talk') {
+        ctx.beginPath();
+        ctx.ellipse(faceX, baseY + 4, 7, 3 + Math.abs(Math.sin(time * 10)) * 8, 0, 0, Math.PI * 2);
         ctx.stroke();
       } else if (mouthMode === 'oh') {
         ctx.beginPath();
@@ -1752,6 +1767,86 @@ function RobotCard() {
       }
     };
 
+    // speech bubble for webhook replies: wraps, stays as long as the text needs
+    const emitSpeech = (text: string, duration: number) => {
+      const bubble = document.createElement('span');
+      bubble.className = 'robot-say';
+      bubble.textContent = text;
+      bubble.style.animationDuration = `${duration}ms`;
+      fx.appendChild(bubble);
+      later(() => bubble.remove(), duration + 100);
+    };
+
+    const speak = (reply: { text?: string; audio?: string; lang?: string }) => {
+      const text = reply.text?.slice(0, 280);
+      if (text) emitSpeech(text, Math.min(14000, Math.max(3000, text.length * 70)));
+      if (reply.audio) {
+        const audio = new Audio(reply.audio);
+        voice = audio;
+        speaking = true;
+        const done = () => {
+          speaking = false;
+          voice = null;
+          if (reply.audio?.startsWith('blob:')) URL.revokeObjectURL(reply.audio);
+        };
+        audio.onended = done;
+        audio.onerror = done;
+        audio.play().catch(done);
+        return;
+      }
+      if (text && ROBOT_SPEAK && 'speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = reply.lang ?? navigator.language;
+        utterance.rate = 1.05;
+        utterance.pitch = 1.25;
+        const done = () => { speaking = false; };
+        utterance.onend = done;
+        utterance.onerror = done;
+        speaking = true;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    };
+
+    // touch -> webhook -> reply. Any failure quietly falls back to a built-in phrase.
+    const askWebhook = async (touches: number) => {
+      asking = true;
+      emitPop('...', 900);
+      const controller = new AbortController();
+      webhookAbort = controller;
+      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      try {
+        const res = await fetch(ROBOT_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'robot_touch', touches, page: window.location.href, language: navigator.language, time: new Date().toISOString() }),
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`webhook ${res.status}`);
+        const type = res.headers.get('content-type') ?? '';
+        let reply: { text?: string; audio?: string; lang?: string };
+        if (type.startsWith('audio/')) {
+          reply = { audio: URL.createObjectURL(await res.blob()) };
+        } else if (type.includes('json')) {
+          const data = await res.json();
+          const first = Array.isArray(data) ? data[0] : data;
+          const text = first?.reply ?? first?.text ?? first?.message ?? first?.output ?? first?.response;
+          const audio = first?.audio_url ?? first?.audioUrl;
+          reply = { text: typeof text === 'string' ? text.trim() : undefined, audio: typeof audio === 'string' ? audio : undefined, lang: typeof first?.lang === 'string' ? first.lang : undefined };
+        } else {
+          reply = { text: (await res.text()).trim() || undefined };
+        }
+        if (!reply.text && !reply.audio) throw new Error('empty reply');
+        speak(reply);
+      } catch {
+        if (!controller.signal.aborted || webhookAbort === controller) emitPop(pick(funTexts), 1200);
+      } finally {
+        window.clearTimeout(timeout);
+        if (webhookAbort === controller) webhookAbort = null;
+        asking = false;
+      }
+    };
+
     const funTexts = ["Hallo! I'm Suresh Assit.", 'Are you OK?', "You Need Suresh's Help?", 'Okay', 'Wow', 'Ah'];
     const angryTexts = ['Enough!', "I'm angry", 'Stop', 'Sad'];
     const collapseTexts = ['Ouch!', "I'm done"];
@@ -1797,7 +1892,8 @@ function RobotCard() {
         mouthMode = Math.random() > 0.6 ? 'wow' : 'smile';
         mouthUntil = now + 1200;
         emitBubbles(4);
-        emitPop(pick(funTexts), 1200);
+        if (!ROBOT_WEBHOOK_URL) emitPop(pick(funTexts), 1200);
+        else if (!asking && !speaking) void askWebhook(clickCount);
         sfx.play(mouthMode === 'wow' ? 'robotWow' : 'robotHappy');
       }
 
@@ -1829,6 +1925,9 @@ function RobotCard() {
       window.removeEventListener('blur', onLeave);
       window.removeEventListener('click', onWindowClick);
       timers.forEach((id) => window.clearTimeout(id));
+      webhookAbort?.abort();
+      voice?.pause();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       fx.replaceChildren();
     };
   }, []);
@@ -2533,6 +2632,15 @@ export default function App() {
         @keyframes robot-collapse { 0% { opacity: 1; transform: scale(1); } 40% { opacity: 0.2; transform: scale(0.94); } 100% { opacity: 0; transform: scale(0.9); } }
         @keyframes robot-reappear { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes robot-bubble { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 40% { opacity: 0.8; } 100% { opacity: 0; transform: translateY(-16px) scale(1.1); } }
+        .robot-say {
+          position: absolute; left: 50%; bottom: calc(100% + 4px); width: max-content; max-width: min(230px, 62vw); padding: 8px 12px; border-radius: 14px;
+          font-size: 12px; line-height: 1.4; letter-spacing: 0; text-align: left; color: #fff; pointer-events: none;
+          background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4);
+          -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), 0 8px 24px rgba(0, 0, 0, 0.28); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+          transform: translateX(-30%); opacity: 0; animation: robot-say 4s ease forwards;
+        }
+        @keyframes robot-say { 0% { opacity: 0; transform: translate(-30%, 8px) scale(0.96); } 6%, 92% { opacity: 1; transform: translate(-30%, 0) scale(1); } 100% { opacity: 0; transform: translate(-30%, -6px) scale(0.98); } }
         @keyframes robot-pop { 0% { opacity: 0; transform: translate(-50%, 6px); } 30% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
         /* Metric glass widgets */
         .metric-card.glass { background: rgba(255, 255, 255, 0.05); color: #fff; }
