@@ -424,6 +424,14 @@ const sfx = (() => {
       tone({ f: 640 + p * 9, type: 'triangle', d: 0.035, g: 0.04, lp: 4200, send: 0.12 });
       noise({ type: 'highpass', f: 5000, d: 0.01, g: 0.015, send: 0 });
     },
+    // ENTER pressed: a power-up sweep as the gauge wakes
+    curtainStart: () => {
+      noise({ type: 'highpass', f: 4200, d: 0.014, g: 0.07, send: 0 });
+      tone({ f: 200, to: 90, d: 0.12, g: 0.1, send: 0.1 });
+      tone({ f: 180, to: 900, type: 'sawtooth', a: 0.05, d: 0.45, g: 0.04, lp: 2200, send: 0.3 });
+      noise({ type: 'bandpass', f: 500, to: 6000, q: 1.1, a: 0.12, d: 0.4, g: 0.09, pan: -0.5, panTo: 0.5, send: 0.35 });
+      [0, 2, 4].forEach((n, k) => glass({ f: hz(n, 76), t: 0.12 + k * 0.09, g: 0.06, d: 0.7, send: 0.5 }));
+    },
     // the gauge hits 100
     curtainReady: () => {
       glass({ f: hz(7, 79), g: 0.06, d: 0.6 });
@@ -1833,6 +1841,7 @@ function RobotCard() {
    At 100 the panels slide apart with a sound effect and the site, already loaded behind the glass, is revealed.
    The counter, needle and arc are driven straight from requestAnimationFrame (no React re-renders), so it stays smooth. */
 const CURTAIN_MS = 15000; // how long the speedometer takes to reach 100
+const CURTAIN_HOLD_MS = 450; // short pause at 100 before the panels open
 const CURTAIN_REMOVE_MS = 1700; // the panels need 1.2 s to slide away; then the curtain is removed from the page
 const GAUGE_FROM = -135; // needle angle at 0 (degrees from straight up)
 const GAUGE_SWEEP = 270;
@@ -1853,9 +1862,8 @@ const GAUGE_LABELS = [0, 20, 40, 60, 80, 100].map((v) => {
 
 function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
   const [open, setOpen] = useState(false);
-  const [ready, setReady] = useState(false); // the gauge reached 100: ENTER lights up
-  const enterBtnRef = useRef<HTMLButtonElement>(null);
-  const enterRef = useRef<() => void>(() => {});
+  const [started, setStarted] = useState(false); // ENTER was pressed: the loading run is on
+  const startRef = useRef<() => void>(() => {});
   const needleRef = useRef<SVGGElement>(null);
   const arcRef = useRef<SVGPathElement>(null);
   const leadRef = useRef<HTMLSpanElement>(null);
@@ -1889,11 +1897,7 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
       meterRef.current?.setAttribute('aria-valuenow', digits);
     };
 
-    // ENTER: the tap itself unlocks browser audio, so the opening sound always plays
-    let entered = false;
-    enterRef.current = () => {
-      if (entered) return;
-      entered = true;
+    const openCurtain = () => {
       release();
       setOpen(true); // panels slide apart
       sfx.play('curtainOpen');
@@ -1904,21 +1908,28 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
     const finish = () => {
       paint(1);
       sfx.play('curtainReady');
-      setReady(true);
-      timers.push(window.setTimeout(() => enterBtnRef.current?.focus({ preventScroll: true }), 50)); // Enter / Space works too
+      timers.push(window.setTimeout(openCurtain, CURTAIN_HOLD_MS));
     };
 
-    const start = performance.now();
-    const frame = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start) / CURTAIN_MS));
+    const frame = (now: number, from: number) => {
+      const t = Math.min(1, Math.max(0, (now - from) / CURTAIN_MS));
       const p = curtainCurve(t);
       paint(p);
       const step = Math.floor(p * 20); // a tick every 5 %
       if (step > lastStep && step < 20) { lastStep = step; sfx.play('curtainTick', step * 5); }
-      if (t < 1) raf = requestAnimationFrame(frame); else finish();
+      if (t < 1) raf = requestAnimationFrame((next) => frame(next, from)); else finish();
+    };
+
+    // ENTER starts the run. The tap itself unlocks browser audio, so every sound from here on plays.
+    let running = false;
+    startRef.current = () => {
+      if (running) return;
+      running = true;
+      timers.push(window.setTimeout(() => sfx.play('curtainStart'), 40)); // lets the audio engine finish unlocking
+      const from = performance.now();
+      raf = requestAnimationFrame((now) => frame(now, from));
     };
     paint(0);
-    raf = requestAnimationFrame(frame);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -1968,13 +1979,14 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
       </div>
 
       <button
-        ref={enterBtnRef}
         type="button"
-        className={`curtain__enter${ready ? ' is-ready' : ''}`}
+        className={`curtain__enter${started ? ' is-started' : ''}`}
         data-sfx="none"
-        disabled={!ready || open}
-        aria-label="Enter the site"
-        onClick={() => enterRef.current()}
+        disabled={started}
+        tabIndex={started ? -1 : 0}
+        autoFocus
+        aria-label="Enter: start loading"
+        onClick={() => { setStarted(true); startRef.current(); }}
       >
         <span>Enter</span>
       </button>
@@ -3119,43 +3131,42 @@ export default function App() {
         .gauge-lead { opacity: 0.22; }
         .gauge-unit { font-size: calc(var(--g) * 0.06); opacity: 0.8; }
         .gauge-caption { position: absolute; left: 50%; top: 87%; margin: 0; transform: translateX(-50%); font-family: 'Josefin Sans', sans-serif; font-size: calc(var(--g) * 0.036); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
-        /* ENTER button: dim while loading, red glow + pulse once the gauge hits 100 */
+        /* ENTER button: sits in the middle of the gauge; pressing it starts the loading run */
         .curtain__enter {
-          position: absolute; left: 50%; bottom: max(5dvh, 28px); z-index: 4; margin: 0; padding: 0.95em 2.8em 0.95em 3.1em;
-          transform: translateX(-50%); isolation: isolate; cursor: pointer; white-space: nowrap;
-          font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.35em; text-transform: uppercase; color: #fff;
-          background: radial-gradient(circle at 50% 30%, rgba(255, 90, 100, 0.3), rgba(160, 10, 24, 0.35) 80%);
-          -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 110, 120, 0.85); border-radius: 999px;
-          text-shadow: 0 0 6px #ff3b4a, 0 0 14px rgba(255, 30, 50, 0.9);
-          box-shadow: inset 0 0 14px rgba(255, 60, 70, 0.45), 0 0 10px rgba(255, 40, 55, 0.8), 0 0 28px rgba(255, 20, 40, 0.55), 0 0 60px rgba(255, 0, 30, 0.3);
-          opacity: 0.3; filter: saturate(0.5);
-          transition: opacity 0.6s ease, filter 0.6s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+          position: absolute; left: 50%; top: 50%; z-index: 4; margin: 0; width: calc(var(--g) * 0.89); height: calc(var(--g) * 0.17); padding: 0;
+          display: grid; place-items: center; transform: translate(-50%, -50%); isolation: isolate; cursor: pointer; white-space: nowrap;
+          font-family: 'Super Guardian', 'SuperGuardianBackup', Impact, sans-serif; font-style: italic; font-weight: 400;
+          font-size: calc(var(--g) * 0.085); letter-spacing: 0.03em; text-transform: uppercase; color: #fff;
+          background: linear-gradient(180deg, #ff2323, #f00000 60%, #e60000);
+          border: 0; border-radius: 999px;
+          text-shadow: 0 1px 3px rgba(120, 0, 0, 0.55);
+          box-shadow: inset 0 0 10px rgba(255, 120, 120, 0.45), 0 0 10px #ff0000, 0 0 26px rgba(255, 0, 0, 0.85), 0 0 56px rgba(255, 0, 0, 0.55);
+          animation: enter-pulse 1.7s ease-in-out infinite;
+          transition: opacity 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .curtain__enter:disabled { cursor: default; }
-        .curtain__enter.is-ready { opacity: 1; filter: none; animation: enter-pulse 1.7s ease-in-out infinite; }
-        .curtain__enter.is-ready:hover { transform: translateX(-50%) scale(1.06); }
-        .curtain__enter.is-ready:active { transform: translateX(-50%) scale(0.97); }
+        .curtain__enter:hover { transform: translate(-50%, -50%) scale(1.05); }
+        .curtain__enter:active { transform: translate(-50%, -50%) scale(0.97); }
         .curtain__enter:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 5px; }
-        /* expanding ring that ping-pongs outward from the button */
+        /* ring that ping-pongs outward from the button */
         .curtain__enter::before {
-          content: ''; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; pointer-events: none;
-          border: 2px solid rgba(255, 50, 65, 0.9); opacity: 0;
+          content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+          border: 2px solid rgba(255, 40, 40, 0.95); opacity: 0; animation: enter-ring 1.7s ease-out infinite;
         }
-        .curtain__enter.is-ready::before { animation: enter-ring 1.7s ease-out infinite; }
-        .curtain.is-open .curtain__enter { opacity: 0; transform: translateX(-50%) translateY(14px); pointer-events: none; animation: none; transition: opacity 0.4s ease, transform 0.6s ease; }
+        /* pressed: the button shrinks away and the loading takes over the gauge */
+        .curtain__enter.is-started, .curtain.is-open .curtain__enter { opacity: 0; transform: translate(-50%, -50%) scale(0.6); pointer-events: none; animation: none; }
+        .curtain__enter.is-started::before { animation: none; }
         @keyframes enter-pulse {
-          0%, 100% { box-shadow: inset 0 0 12px rgba(255, 60, 70, 0.4), 0 0 8px rgba(255, 40, 55, 0.7), 0 0 20px rgba(255, 20, 40, 0.45), 0 0 44px rgba(255, 0, 30, 0.25); }
-          50% { box-shadow: inset 0 0 20px rgba(255, 70, 80, 0.65), 0 0 16px rgba(255, 50, 65, 1), 0 0 40px rgba(255, 20, 40, 0.8), 0 0 90px rgba(255, 0, 30, 0.5); }
+          0%, 100% { box-shadow: inset 0 0 8px rgba(255, 120, 120, 0.4), 0 0 8px #ff0000, 0 0 20px rgba(255, 0, 0, 0.7), 0 0 40px rgba(255, 0, 0, 0.4); }
+          50% { box-shadow: inset 0 0 14px rgba(255, 140, 140, 0.6), 0 0 16px #ff1a1a, 0 0 40px rgba(255, 0, 0, 1), 0 0 90px rgba(255, 0, 0, 0.7); }
         }
-        @keyframes enter-ring { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35, 1.9); } }
+        @keyframes enter-ring { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.3, 1.9); } }
         @media (max-width: 639px) {
           .curtain { --g: min(64vw, 70dvh, 280px); }
           .curtain__word { display: none; }
         }
         @media (prefers-reduced-motion: reduce) {
           .curtain__panel, .curtain__center { transition-duration: 0.01s; }
-          .curtain__enter.is-ready, .curtain__enter.is-ready::before { animation: none; }
+          .curtain__enter, .curtain__enter::before { animation: none; }
         }
         /* the site waits behind the glass: every animation is held until the curtain starts to open */
         .app-root[data-site="loading"] > :not(.curtain),
