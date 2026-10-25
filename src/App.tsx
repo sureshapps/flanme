@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, LayoutGrid, MessageCircle, Briefcase, Download, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, LayoutGrid, Briefcase, Download, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -2396,21 +2396,20 @@ export default function App() {
         <div
           ref={navRef}
           className="glass nav-drop pointer-events-auto relative h-14 overflow-hidden text-white transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{ width: menuOpen ? 'min(340px, calc(100vw - 2.5rem))' : '56px' }}
+          style={{ width: menuOpen ? 'min(300px, calc(100vw - 2.5rem))' : '56px' }}
         >
           <span className="fx-layer" aria-hidden="true" />
           <button
             type="button"
-            aria-label="Open navigation"
+            aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
             aria-expanded={menuOpen}
             aria-controls="nav-items"
-            tabIndex={menuOpen ? -1 : 0}
-            onClick={() => setMenuOpen(true)}
-            className={`absolute inset-0 z-10 flex items-center justify-center rounded-full transition-opacity duration-300 ${menuOpen ? 'pointer-events-none opacity-0' : 'opacity-100 delay-200'}`}
+            onClick={() => setMenuOpen((open) => !open)}
+            className="absolute inset-y-0 left-0 z-10 flex w-14 items-center justify-center rounded-full"
           >
             <img src={NAV_ICON} alt="" aria-hidden="true" draggable={false} className="h-12 w-12 select-none object-contain" />
           </button>
-          <div id="nav-items" className={`relative flex h-full items-center justify-between px-3 ${menuOpen ? '' : 'pointer-events-none'}`}>
+          <div id="nav-items" className={`relative flex h-full items-center justify-between pl-[56px] pr-3 ${menuOpen ? '' : 'pointer-events-none'}`}>
             {NAV_ITEMS.map(({ label, Icon }, index) => (
               <button
                 key={label}
@@ -2426,17 +2425,6 @@ export default function App() {
                 <Icon size={22} strokeWidth={1.75} />
               </button>
             ))}
-            <button
-              type="button"
-              title="Connect"
-              aria-label="Connect"
-              tabIndex={menuOpen ? 0 : -1}
-              onClick={() => openNotice('connect')}
-              style={{ transitionDelay: menuOpen ? `${150 + NAV_ITEMS.length * 50}ms` : '0ms' }}
-              className={`flex h-11 w-11 min-w-0 shrink items-center justify-center rounded-full transition-all duration-300 hover:bg-white/15 ${menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-50 opacity-0'}`}
-            >
-              <MessageCircle size={22} strokeWidth={1.75} />
-            </button>
           </div>
         </div>
       </nav>
