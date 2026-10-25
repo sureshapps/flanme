@@ -208,7 +208,7 @@ function RingPill({ id, value, label, from, to }: { id: string; value: number; l
     <div className="glass metric-card metric-pill" style={{ '--r': '9999px' } as CSSProperties} role="img" aria-label={`${label} ${value} percent`}>
       <span className="fx-layer" aria-hidden="true" />
       <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" className="shrink-0 -rotate-90" style={{ filter: `drop-shadow(0 0 4px ${to})` }}>
-        <defs>
+        <defs>V
           <linearGradient id={`ring-${id}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor={from} />
             <stop offset="100%" stopColor={to} />
@@ -1487,7 +1487,7 @@ export default function App() {
         }
         .title span { position: relative; color: #fff700; font-family: 'Ngopie', cursive; font-size: 2.1em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
         .title span:before {
-          content: ''; position: absolute; top: 20%; left: 73%; translate: -40% 0;
+          content: ''; position: absolute; top: 20%; left: 43%; translate: -40% 0;
           width: 350%; aspect-ratio: 1 / 1; z-index: -1;
           border: 0.9em solid #eb0027; border-radius: 50%; opacity: 1;
           transition: --mask-progress 0.5s; transition-delay: 0.3s;
