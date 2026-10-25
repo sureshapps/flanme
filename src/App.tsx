@@ -2711,6 +2711,42 @@ export default function App() {
         html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         body { position: fixed; inset: 0; -webkit-tap-highlight-color: transparent; }
         .app-root { position: fixed; inset: 0; width: 100%; height: var(--app-h, 100dvh); overflow: hidden; background: #820d16; }
+        /* Glassmorphic page frame: inside border with a soft emboss (non-interactive, sits under popups and the curtain) */
+        .page-frame {
+          --pf-inset: clamp(8px, 1.3vw, 18px);
+          --pf-r: clamp(20px, 2.4vw, 34px);
+          position: fixed; inset: var(--pf-inset); z-index: 48; pointer-events: none;
+          border-radius: var(--pf-r);
+          background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.10) 100%);
+          box-shadow:
+            0 0 0 100vmax rgba(255, 255, 255, 0.06),            /* frosted bezel between the frame and the screen edge */
+            0 0 0 1px rgba(0, 0, 0, 0.28),                      /* crisp outer groove */
+            0 0 0 2px rgba(255, 255, 255, 0.10),                /* soft lip around the groove */
+            inset 2px 2px 2px -1px rgba(255, 255, 255, 0.65),   /* top-left light edge */
+            inset -2px -2px 2px -1px rgba(255, 255, 255, 0.40), /* bottom-right light edge */
+            inset 0 0 0 1px rgba(255, 255, 255, 0.14),          /* inner hairline */
+            inset 6px 6px 18px -8px rgba(255, 255, 255, 0.35),  /* smooth raised emboss glow */
+            inset -8px -8px 24px -10px rgba(0, 0, 0, 0.45),     /* smooth shadowed emboss */
+            inset 0 0 60px rgba(0, 0, 0, 0.16);                 /* gentle depth toward the centre */
+        }
+        /* glossy gradient rim: bright at the top-left and bottom-right corners, clear in between */
+        .page-frame::before {
+          content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.08) 24%, rgba(255, 255, 255, 0.04) 60%, rgba(255, 255, 255, 0.55) 100%);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+        }
+        /* faint top gloss, like light catching the upper glass edge */
+        .page-frame::after {
+          content: ''; position: absolute; left: 8%; right: 8%; top: 0; height: 22%;
+          border-radius: var(--pf-r) var(--pf-r) 100% 100% / var(--pf-r) var(--pf-r) 100% 100%;
+          background: linear-gradient(to bottom, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0));
+          -webkit-mask: linear-gradient(to bottom, #000, transparent);
+          mask: linear-gradient(to bottom, #000, transparent);
+        }
+        @media (max-width: 639px) { .page-frame { --pf-inset: 7px; --pf-r: 22px; } }
         /* Liquid-glass surface (shared by the button and the nav) */
         .glass {
           --r: 9999px; --tr: 15%;
@@ -3584,6 +3620,7 @@ export default function App() {
           .case-skel { animation: none; }
         }
       `}</style>
+      <div className="page-frame" aria-hidden="true" />
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
           ref={navRef}
