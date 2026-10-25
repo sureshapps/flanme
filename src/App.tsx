@@ -6,6 +6,8 @@ const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/head
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
 const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const SIGNATURE = '/signature.png';
+// DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
+const DEVOPS_ICON = '/devops.svg';
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 // cover photo for the Jom Connect card; swap for your own portrait
 const CONNECT_COVER = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/me.webp';
@@ -1449,6 +1451,27 @@ export default function App() {
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
         .widgets-btn.is-open svg { transform: rotate(180deg); }
         /* Info button + mesh popup (pulls out of the button) */
+        /* iridescent ring border (active nav item, info button, mobile << button) */
+        .ring-btn {
+          position: relative; isolation: isolate;
+          background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.12), rgba(10, 10, 12, 0.45) 75%) !important;
+          box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 0 12px rgba(255, 170, 60, 0.12);
+        }
+        .ring-btn::before, .ring-btn::after {
+          content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: 0;
+          background: conic-gradient(from 300deg, #fff3b0 0deg, #ffc23d 22deg, #ff6a1f 48deg, #ff2b3a 74deg, #3b1d78 100deg, #1b4dff 135deg, #0b1b55 175deg, #1fc8ff 215deg, #3b7bff 245deg, #ff8a1f 280deg, #ff3a2a 305deg, #2a52ff 335deg, #fff3b0 360deg);
+        }
+        .ring-btn::before {
+          padding: 2px;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+        }
+        .ring-btn::after {
+          z-index: -1; inset: -2px; padding: 3px; filter: blur(5px); opacity: 0.75;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+        }
+        .ring-btn > svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)); }
         .info-btn { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease; }
         .info-btn:hover { transform: scale(1.06); }
         .info-btn:active { transform: scale(0.95); }
@@ -1762,6 +1785,7 @@ export default function App() {
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
         .conn-icon { width: 1em; height: 1em; flex: none; }
+        .conn-badge { height: 1.5em; width: auto; flex: none; display: block; user-select: none; }
         .conn-list { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 1.1em; margin: 0; padding: 0.35em 0 0.2em; list-style: none; font-size: 1em; }
         .conn-social { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; text-decoration: none; transition: transform 0.3s ease; }
         .conn-social:hover { transform: translateY(-3px) scale(1.12); }
@@ -1836,7 +1860,7 @@ export default function App() {
                 tabIndex={menuOpen ? 0 : -1}
                 onClick={() => navigate(label)}
                 style={{ transitionDelay: menuOpen ? `${150 + index * 50}ms` : '0ms' }}
-                className={`flex h-11 w-11 min-w-0 shrink items-center justify-center rounded-full transition-all duration-300 hover:bg-white/15 ${label === 'Module' ? 'bg-white/20' : ''} ${menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-50 opacity-0'}`}
+                className={`relative flex h-11 w-11 min-w-0 shrink items-center justify-center rounded-full transition-all duration-300 hover:bg-white/15 ${label === 'Module' ? 'ring-btn' : ''} ${menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-50 opacity-0'}`}
               >
                 <Icon size={22} strokeWidth={1.75} />
               </button>
@@ -1856,33 +1880,33 @@ export default function App() {
         </div>
       </nav>
 
-      <div className="pointer-events-none fixed top-5 right-5 z-[70] sm:top-6 sm:right-8 md:right-12">
+      <div className="pointer-events-none fixed top-[26px] right-[26px] z-[70] sm:top-[30px] sm:right-[34px] md:right-[50px]">
         <button
           type="button"
           aria-label={infoOpen ? 'Close info' : 'About this module'}
           aria-expanded={infoOpen}
           aria-controls="info-popup"
           onClick={(event) => { event.stopPropagation(); setWidgetsOpen(false); setInfoOpen((open) => !open); }}
-          className={`glass info-btn pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
+          className={`glass ring-btn info-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
         >
           <span className="fx-layer" aria-hidden="true" />
-          <Info size={26} strokeWidth={1.75} />
+          <Info size={22} strokeWidth={1.75} />
         </button>
       </div>
 
-      <div className="pointer-events-none fixed top-[88px] right-6 z-[70] sm:hidden">
+      <div className="pointer-events-none fixed top-[82px] right-[26px] z-[70] sm:hidden">
         <button
           type="button"
           aria-label={widgetsOpen ? 'Hide widgets' : 'Show widgets'}
           aria-expanded={widgetsOpen}
           aria-controls="widgets-panel"
           onClick={(event) => { event.stopPropagation(); setInfoOpen(false); setWidgetsOpen((open) => !open); }}
-          className={`glass info-btn widgets-btn pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center text-white ${widgetsOpen ? 'is-open' : ''}`}
+          className={`glass ring-btn info-btn widgets-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${widgetsOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
         >
           <span className="fx-layer" aria-hidden="true" />
-          <ChevronsLeft size={22} strokeWidth={1.75} />
+          <ChevronsLeft size={20} strokeWidth={1.75} />
         </button>
       </div>
 
@@ -2068,16 +2092,13 @@ export default function App() {
       </main>
 
       <dialog ref={noticeRef} onCancel={() => setNotice(null)} onClick={(event) => { if (event.target === event.currentTarget) setNotice(null); }} className="connect-dialog" aria-labelledby="notice-title">
-        <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
-          <symbol id="icon-check" viewBox="0 -960 960 960" fill="currentColor"><path d="m443-429 169-169-38-39-131 132-57-56-38 38 95 94ZM222-160v-578q0-36.72 24.64-61.36Q271.27-824 308-824h344q36.72 0 61.36 24.64T738-738v578L480-270 222-160Zm54-82 204-87.66L684-242v-496q0-12-10-22t-22-10H308q-12 0-22 10t-10 22v496Zm0-528h408-408Z" /></symbol>
-        </svg>
         <div className="conn-card">
           <div className="conn-inner">
             <img className="conn-cover" src={CONNECT_COVER} alt="" draggable={false} />
             <button type="button" className="conn-close" onClick={() => setNotice(null)} aria-label="Close dialog"><X size={18} strokeWidth={2} /></button>
             <div className="conn-body">
               <h2 id="notice-title" className="conn-header">
-                <span className="conn-chips">Suresh Kaleyannan <svg className="conn-icon" style={{ width: '1.1em', height: '1.1em' }} aria-hidden="true"><use href="#icon-check" /></svg></span>
+                <span className="conn-chips">Suresh Kaleyannan <img className="conn-badge" src={DEVOPS_ICON} alt="DevOps" draggable={false} /></span>
               </h2>
               <p>Building interactive websites with modern frontend technologies, smooth animations, and creative experiences.</p>
               <ul className="conn-list">
