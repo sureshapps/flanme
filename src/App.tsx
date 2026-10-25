@@ -1833,7 +1833,6 @@ function RobotCard() {
    At 100 the panels slide apart with a sound effect and the site, already loaded behind the glass, is revealed.
    The counter, needle and arc are driven straight from requestAnimationFrame (no React re-renders), so it stays smooth. */
 const CURTAIN_MS = 15000; // how long the speedometer takes to reach 100
-const CURTAIN_HOLD_MS = 450; // short pause at 100 before the panels open
 const CURTAIN_REMOVE_MS = 1700; // the panels need 1.2 s to slide away; then the curtain is removed from the page
 const GAUGE_FROM = -135; // needle angle at 0 (degrees from straight up)
 const GAUGE_SWEEP = 270;
@@ -1854,7 +1853,9 @@ const GAUGE_LABELS = [0, 20, 40, 60, 80, 100].map((v) => {
 
 function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
   const [open, setOpen] = useState(false);
-  const [hint, setHint] = useState(() => sfx.isEnabled());
+  const [ready, setReady] = useState(false); // the gauge reached 100: ENTER lights up
+  const enterBtnRef = useRef<HTMLButtonElement>(null);
+  const enterRef = useRef<() => void>(() => {});
   const needleRef = useRef<SVGGElement>(null);
   const arcRef = useRef<SVGPathElement>(null);
   const leadRef = useRef<HTMLSpanElement>(null);
@@ -1862,15 +1863,6 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
   const meterRef = useRef<HTMLDivElement>(null);
   const cb = useRef({ onReveal, onDone });
   cb.current = { onReveal, onDone };
-
-  // browsers only allow sound after a tap / key press: the first one also hides the "tap for sound" hint
-  useEffect(() => {
-    if (!hint) return;
-    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
-    const off = () => setHint(false);
-    events.forEach((name) => window.addEventListener(name, off, { once: true, passive: true }));
-    return () => events.forEach((name) => window.removeEventListener(name, off));
-  }, [hint]);
 
   useEffect(() => {
     // the page behind the glass can't be clicked or tabbed into until the curtain opens
@@ -1897,16 +1889,23 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
       meterRef.current?.setAttribute('aria-valuenow', digits);
     };
 
+    // ENTER: the tap itself unlocks browser audio, so the opening sound always plays
+    let entered = false;
+    enterRef.current = () => {
+      if (entered) return;
+      entered = true;
+      release();
+      setOpen(true); // panels slide apart
+      sfx.play('curtainOpen');
+      cb.current.onReveal(); // the site starts its entrance animations while the panels move
+      timers.push(window.setTimeout(() => cb.current.onDone(), CURTAIN_REMOVE_MS));
+    };
+
     const finish = () => {
       paint(1);
       sfx.play('curtainReady');
-      timers.push(window.setTimeout(() => {
-        release();
-        setOpen(true); // panels slide apart
-        sfx.play('curtainOpen');
-        cb.current.onReveal(); // the site starts its entrance animations while the panels move
-        timers.push(window.setTimeout(() => cb.current.onDone(), CURTAIN_REMOVE_MS));
-      }, CURTAIN_HOLD_MS));
+      setReady(true);
+      timers.push(window.setTimeout(() => enterBtnRef.current?.focus({ preventScroll: true }), 50)); // Enter / Space works too
     };
 
     const start = performance.now();
@@ -1968,7 +1967,17 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
         <p className="gauge-caption" aria-hidden="true">Loading</p>
       </div>
 
-      <p className={`curtain__hint${hint && !open ? '' : ' is-hidden'}`} aria-hidden="true">Tap anywhere for sound</p>
+      <button
+        ref={enterBtnRef}
+        type="button"
+        className={`curtain__enter${ready ? ' is-ready' : ''}`}
+        data-sfx="none"
+        disabled={!ready || open}
+        aria-label="Enter the site"
+        onClick={() => enterRef.current()}
+      >
+        <span>Enter</span>
+      </button>
     </div>
   );
 }
@@ -3110,20 +3119,43 @@ export default function App() {
         .gauge-lead { opacity: 0.22; }
         .gauge-unit { font-size: calc(var(--g) * 0.06); opacity: 0.8; }
         .gauge-caption { position: absolute; left: 50%; top: 87%; margin: 0; transform: translateX(-50%); font-family: 'Josefin Sans', sans-serif; font-size: calc(var(--g) * 0.036); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
-        .curtain__hint {
-          position: absolute; left: 50%; bottom: max(4dvh, 24px); z-index: 3; margin: 0; transform: translateX(-50%); white-space: nowrap;
-          font-family: 'Josefin Sans', sans-serif; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8);
-          animation: curtain-hint 2.2s ease-in-out infinite; transition: opacity 0.4s ease;
+        /* ENTER button: dim while loading, red glow + pulse once the gauge hits 100 */
+        .curtain__enter {
+          position: absolute; left: 50%; bottom: max(5dvh, 28px); z-index: 4; margin: 0; padding: 0.95em 2.8em 0.95em 3.1em;
+          transform: translateX(-50%); isolation: isolate; cursor: pointer; white-space: nowrap;
+          font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.35em; text-transform: uppercase; color: #fff;
+          background: radial-gradient(circle at 50% 30%, rgba(255, 90, 100, 0.3), rgba(160, 10, 24, 0.35) 80%);
+          -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 110, 120, 0.85); border-radius: 999px;
+          text-shadow: 0 0 6px #ff3b4a, 0 0 14px rgba(255, 30, 50, 0.9);
+          box-shadow: inset 0 0 14px rgba(255, 60, 70, 0.45), 0 0 10px rgba(255, 40, 55, 0.8), 0 0 28px rgba(255, 20, 40, 0.55), 0 0 60px rgba(255, 0, 30, 0.3);
+          opacity: 0.3; filter: saturate(0.5);
+          transition: opacity 0.6s ease, filter 0.6s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .curtain__hint.is-hidden { opacity: 0; animation: none; }
-        @keyframes curtain-hint { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.95; } }
+        .curtain__enter:disabled { cursor: default; }
+        .curtain__enter.is-ready { opacity: 1; filter: none; animation: enter-pulse 1.7s ease-in-out infinite; }
+        .curtain__enter.is-ready:hover { transform: translateX(-50%) scale(1.06); }
+        .curtain__enter.is-ready:active { transform: translateX(-50%) scale(0.97); }
+        .curtain__enter:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 5px; }
+        /* expanding ring that ping-pongs outward from the button */
+        .curtain__enter::before {
+          content: ''; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; pointer-events: none;
+          border: 2px solid rgba(255, 50, 65, 0.9); opacity: 0;
+        }
+        .curtain__enter.is-ready::before { animation: enter-ring 1.7s ease-out infinite; }
+        .curtain.is-open .curtain__enter { opacity: 0; transform: translateX(-50%) translateY(14px); pointer-events: none; animation: none; transition: opacity 0.4s ease, transform 0.6s ease; }
+        @keyframes enter-pulse {
+          0%, 100% { box-shadow: inset 0 0 12px rgba(255, 60, 70, 0.4), 0 0 8px rgba(255, 40, 55, 0.7), 0 0 20px rgba(255, 20, 40, 0.45), 0 0 44px rgba(255, 0, 30, 0.25); }
+          50% { box-shadow: inset 0 0 20px rgba(255, 70, 80, 0.65), 0 0 16px rgba(255, 50, 65, 1), 0 0 40px rgba(255, 20, 40, 0.8), 0 0 90px rgba(255, 0, 30, 0.5); }
+        }
+        @keyframes enter-ring { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35, 1.9); } }
         @media (max-width: 639px) {
           .curtain { --g: min(64vw, 70dvh, 280px); }
           .curtain__word { display: none; }
         }
         @media (prefers-reduced-motion: reduce) {
           .curtain__panel, .curtain__center { transition-duration: 0.01s; }
-          .curtain__hint { animation: none; opacity: 0.8; }
+          .curtain__enter.is-ready, .curtain__enter.is-ready::before { animation: none; }
         }
         /* the site waits behind the glass: every animation is held until the curtain starts to open */
         .app-root[data-site="loading"] > :not(.curtain),
