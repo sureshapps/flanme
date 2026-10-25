@@ -1485,9 +1485,9 @@ export default function App() {
           font-family: 'Poppins', sans-serif; font-weight: 300; letter-spacing: 0.02em;
           font-size: clamp(0.6rem, 0.45vw + 0.42rem, 0.8rem);
         }
-        .title span { position: relative; color: #fff700; font-family: 'Ngopie', cursive; font-size: 2.1em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+        .title span { position: relative; color: #fff700; font-family: 'Ngopie', cursive; font-size: 1.8em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
         .title span:before {
-          content: ''; position: absolute; top: 20%; left: 43%; translate: -40% 0;
+          content: ''; position: absolute; top: 20%; left: 23%; translate: -40% 0;
           width: 350%; aspect-ratio: 1 / 1; z-index: -1;
           border: 0.9em solid #eb0027; border-radius: 50%; opacity: 1;
           transition: --mask-progress 0.5s; transition-delay: 0.3s;
