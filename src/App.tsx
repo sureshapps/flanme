@@ -14,6 +14,14 @@ const CONNECT_COVER = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const NEON_URL = 'https://unpkg.com/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js';
+// 3D glass photo frame (three.js from esm.sh so the core + addons share one instance)
+const THREE_URL = 'https://esm.sh/three@0.170.0';
+const THREE_ROUNDED_BOX_URL = 'https://esm.sh/three@0.170.0/examples/jsm/geometries/RoundedBoxGeometry.js';
+const THREE_RGBE_URL = 'https://esm.sh/three@0.170.0/examples/jsm/loaders/RGBELoader.js';
+const THREE_ROOM_ENV_URL = 'https://esm.sh/three@0.170.0/examples/jsm/environments/RoomEnvironment.js';
+const GLASS_ENV_HDR = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/royal_esplanade_2k.hdr';
+// photo shown inside the glass frame: swap for any image URL that allows cross-origin loading
+const GLASS_PHOTO = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
@@ -542,12 +550,212 @@ function WeatherCard() {
   );
 }
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => (typeof window !== 'undefined' ? window.matchMedia(query).matches : false));
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const update = () => setMatches(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, [query]);
+  return matches;
+}
+
+/* Rotating 3D glass photo frame (display only: no controls, no upload) */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function GlassFrame({ className = '', style }: { className?: string; style?: CSSProperties }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    let disposed = false;
+    let raf = 0;
+    let teardown: (() => void) | null = null;
+
+    (async () => {
+      try {
+        const [THREE, { RoundedBoxGeometry }, { RGBELoader }]: any[] = await Promise.all([
+          import(/* @vite-ignore */ THREE_URL),
+          import(/* @vite-ignore */ THREE_ROUNDED_BOX_URL),
+          import(/* @vite-ignore */ THREE_RGBE_URL),
+        ]);
+        if (disposed) return;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.02, 200);
+        camera.position.set(0, 0, 5.8);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+        renderer.setClearColor(0x000000, 0);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        host.appendChild(renderer.domElement);
+        const draw = () => renderer.render(scene, camera);
+
+        // lights
+        scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        keyLight.position.set(6, 10, 8);
+        scene.add(keyLight);
+        const rimLight = new THREE.DirectionalLight(0xffffff, 2.6);
+        rimLight.position.set(-6, 3, -10);
+        scene.add(rimLight);
+
+        // environment reflections (HDR, with a built-in studio room as fallback)
+        new RGBELoader().load(
+          GLASS_ENV_HDR,
+          (texture: any) => {
+            if (disposed) { texture.dispose(); return; }
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            scene.environment = texture;
+            if (reduced) draw();
+          },
+          undefined,
+          async () => {
+            try {
+              const { RoomEnvironment } = await import(/* @vite-ignore */ THREE_ROOM_ENV_URL);
+              if (disposed) return;
+              const pmrem = new THREE.PMREMGenerator(renderer);
+              scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+              pmrem.dispose();
+              if (reduced) draw();
+            } catch { /* no reflections */ }
+          },
+        );
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const glassMat = new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color('#ffffff'), transmission: 1.0, opacity: 1.0, metalness: 0.0, roughness: 0.02, ior: 1.5, thickness: 1.2,
+          specularIntensity: 1.0, envMapIntensity: 1.2, clearcoat: 1.0, clearcoatRoughness: 0.0, transparent: true, side: THREE.DoubleSide, depthWrite: false,
+        });
+        const glassMesh = new THREE.Mesh(new RoundedBoxGeometry(2.1, 2.1, 1.0, 32, 0.26), glassMat);
+        glassMesh.renderOrder = 2;
+        group.add(glassMesh);
+
+        // photo: rounded-square silhouette, slightly inset, planar UVs
+        const w = 2.1, h = 2.1, r = 0.22, x = -w / 2, y = -h / 2;
+        const shape = new THREE.Shape();
+        shape.moveTo(x + r, y);
+        shape.lineTo(x + w - r, y);
+        shape.quadraticCurveTo(x + w, y, x + w, y + r);
+        shape.lineTo(x + w, y + h - r);
+        shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        shape.lineTo(x + r, y + h);
+        shape.quadraticCurveTo(x, y + h, x, y + h - r);
+        shape.lineTo(x, y + r);
+        shape.quadraticCurveTo(x, y, x + r, y);
+        shape.closePath();
+        const photoGeo = new THREE.ShapeGeometry(shape, 48);
+        photoGeo.center();
+        photoGeo.scale(0.97, 0.97, 1);
+        photoGeo.computeBoundingBox();
+        const bb = photoGeo.boundingBox;
+        const pos = photoGeo.attributes.position;
+        const uv = new Float32Array(pos.count * 2);
+        for (let i = 0; i < pos.count; i++) {
+          uv[i * 2] = (pos.getX(i) - bb.min.x) / (bb.max.x - bb.min.x || 1);
+          uv[i * 2 + 1] = (pos.getY(i) - bb.min.y) / (bb.max.y - bb.min.y || 1);
+        }
+        photoGeo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+        photoGeo.computeVertexNormals();
+        const photoMat = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: 0xffffff, roughness: 0.35, metalness: 0.05, transparent: true, opacity: 1.0 });
+        const photoMesh = new THREE.Mesh(photoGeo, photoMat);
+        photoMesh.renderOrder = 1;
+        photoMesh.visible = false; // until the image has loaded
+        group.add(photoMesh);
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          if (disposed) return;
+          const size = 1024;
+          const canvas = document.createElement('canvas');
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const iw = img.naturalWidth || img.width;
+          const ih = img.naturalHeight || img.height;
+          const scale = Math.max(size / iw, size / ih);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, (size - iw * scale) / 2, (size - ih * scale) / 2, iw * scale, ih * scale);
+          const tex = new THREE.CanvasTexture(canvas);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
+          photoMat.map = tex;
+          photoMat.needsUpdate = true;
+          photoMesh.visible = true;
+          if (reduced) draw();
+        };
+        img.src = GLASS_PHOTO;
+
+        const resize = () => {
+          const width = host.clientWidth || 1;
+          const height = host.clientHeight || 1;
+          renderer.setSize(width, height, false);
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+        };
+        const ro = new ResizeObserver(() => { resize(); if (reduced) draw(); });
+        ro.observe(host);
+        resize();
+
+        const clock = new THREE.Clock();
+        let t = 0;
+        const tick = () => {
+          raf = requestAnimationFrame(tick);
+          const dt = Math.min(clock.getDelta(), 0.05);
+          if (document.hidden) return;
+          t += dt;
+          group.rotation.y += dt * 0.45;
+          group.rotation.x = Math.cos(t * 0.6) * 0.14;
+          group.rotation.z = Math.sin(t * 0.45) * 0.08;
+          draw();
+        };
+        if (reduced) { group.rotation.set(0.1, -0.5, 0); draw(); } else tick();
+
+        teardown = () => {
+          ro.disconnect();
+          glassMesh.geometry.dispose();
+          photoGeo.dispose();
+          glassMat.dispose();
+          photoMat.map?.dispose();
+          photoMat.dispose();
+          scene.environment?.dispose?.();
+          renderer.dispose();
+          renderer.domElement.remove();
+        };
+        if (disposed) teardown();
+      } catch {
+        /* three.js failed to load: the frame simply doesn't show */
+      }
+    })();
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      teardown?.();
+    };
+  }, []);
+
+  return <div ref={hostRef} className={`glass-frame ${className}`} style={style} aria-hidden="true" />;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 function Metrics({ open }: { open: boolean }) {
+  const desktop = useMediaQuery('(min-width: 1024px)');
   return (
     <div className="hero-rise pointer-events-none absolute right-3 top-[148px] z-[55] w-[calc(100vw-1.5rem)] max-w-[300px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none" style={{ animationDelay: '1.1s' }}>
       <div id="widgets-panel" className={`metrics-panel ${open ? 'is-open' : ''}`}>
       <span className="fx-layer" aria-hidden="true" />
       <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
+        {desktop && <GlassFrame className="glass-frame--desktop" />}
         <ClockCard />
         <div className="info-extra grid grid-cols-2 gap-2 lg:gap-3">
           <WeatherCard />
@@ -923,6 +1131,7 @@ function RobotCard() {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const phone = useMediaQuery('(max-width: 639px)');
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [widgetsOpen, setWidgetsOpen] = useState(false);
@@ -1497,6 +1706,11 @@ export default function App() {
         .info-card { font-size: 9.5px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; }
         .info-card p { margin: 0; }
         .metrics-scale { transform-origin: bottom right; }
+        /* rotating 3D glass photo frame */
+        .glass-frame { position: relative; pointer-events: none; }
+        .glass-frame canvas { display: block; width: 100%; height: 100%; }
+        .glass-frame--desktop { align-self: flex-end; width: clamp(150px, 12.5vw, 210px); aspect-ratio: 1; margin-bottom: -6px; }
+        .glass-frame--mobile { position: absolute; z-index: 45; right: 11vw; top: 55%; width: 31vw; aspect-ratio: 1; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
         .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.5em; padding: 0.95em 1.4em; }
@@ -2268,6 +2482,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
         <Metrics open={widgetsOpen} />
+        {phone && <GlassFrame className="glass-frame--mobile hero-rise" style={{ animationDelay: '1.1s' }} />}
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
             <span className="title-code block">Code</span>
