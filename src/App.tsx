@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Link2, Download, Play, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, LayoutGrid, MessageCircle, Briefcase, Download, Play, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -58,32 +58,6 @@ function fetchBehanceProjects(): Promise<BehanceProject[]> {
 
 type IconProps = { size?: number | string; strokeWidth?: number | string; className?: string };
 
-function BehanceIcon({ size = 22, className = '' }: IconProps) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-behance ${className}`} aria-hidden="true" fill="currentColor">
-      <path fillRule="evenodd" clipRule="evenodd" d="M1 5a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H5a4 4 0 0 1-4-4V5Zm4-2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5Z" />
-      <path fillRule="evenodd" clipRule="evenodd" d="M4 7a1 1 0 0 1 1-1h3.5a3.5 3.5 0 1 1 0 7H5a1 1 0 0 1-1-1V7Zm2 1v3h2.5a1.5 1.5 0 0 0 0-3H6Z" />
-      <path fillRule="evenodd" clipRule="evenodd" d="M4 12a1 1 0 0 1 1-1h3.5a3.5 3.5 0 1 1 0 7H5a1 1 0 0 1-1-1v-5zm2 1v3h2.5a1.5 1.5 0 0 0 0-3H6zm8.768 2H19.5a1 1 0 0 0 1-1 4 4 0 1 0-1.189 2.845l-1.405-1.422A2 2 0 0 1 14.768 15zm1.732-3a2 2 0 0 0-1.732 1h3.464a2 2 0 0 0-1.732-1zM19 9h-5V7h5v2z" />
-    </svg>
-  );
-}
-
-function CvIcon({ size = 22, className = '' }: IconProps) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-cv ${className}`} aria-hidden="true" fill="currentColor">
-      <path d="M19 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Zm-1 18H6V4h12Zm-9-5h6a1 1 0 0 0 1-1v-1a4 4 0 0 0-1.62-3.2A3 3 0 0 0 15 8a3 3 0 0 0-6 0 3 3 0 0 0 .62 1.8A4 4 0 0 0 8 13v1a1 1 0 0 0 1 1Zm1-2a2 2 0 0 1 4 0Zm1-5a1 1 0 1 1 1 1 1 1 0 0 1-1-1ZM8 18a1 1 0 0 1 1-1h3a1 1 0 0 1 0 2H9a1 1 0 0 1-1-1Zm8 0a1 1 0 1 1-1-1 1 1 0 0 1 1 1Z" />
-    </svg>
-  );
-}
-
-function GithubIcon({ size = 22, className = '' }: IconProps) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={size} height={size} className={`neon-github ${className}`} aria-hidden="true" fill="currentColor">
-      <path d="M27.106 0s-2.101 0-4.235 3.2c-1.056-1.057-4.267-1.067-5.331-1.067-1.068 0-4.277.01-5.334 1.067C10.072 0 7.976 0 7.976 0c-1.141 2.864-.248 4.807-.033 5.333C6.877 6.4 5.806 7.467 5.806 12.8s3.878 8.008 8.538 8.533c-.599.521-1.067 2.133-1.067 3.2-1.197.533-4.528 1.045-6.4-2.133 0 0-1.067-2.133-3.2-2.133 0 0-2.133-.201 0 1.067 0 0 1.067 1.067 2.133 3.2 0 0 1.629 4.456 7.467 3.2.012 1.735 0 4.267 0 4.267h8.528v-7.467c0-.844-.466-2.68-1.067-3.2 4.66-.525 8.533-3.2 8.533-8.533 0-5.333-1.067-6.4-2.133-7.467.217-.527 1.108-2.47-.032-5.334z" />
-    </svg>
-  );
-}
-
 function InstagramIcon({ size = 22, className = '' }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width={size} height={size} className={className} aria-hidden="true" fill="currentColor">
@@ -117,14 +91,6 @@ function EmailIcon({ size = 22, className = '' }: IconProps) {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden="true" fill="currentColor">
       <path fillRule="evenodd" clipRule="evenodd" d="M2.25 7C2.25 4.37665 4.37665 2.25 7 2.25H17C19.6234 2.25 21.75 4.37665 21.75 7V17C21.75 19.6234 19.6234 21.75 17 21.75H7C4.37665 21.75 2.25 19.6234 2.25 17V7ZM7 3.75C5.20507 3.75 3.75 5.20507 3.75 7V17C3.75 18.7949 5.20507 20.25 7 20.25H17C18.7949 20.25 20.25 18.7949 20.25 17V7C20.25 5.20507 18.7949 3.75 17 3.75H7Z" />
       <path fillRule="evenodd" clipRule="evenodd" d="M6.25 12C6.25 8.82412 8.82412 6.25 12 6.25C15.1759 6.25 17.75 8.82412 17.75 12V12.8333C17.75 14.0148 16.7925 14.9722 15.6111 14.9722C14.9573 14.9722 14.3721 14.679 13.9798 14.2169C13.4541 14.6866 12.7604 14.9722 12 14.9722C10.3586 14.9722 9.02778 13.6414 9.02778 12C9.02778 10.3586 10.3586 9.02778 12 9.02778C13.6414 9.02778 14.9722 10.3586 14.9722 12V12.8333C14.9722 13.1863 15.2581 13.4722 15.6111 13.4722C15.9641 13.4722 16.25 13.1863 16.25 12.8333V12C16.25 9.65255 14.3475 7.75 12 7.75C9.65255 7.75 7.75 9.65255 7.75 12C7.75 14.3475 9.65255 16.25 12 16.25C12.543 16.25 13.094 16.1471 13.6262 15.9266C13.9099 15.809 14.1751 15.6603 14.4234 15.4876C14.7634 15.2511 15.2308 15.335 15.4674 15.6751C15.7039 16.0151 15.62 16.4825 15.2799 16.719C14.9516 16.9474 14.5924 17.1499 14.2005 17.3123C13.4805 17.6106 12.7337 17.75 12 17.75C8.82412 17.75 6.25 15.1759 6.25 12ZM13.4722 12C13.4722 11.187 12.813 10.5278 12 10.5278C11.187 10.5278 10.5278 11.187 10.5278 12C10.5278 12.813 11.187 13.4722 12 13.4722C12.813 13.4722 13.4722 12.813 13.4722 12Z" />
-    </svg>
-  );
-}
-
-function GalleryIcon({ size = 22, className = '' }: IconProps) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={size} height={size} className={`neon-gallery ${className}`} aria-hidden="true" fill="currentColor">
-      <path d="M3.3330078,30h20.1806641c0.3935547,0,0.7509766-0.230957,0.9121094-0.5898438l5.0419922-11.2290039c0.3837891-1.1298828,0.1982422-2.3828125-0.4951172-3.3510742c-0.6972656-0.9726562-1.7792969-1.5302734-2.9707031-1.5302734h-7.140625l0.0400391-0.0957031c0.84375-2.0102539,1.3535156-3.2236328,1.3535156-6.0625c0-0.0060425-0.0032959-0.0109863-0.003418-0.0170288c0.0001221-0.0060425,0.003418-0.0111084,0.003418-0.0171509c0-1.75-1.2714844-3.2641602-2.3798828-4.3886719c-0.8759766-0.8852539-2.1953125-0.9570312-3.1425781-0.1674805c-0.8994141,0.7524414-0.9023438,1.8061523-0.9052734,2.652832c-0.0009766,0.2241211-0.0009766,0.4575195-0.0175781,0.6953125l-0.0719604,0.9909058c-0.7571411,1.7475586-1.6392212,2.6170654-2.7503052,3.7014771c-0.5888672,0.574707-1.2558594,1.2260742-1.9541016,2.0698242l-0.5283203,0.6381836h-5.171875c-0.5527344,0-1,0.4477539-1,1V29C2.3330078,29.5522461,2.7802734,30,3.3330078,30z" />
     </svg>
   );
 }
@@ -197,11 +163,11 @@ function LightboxMedia({ item }: { item: GalleryEntry }) {
   return <img className="lb-media" src={item.src} alt={item.title} draggable={false} />;
 }
 
-const CONTACTS: { name: string; href: string; Icon: typeof InstagramIcon; glow: string; external: boolean }[] = [
-  { name: 'Instagram', href: 'https://www.instagram.com/sureshksmy', Icon: InstagramIcon, glow: 'glow-ig', external: true },
-  { name: 'Facebook', href: 'https://www.facebook.com/mesurreshks', Icon: FacebookIcon, glow: 'glow-fb', external: true },
-  { name: 'WhatsApp', href: 'https://wa.me/60104368680', Icon: WhatsappIcon, glow: 'glow-wa', external: true },
-  { name: 'Email', href: 'mailto:hello@suresh.app', Icon: EmailIcon, glow: 'glow-em', external: false },
+const CONTACTS: { name: string; href: string; Icon: typeof InstagramIcon; external: boolean }[] = [
+  { name: 'Instagram', href: 'https://www.instagram.com/sureshksmy', Icon: InstagramIcon, external: true },
+  { name: 'Facebook', href: 'https://www.facebook.com/mesurreshks', Icon: FacebookIcon, external: true },
+  { name: 'WhatsApp', href: 'https://wa.me/60104368680', Icon: WhatsappIcon, external: true },
+  { name: 'Email', href: 'mailto:hello@suresh.app', Icon: EmailIcon, external: false },
 ];
 
 type Repo = { slug: string; title: string; description: string; tech: string[]; live: string };
@@ -232,12 +198,12 @@ const REPOS: Repo[] = [
   { slug: 'opencv/opencv', title: 'OpenCV', description: 'Open source computer vision and machine learning software library.', tech: ['C++', 'Python', 'Computer Vision'], live: 'https://opencv.org' },
 ];
 
-const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon }[] = [
-  { label: 'Module', Icon: Home },
-  { label: 'Case Records', Icon: BehanceIcon },
-  { label: 'CV', Icon: CvIcon },
-  { label: 'GitHub', Icon: GithubIcon },
-  { label: 'Gallery', Icon: GalleryIcon },
+const NAV_ITEMS: { label: string; Icon: LucideIcon }[] = [
+  { label: 'Module', Icon: LayoutGrid },
+  { label: 'Case Records', Icon: Briefcase },
+  { label: 'CV', Icon: FileText },
+  { label: 'GitHub', Icon: Code2 },
+  { label: 'Gallery', Icon: Images },
 ];
 const STATS = [
   { radius: 330, start: -92, end: 16, dot: -49 },
@@ -1936,42 +1902,6 @@ export default function App() {
         }
         .sig-line { opacity: 0; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; text-transform: uppercase; }
 
-        /* Neon Behance icon (pink) */
-        .neon-behance {
-          color: #ff7bd5;
-          animation: neon-behance-pulse 2.2s ease-in-out infinite;
-        }
-        @keyframes neon-behance-pulse {
-          0%, 100% { filter: drop-shadow(0 0 1.5px #ff4fc3) drop-shadow(0 0 4px #ff1fa8); }
-          50% { filter: drop-shadow(0 0 2px #ffd0f0) drop-shadow(0 0 6px #ff5ccf) drop-shadow(0 0 13px #ff1fa8); }
-        }
-        /* Neon GitHub icon (#00ff88) */
-        .neon-github {
-          color: #00ff88;
-          animation: neon-github-pulse 2.2s ease-in-out infinite;
-        }
-        @keyframes neon-github-pulse {
-          0%, 100% { filter: drop-shadow(0 0 1.5px #00ff88) drop-shadow(0 0 4px #00cc6a); }
-          50% { filter: drop-shadow(0 0 2px #b9ffe0) drop-shadow(0 0 6px #00ff88) drop-shadow(0 0 13px #00ff88); }
-        }
-        /* Neon CV icon (yellow) */
-        .neon-cv {
-          color: #ffe14d;
-          animation: neon-cv-pulse 2.2s ease-in-out infinite;
-        }
-        @keyframes neon-cv-pulse {
-          0%, 100% { filter: drop-shadow(0 0 1.5px #ffcc00) drop-shadow(0 0 4px #ff9d00); }
-          50% { filter: drop-shadow(0 0 2px #fff4b0) drop-shadow(0 0 6px #ffd400) drop-shadow(0 0 13px #ffb000); }
-        }
-        /* Neon Gallery icon (purple) */
-        .neon-gallery {
-          color: #c58bff;
-          animation: neon-gallery-pulse 2.2s ease-in-out infinite;
-        }
-        @keyframes neon-gallery-pulse {
-          0%, 100% { filter: drop-shadow(0 0 1.5px #a855f7) drop-shadow(0 0 4px #7c3aed); }
-          50% { filter: drop-shadow(0 0 2px #ead5ff) drop-shadow(0 0 6px #a855f7) drop-shadow(0 0 13px #7c3aed); }
-        }
         .cv-pop { width: min(900px, calc(100vw - 2.5rem)); height: min(88dvh, 880px); }
         .cv-head-actions { display: flex; align-items: center; gap: 8px; }
         .cv-pages { display: flex; flex-direction: column; gap: 14px; }
@@ -1982,9 +1912,7 @@ export default function App() {
           .cv-page { border-radius: 6px; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .neon-cv { animation: none; filter: drop-shadow(0 0 2px #ffd400) drop-shadow(0 0 6px #ffb000); }
           .shine-btn::after { animation: none; opacity: 0; }
-          .neon-gallery { animation: none; filter: drop-shadow(0 0 2px #a855f7) drop-shadow(0 0 6px #7c3aed); }
           .lb, .lb-panel { animation: none; }
         }
         /* GitHub showcase popup (glassmorphic, same look as the showcase page) */
@@ -2191,7 +2119,7 @@ export default function App() {
           font-family: 'Anek Odia', sans-serif;
           font-size: clamp(0.8rem, min(4.2vw, 2.9dvh), 1.5rem); font-weight: 300; color: #fff;
           /* same liquid-glass recipe as the info / Behance / GitHub popups */
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 60%), rgba(40, 6, 6, 0.2);
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 60%), rgba(255, 255, 255, 0.06);
           -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
           border: 1px solid rgba(255, 255, 255, 0.35);
           box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4);
@@ -2215,20 +2143,19 @@ export default function App() {
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
         .conn-icon { width: 1em; height: 1em; flex: none; }
-        .conn-badge { height: 1.0em; width: auto; flex: none; display: block; user-select: none; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));}
+        .conn-badge { height: 1.0em; width: auto; flex: none; display: block; user-select: none; opacity: 0.95; }
         .conn-list { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 1.1em; margin: 0; padding: 0.35em 0 0.2em; list-style: none; font-size: 1em; }
-        .conn-social { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; text-decoration: none; transition: transform 0.3s ease; }
-        .conn-social:hover { transform: translateY(-3px) scale(1.12); }
-        .conn-social .conn-icon { width: 1.7em; height: 1.7em; }
-        .glow-ig { color: #ba2020; filter: drop-shadow(0 0 1px #ff4fd8) drop-shadow(0 0 3px #c04bff) drop-shadow(0 0 4px #9b4dff); animation: glow-ig 2.6s ease-in-out infinite; }
-        .glow-fb { color: #8fdcff; filter: drop-shadow(0 0 1px #38bdf8) drop-shadow(0 0 3px #22d3ee) drop-shadow(0 0 4px #06b6d4); animation: glow-fb 2.6s ease-in-out infinite 0.3s; }
-        .glow-wa { color: #b8f23c; filter: drop-shadow(0 0 1px #a3e635) drop-shadow(0 0 3px #84cc16) drop-shadow(0 0 4px #facc15); animation: glow-wa 2.6s ease-in-out infinite 0.6s; }
-        .glow-em { color: #ffa24d; filter: drop-shadow(0 0 1px #fb923c) drop-shadow(0 0 3px #f97316) drop-shadow(0 0 4px #ea580c); animation: glow-em 2.6s ease-in-out infinite 0.9s; }
-        @keyframes glow-ig { 50% { filter: drop-shadow(0 0 2px #ff4fd8) drop-shadow(0 0 5px #c04bff) drop-shadow(0 0 8px #9b4dff); } }
-        @keyframes glow-fb { 50% { filter: drop-shadow(0 0 2px #38bdf8) drop-shadow(0 0 5px #22d3ee) drop-shadow(0 0 8px #06b6d4); } }
-        @keyframes glow-wa { 50% { filter: drop-shadow(0 0 2px #a3e635) drop-shadow(0 0 5px #84cc16) drop-shadow(0 0 8px #facc15); } }
-        @keyframes glow-em { 50% { filter: drop-shadow(0 0 2px #fb923c) drop-shadow(0 0 5px #f97316) drop-shadow(0 0 8px #ea580c); } }
-        @media (prefers-reduced-motion: reduce) { .glow-ig, .glow-fb, .glow-wa, .glow-em { animation: none; } }
+        .conn-social {
+          display: grid; place-items: center; width: 2.6em; height: 2.6em; border-radius: 50%; text-decoration: none; color: #fff;
+          background: rgba(255, 255, 255, 0.12);
+          -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+          border: 1px solid rgba(255, 255, 255, 0.32);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), inset -1px -1px 1px rgba(255, 255, 255, 0.12), 0 6px 16px rgba(0, 0, 0, 0.18);
+          transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        .conn-social:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.22); }
+        .conn-social:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
+        .conn-social .conn-icon { width: 1.25em; height: 1.25em; color: #fff; }
         .conn-chips:focus-visible, .conn-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
         .conn-close {
           position: absolute; top: clamp(0.7rem, 3vw, 1.1rem); right: clamp(0.7rem, 3vw, 1.1rem); z-index: 2; display: grid; place-items: center;
@@ -2254,8 +2181,6 @@ export default function App() {
           .case-card-stats { font-size: 9.5px; padding: 0 9px 9px; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .neon-behance { animation: none; filter: drop-shadow(0 0 2px #ff5ccf) drop-shadow(0 0 6px #ff1fa8); }
-          .neon-github { animation: none; filter: drop-shadow(0 0 2px #00ff88) drop-shadow(0 0 6px #00ff88); }
           .gh-card { animation: none; }
           .case-pop, .case-pop.is-open { transition-duration: 0.01s; }
           .case-skel { animation: none; }
@@ -2304,7 +2229,7 @@ export default function App() {
               style={{ transitionDelay: menuOpen ? `${150 + NAV_ITEMS.length * 50}ms` : '0ms' }}
               className={`flex h-11 w-11 min-w-0 shrink items-center justify-center rounded-full transition-all duration-300 hover:bg-white/15 ${menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-50 opacity-0'}`}
             >
-              <Link2 size={22} strokeWidth={1.75} />
+              <MessageCircle size={22} strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -2564,7 +2489,7 @@ export default function App() {
               </h2>
               <p>Building interactive websites with modern frontend technologies, smooth animations, and creative experiences.</p>
               <ul className="conn-list">
-                {CONTACTS.map(({ name, href, Icon, glow, external }) => (
+                {CONTACTS.map(({ name, href, Icon, external }) => (
                   <li key={name}>
                     <a
                       className="conn-social"
@@ -2573,7 +2498,7 @@ export default function App() {
                       title={name}
                       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     >
-                      <Icon className={`conn-icon ${glow}`} />
+                      <Icon className="conn-icon" />
                     </a>
                   </li>
                 ))}
