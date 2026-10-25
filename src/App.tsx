@@ -16,6 +16,7 @@ const CONNECT_COVER = 'https://images.unsplash.com/photo-1506366197612-8acc64095
 const GITHUB_PROFILE = 'https://github.com/sureshapps';
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
+const NEON_URL = 'https://unpkg.com/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
@@ -861,6 +862,7 @@ export default function App() {
   const navRef = useRef<HTMLDivElement>(null);
   const signatureRef = useRef<HTMLDivElement>(null);
   const cursorTarget = useRef({ x: -999, y: -999 });
+  const appRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1138,6 +1140,41 @@ export default function App() {
     return () => ctx.revert();
   }, []);
 
+  useEffect(() => {
+    const el = appRef.current;
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let cancelled = false;
+    let cursor: { dispose?: () => void } | undefined;
+    const existing = new Set(Array.from(el.querySelectorAll('canvas')));
+    (async () => {
+      try {
+        // loaded from the CDN on demand, so no npm package is needed
+        const { neonCursor } = await import(/* @vite-ignore */ NEON_URL);
+        if (cancelled) return;
+        cursor = neonCursor({
+          el,
+          shaderPoints: 16,
+          curvePoints: 80,
+          curveLerp: 0.5,
+          radius1: 5,
+          radius2: 30,
+          velocityTreshold: 10,
+          sleepRadiusX: 100,
+          sleepRadiusY: 100,
+          sleepTimeCoefX: 0.0025,
+          sleepTimeCoefY: 0.0025,
+        });
+      } catch (error) {
+        console.error('Failed to load neon cursor:', error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      cursor?.dispose?.();
+      el.querySelectorAll('canvas').forEach((canvas) => { if (!existing.has(canvas)) canvas.remove(); });
+    };
+  }, []);
+
   function navigate(label: string) {
     setMenuOpen(false);
     if (label === 'Case Records') {
@@ -1175,7 +1212,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+    <div ref={appRef} className="neon-host min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
         @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
@@ -1659,6 +1696,8 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        /* neon cursor trail: full-screen overlay that never blocks clicks */
+        .neon-host > canvas { position: fixed; inset: 0; width: 100% !important; height: 100% !important; z-index: 90; pointer-events: none; }
         /* Jom Connect card popup */
         .connect-dialog {
           width: min(30rem, calc(100vw - 2.5rem)); max-width: none; max-height: calc(100dvh - 2rem);
