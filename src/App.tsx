@@ -732,7 +732,7 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
 function Metrics({ open }: { open: boolean }) {
   const desktop = useMediaQuery('(min-width: 1024px)');
   return (
-    <div className="hero-rise pointer-events-none absolute right-3 top-[148px] z-[55] w-[calc(100vw-1.5rem)] max-w-[300px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none" style={{ animationDelay: '1.1s' }}>
+    <div className={`${desktop ? 'hero-rise ' : ''}pointer-events-none absolute right-3 top-[148px] z-[55] w-[calc(100vw-1.5rem)] max-w-[300px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none`} style={{ animationDelay: '1.1s' }}>
       <div id="widgets-panel" className={`metrics-panel ${open ? 'is-open' : ''}`}>
       <span className="fx-layer" aria-hidden="true" />
       <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
@@ -1727,23 +1727,24 @@ export default function App() {
         @media (max-width: 639px) {
           .metrics-panel {
             --tr: 15%;
-            position: relative; isolation: isolate; padding: 12px; 
-            border-radius: 24px; overflow: hidden; isolation: isolate; color: #fff;
-          background: rgba(40, 6, 6, 0.18);
-          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 60px rgba(0, 0, 0, 0.35);
-          transform-origin: top right;
-       
-          transform: translate(8px, -12px) scale(0.55);
-          opacity: 0; visibility: hidden; pointer-events: none;
-          transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s linear 0.6s;
+            position: relative; isolation: isolate; padding: 12px;
+            border-radius: 24px; overflow: hidden; color: #fff;
+            /* same glass recipe as .info-pop */
+            background: rgba(40, 6, 6, 0.18);
+            -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 60px rgba(0, 0, 0, 0.35);
+            transform-origin: top right;
+            clip-path: inset(0 0 100% 100% round 28px);
+            transform: translate(8px, -12px) scale(0.55);
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s linear 0.6s;
           }
           .metrics-panel.is-open {
-     
-          transform: none; opacity: 1; visibility: visible; pointer-events: auto;
-          transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
-        }
+            clip-path: inset(0 0 0 0 round 24px);
+            transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+            transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
+          }
           .metrics-panel > .fx-layer { display: none; }
         }
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
