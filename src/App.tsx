@@ -1223,7 +1223,7 @@ export default function App() {
         .info-sound:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 2px; }
         .info-kicker { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); }
         .info-title { margin-top: 8px; font-size: 20px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.15; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3); }
-        .info-role { margin-top: 4px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
+        .info-role { margin-top: 2px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
         .info-text { margin-top: 12px; font-size: 12.5px; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
         .info-list { margin: 14px 0 0; padding: 12px 0 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; gap: 8px; }
         .info-list li { position: relative; padding-left: 16px; font-size: 11.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.88); }
@@ -1245,9 +1245,9 @@ export default function App() {
         /* "the digital signature of Suresh" tagline */
         @property --mask-progress { syntax: '<percentage>'; inherits: false; initial-value: 12%; }
         .title {
-          overflow: hidden; padding: 0.9em 0.2em; color: #fff;
+          overflow: hidden; padding: 0.5em 0.2em; color: #fff;
           font-family: 'Poppins', sans-serif; font-weight: 300; letter-spacing: 0.02em;
-          font-size: clamp(0.72rem, 0.6vw + 0.5rem, 0.98rem);
+          font-size: clamp(0.6rem, 0.45vw + 0.42rem, 0.8rem);
         }
         .title span { position: relative; font-family: 'Playwrite IS', cursive; font-size: 1.4em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
         .title span:before {
@@ -1354,7 +1354,7 @@ export default function App() {
             <div className="info-head-text">
               <p className="info-kicker">About</p>
               <h2 className="info-title">Suresh Kaleyannan</h2>
-              <p className="info-role">DevOps · Malaysia</p>
+              <p className="info-role">DevOps · Web Developer · MY</p>
             </div>
             <div className={`info-video is-${videoState}`}>
               <video
@@ -1416,7 +1416,7 @@ export default function App() {
             <span className="title-code block">Code</span>
             <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
           </h1>
-          <div className="title hero-rise -mt-4 sm:-mt-6" style={{ animationDelay: '0.5s' }}>the digital signature of <span>Suresh</span></div>
+          <div className="title hero-rise -mt-7 sm:-mt-10" style={{ animationDelay: '0.5s' }}>the digital signature of <span>Suresh</span></div>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
             <img src={SIGNATURE} alt="Suresh signature" draggable={false} className="sig-img w-[100px] select-none sm:w-[150px] md:w-[180px]" />
             <p className="sig-line mt-3 text-[10px] font-normal tracking-[0.1em] text-white sm:text-lg">Suresh Kaleyannan</p>
