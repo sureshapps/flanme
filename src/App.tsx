@@ -11,7 +11,9 @@ const FOLLOW_GAP_X = 95;
 const FOLLOW_GAP_Y = 105;
 const FOLLOW_GAP_TOUCH = 115;
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
-const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
+// cover photo for the Jom Connect card; swap for your own portrait
+const CONNECT_COVER = 'https://images.unsplash.com/photo-1506366197612-8acc64095e53?q=80&w=480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
+const GITHUB_PROFILE = 'https://github.com/sureshapps';
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const BEHANCE_USER = 'sureshksmy';
@@ -113,14 +115,6 @@ const STATS = [
   { radius: 395, start: -56, end: 60, dot: 2 },
   { radius: 460, start: -14, end: 72, dot: 44 },
 ];
-
-function Logo() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
-      <path d={LOGO_PATH} />
-    </svg>
-  );
-}
 
 const STAR = 'M 0 -6 Q 0.8 -0.8 6 0 Q 0.8 0.8 0 6 Q -0.8 0.8 -6 0 Q -0.8 -0.8 0 -6 Z';
 
@@ -1665,6 +1659,53 @@ export default function App() {
         .case-state { padding: 40px 12px; text-align: center; font-size: 13px; color: rgba(255, 255, 255, 0.85); }
         .case-state a, .case-state button { color: #fff; text-decoration: underline; background: none; border: 0; cursor: pointer; font: inherit; }
         .case-foot { flex: none; padding: 9px 16px 13px; text-align: center; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); border-top: 1px solid rgba(255, 255, 255, 0.18); }
+        /* Jom Connect card popup */
+        .connect-dialog {
+          width: min(30rem, calc(100vw - 2.5rem)); max-width: none; max-height: calc(100dvh - 2rem);
+          padding: 0; border: 0; background: transparent; color: #e5e5e5; overflow: visible;
+        }
+        .connect-dialog::backdrop { background: rgba(0, 0, 0, 0.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+        .connect-dialog[open] .conn-card { animation: conn-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        @keyframes conn-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+        .conn-card {
+          position: relative; overflow: clip; padding: 1rem; border-radius: 4rem;
+          font-size: clamp(1rem, 4.4vw, 1.5rem); font-weight: 200; color: #e5e5e5;
+          background: #35353566;
+          box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55, 0 24px 70px rgba(0, 0, 0, 0.5);
+          -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+        }
+        .conn-inner {
+          position: relative; display: grid; grid-template-areas: "stack"; overflow: clip; border-radius: 3rem;
+          box-shadow: inset 0 0 4px -2px #ffffff55, 0 0 4px -2px #ffffff55;
+        }
+        .conn-inner::after {
+          content: ''; position: absolute; inset: 0; border-radius: 3rem; pointer-events: none;
+          -webkit-backdrop-filter: blur(100px); backdrop-filter: blur(100px);
+          -webkit-mask: linear-gradient(-14deg, black 30%, transparent 66%); mask: linear-gradient(-14deg, black 30%, transparent 66%);
+        }
+        .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 22em; object-fit: cover; }
+        .conn-body { grid-area: stack; z-index: 1; margin-top: auto; padding: 1rem 2rem; }
+        .conn-header { margin: 0; font-size: 1.47em; font-weight: 300; line-height: 1.15; letter-spacing: -0.02em; }
+        .conn-body p { margin-block: 1rem; }
+        .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
+        a.conn-chips:hover { text-decoration: underline; }
+        .conn-icon { width: 1em; height: 1em; flex: none; }
+        .conn-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+        .conn-button {
+          display: flex; align-items: center; gap: 0.5rem; padding: 0.75em 1.25em; border-radius: 5rem;
+          background: #fff; color: #151515; font: inherit; font-weight: 500; text-decoration: none;
+          transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .conn-button:hover { transform: scale(1.05); }
+        .conn-button:focus-visible, .conn-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
+        .conn-close {
+          position: absolute; top: 1.1rem; right: 1.1rem; z-index: 2; display: grid; place-items: center;
+          width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; cursor: pointer; color: #fff;
+          background: rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+          transition: background-color 0.3s ease;
+        }
+        .conn-close:hover { background: rgba(0, 0, 0, 0.55); }
+        @media (prefers-reduced-motion: reduce) { .connect-dialog[open] .conn-card { animation: none; } .conn-button { transition: none; } }
         /* Behance + GitHub popups use Anek Odia (CV popup keeps its own fonts) */
         .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green * { font-family: 'Anek Odia', sans-serif; }
         @media (min-width: 640px) and (max-width: 1023px) {
@@ -1947,15 +1988,30 @@ export default function App() {
         </section>
       </main>
 
-      <dialog ref={noticeRef} onCancel={() => setNotice(null)} onClick={(event) => { if (event.target === event.currentTarget) setNotice(null); }} className="w-[calc(100%-2.5rem)] max-w-md rounded-2xl bg-[#151012] p-7 text-white shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm" aria-labelledby="notice-title">
-        <div className="mb-6 flex items-center justify-between">
-          <Logo />
-          <button type="button" onClick={() => setNotice(null)} aria-label="Close dialog" className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"><X size={22} /></button>
+      <dialog ref={noticeRef} onCancel={() => setNotice(null)} onClick={(event) => { if (event.target === event.currentTarget) setNotice(null); }} className="connect-dialog" aria-labelledby="notice-title">
+        <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
+          <symbol id="icon-plus" viewBox="0 -960 960 960" fill="currentColor"><path d="M453-140v-313H140v-54h313v-313h54v313h313v54H507v313h-54Z" /></symbol>
+          <symbol id="icon-check" viewBox="0 -960 960 960" fill="currentColor"><path d="m443-429 169-169-38-39-131 132-57-56-38 38 95 94ZM222-160v-578q0-36.72 24.64-61.36Q271.27-824 308-824h344q36.72 0 61.36 24.64T738-738v578L480-270 222-160Zm54-82 204-87.66L684-242v-496q0-12-10-22t-22-10H308q-12 0-22 10t-10 22v496Zm0-528h408-408Z" /></symbol>
+        </svg>
+        <div className="conn-card">
+          <div className="conn-inner">
+            <img className="conn-cover" src={CONNECT_COVER} alt="" draggable={false} />
+            <button type="button" className="conn-close" onClick={() => setNotice(null)} aria-label="Close dialog"><X size={18} strokeWidth={2} /></button>
+            <div className="conn-body">
+              <h2 id="notice-title" className="conn-header">
+                <span className="conn-chips">Suresh Kaleyannan <svg className="conn-icon" style={{ width: '1.1em', height: '1.1em' }} aria-hidden="true"><use href="#icon-check" /></svg></span>
+              </h2>
+              <p>Where today's technology meets tomorrow's imagination.</p>
+              <div className="conn-row">
+                <a className="conn-chips" href={BEHANCE_PROFILE} target="_blank" rel="noopener noreferrer"><BehanceIcon size={20} />Behance</a>
+                <a className="conn-chips" href={GITHUB_PROFILE} target="_blank" rel="noopener noreferrer"><GithubIcon size={20} />GitHub</a>
+                <a className="conn-button" href={BEHANCE_PROFILE} target="_blank" rel="noopener noreferrer">Follow
+                  <svg className="conn-icon" aria-hidden="true"><use href="#icon-plus" /></svg>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">Augmented Self</p>
-        <h2 id="notice-title" className="mb-4 text-2xl leading-tight tracking-[-0.06em]">{notice === 'reserve' ? 'Your next evolution.' : 'Human. Beyond.'}</h2>
-        <p className="mb-6 text-sm leading-relaxed text-white/70">{notice === 'reserve' ? 'Reservations will open with the next phase. This preview does not yet accept bookings.' : 'A connection to what comes next. Contact details will be available when the next phase launches.'}</p>
-        <button type="button" onClick={() => setNotice(null)} className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100">Back to the module</button>
       </dialog>
     </div>
   );
