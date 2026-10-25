@@ -1727,24 +1727,23 @@ export default function App() {
         @media (max-width: 639px) {
           .metrics-panel {
             --tr: 15%;
-            position: relative; isolation: isolate; padding: 12px; border-radius: 28px;
-            /* clear glassmorphism (like the reference): barely-there tint, heavy blur of what is behind, thin light edge */
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0.07) 100%);
-            -webkit-backdrop-filter: blur(66px) saturate(1.25); backdrop-filter: blur(66px) saturate(1.25);
-            border: 1px solid rgba(255, 255, 255, 0.45);
-            box-shadow:
-              inset 0 1px 0 rgba(255, 255, 255, 0.35),
-              inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-              0 8px 32px rgba(31, 38, 135, 0.18);
-            transform-origin: top right;
-            transform: translateX(calc(100% + 24px)) scale(0.92);
-            opacity: 0; visibility: hidden; pointer-events: none;
-            transition: transform 0.6s cubic-bezier(0, 0, 0, 0), opacity 0.35s ease, visibility 0s linear 0.6s;
+            position: relative; isolation: isolate; padding: 12px; 
+            border-radius: 24px; overflow: hidden; isolation: isolate; color: #fff;
+          background: rgba(40, 6, 6, 0.18);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.5), inset -1px -1px 1px rgba(255, 255, 255, 0.2), 0 24px 60px rgba(0, 0, 0, 0.35);
+          transform-origin: top right;
+       
+          transform: translate(8px, -12px) scale(0.55);
+          opacity: 0; visibility: hidden; pointer-events: none;
+          transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s linear 0.6s;
           }
           .metrics-panel.is-open {
-            transform: none; opacity: 1; visibility: visible; pointer-events: auto;
-            transition: transform 0.6s cubic-bezier(0, 0, 0, 0), opacity 0.35s ease, visibility 0s;
-          }
+     
+          transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+          transition: clip-path 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
+        }
           .metrics-panel > .fx-layer { display: none; }
         }
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
