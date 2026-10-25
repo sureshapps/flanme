@@ -199,7 +199,7 @@ const REPOS: Repo[] = [
 ];
 
 const NAV_ITEMS: { label: string; Icon: LucideIcon }[] = [
-  { label: 'Module', Icon: LayoutGrid },
+  
   { label: 'Case Records', Icon: Briefcase },
   { label: 'CV', Icon: FileText },
   { label: 'GitHub', Icon: Code2 },
