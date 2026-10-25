@@ -869,7 +869,6 @@ function Metrics({ open }: { open: boolean }) {
       <div id="widgets-panel" className={`metrics-panel ${open ? 'is-open' : ''}`}>
       <span className="fx-layer" aria-hidden="true" />
       <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
-        {desktop && <GlassFrame className="glass-frame--desktop" />}
         <MusicPlayer />
         <ClockCard />
         <div className="info-extra grid grid-cols-2 gap-2 lg:gap-3">
@@ -1247,6 +1246,7 @@ function RobotCard() {
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const phone = useMediaQuery('(max-width: 639px)');
+  const wide = useMediaQuery('(min-width: 1024px)');
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [widgetsOpen, setWidgetsOpen] = useState(false);
@@ -1824,7 +1824,8 @@ export default function App() {
         /* rotating 3D glass photo frame */
         .glass-frame { position: relative; pointer-events: none; }
         .glass-frame canvas { display: block; width: 100%; height: 100%; }
-        .glass-frame--desktop { align-self: flex-end; width: clamp(450px, 42.5vw, 510px); aspect-ratio: 1; margin-bottom: -12px; }
+        /* desktop: sits in the lower-left area, centred in the box under the face (about 2.6vw to 49vw across, 5vh up from the bottom) */
+        .glass-frame--desktop { --s: clamp(280px, min(46vw, 48vh), 560px); position: absolute; z-index: 45; bottom: 5vh; left: calc(2.6vw + (46.4vw - var(--s)) / 2); width: var(--s); aspect-ratio: 1; }
         .glass-frame--mobile { position: absolute; z-index: 45; right: -7vw; top: 45%; width: 71vw; aspect-ratio: 1; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
@@ -2614,6 +2615,7 @@ export default function App() {
         <Statistics />
         <Metrics open={widgetsOpen} />
         {phone && <GlassFrame className="glass-frame--mobile hero-rise" style={{ animationDelay: '1.1s' }} />}
+        {wide && <GlassFrame className="glass-frame--desktop hero-rise" style={{ animationDelay: '1.1s' }} />}
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
             <span className="title-code block">Code</span>
