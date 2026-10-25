@@ -1845,6 +1845,7 @@ const CURTAIN_HOLD_MS = 450; // short pause at 100 before the panels open
 const CURTAIN_REMOVE_MS = 1700; // the panels need 1.2 s to slide away; then the curtain is removed from the page
 const GAUGE_FROM = -135; // needle angle at 0 (degrees from straight up)
 const GAUGE_SWEEP = 270;
+const POWER_D = 'M 30.72 31.02 A 30 30 0 1 0 69.28 31.02 M 50 15 L 50 49'; // neon power symbol (open ring + bar)
 const GAUGE_ARC = 'M 43.43 156.57 A 80 80 0 1 1 156.57 156.57';
 const curtainCurve = (t: number) => 0.85 * t * t * (3 - 2 * t) + 0.15 * t; // revs up, cruises, eases into 100
 
@@ -1985,10 +1986,14 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
         disabled={started}
         tabIndex={started ? -1 : 0}
         autoFocus
-        aria-label="Enter: start loading"
+        aria-label="Power on: start loading"
         onClick={() => { setStarted(true); startRef.current(); }}
       >
-        <span>Enter</span>
+        <svg className="power-icon" viewBox="0 0 100 100" aria-hidden="true">
+          <path className="power-edge" d={POWER_D} />
+          <path className="power-tube" d={POWER_D} />
+          <path className="power-core" d={POWER_D} />
+        </svg>
       </button>
     </div>
   );
@@ -3131,42 +3136,52 @@ export default function App() {
         .gauge-lead { opacity: 0.22; }
         .gauge-unit { font-size: calc(var(--g) * 0.06); opacity: 0.8; }
         .gauge-caption { position: absolute; left: 50%; top: 87%; margin: 0; transform: translateX(-50%); font-family: 'Josefin Sans', sans-serif; font-size: calc(var(--g) * 0.036); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
-        /* ENTER button: sits in the middle of the gauge; pressing it starts the loading run */
+        /* Power button: a round blurred glass disc that masks the speedometer, with a pulsing red neon power icon.
+           Pressing it fades the disc away and the gauge starts loading */
         .curtain__enter {
-          position: absolute; left: 50%; top: 50%; z-index: 4; margin: 0; width: calc(var(--g) * 0.89); height: calc(var(--g) * 0.17); padding: 0;
-          display: grid; place-items: center; transform: translate(-50%, -50%); isolation: isolate; cursor: pointer; white-space: nowrap;
-          font-family: 'Super Guardian', 'SuperGuardianBackup', Impact, sans-serif; font-style: italic; font-weight: 400;
-          font-size: calc(var(--g) * 0.085); letter-spacing: 0.03em; text-transform: uppercase; color: #fff;
-          background: linear-gradient(180deg, #ff2323, #f00000 60%, #e60000);
-          border: 0; border-radius: 999px;
-          text-shadow: 0 1px 3px rgba(120, 0, 0, 0.55);
-          box-shadow: inset 0 0 10px rgba(255, 120, 120, 0.45), 0 0 10px #ff0000, 0 0 26px rgba(255, 0, 0, 0.85), 0 0 56px rgba(255, 0, 0, 0.55);
-          animation: enter-pulse 1.7s ease-in-out infinite;
-          transition: opacity 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+          position: absolute; left: 50%; top: 50%; z-index: 4; margin: 0; padding: 0; width: var(--g); aspect-ratio: 1;
+          display: grid; place-items: center; transform: translate(-50%, -50%); isolation: isolate; cursor: pointer; border-radius: 50%;
+          background: radial-gradient(circle at 50% 42%, rgba(70, 6, 14, 0.55), rgba(14, 1, 5, 0.82) 78%);
+          -webkit-backdrop-filter: blur(22px) saturate(1.3); backdrop-filter: blur(22px) saturate(1.3);
+          border: 1px solid rgba(255, 110, 120, 0.3);
+          box-shadow: inset 2px 2px 1px -1px rgba(255, 255, 255, 0.5), inset -2px -2px 1px -1px rgba(255, 255, 255, 0.18), inset 0 0 30px rgba(255, 0, 20, 0.18), 0 0 36px rgba(255, 0, 20, 0.22);
+          animation: enter-pulse 2s ease-in-out infinite;
+          transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .curtain__enter:hover { transform: translate(-50%, -50%) scale(1.05); }
-        .curtain__enter:active { transform: translate(-50%, -50%) scale(0.97); }
+        .curtain__enter:hover { transform: translate(-50%, -50%) scale(1.03); }
+        .curtain__enter:active { transform: translate(-50%, -50%) scale(0.98); }
         .curtain__enter:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 5px; }
-        /* ring that ping-pongs outward from the button */
+        /* ring that ping-pongs outward from the disc */
         .curtain__enter::before {
-          content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
-          border: 2px solid rgba(255, 40, 40, 0.95); opacity: 0; animation: enter-ring 1.7s ease-out infinite;
+          content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 50%; pointer-events: none;
+          border: 2px solid rgba(255, 40, 55, 0.9); opacity: 0; animation: enter-ring 2s ease-out infinite;
         }
-        /* pressed: the button shrinks away and the loading takes over the gauge */
-        .curtain__enter.is-started, .curtain.is-open .curtain__enter { opacity: 0; transform: translate(-50%, -50%) scale(0.6); pointer-events: none; animation: none; }
-        .curtain__enter.is-started::before { animation: none; }
+        .power-icon {
+          width: 46%; height: 46%; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round;
+          animation: power-pulse 2s ease-in-out infinite;
+        }
+        .power-edge { stroke: #6a0010; stroke-width: 9; }
+        .power-tube { stroke: #ff2a3a; stroke-width: 5.6; }
+        .power-core { stroke: #ffd6d6; stroke-width: 1.7; opacity: 0.95; }
+        /* pressed: the disc and icon fade out, uncovering the gauge */
+        .curtain__enter.is-started, .curtain.is-open .curtain__enter { opacity: 0; transform: translate(-50%, -50%) scale(1.08); pointer-events: none; animation: none; }
+        .curtain__enter.is-started::before, .curtain__enter.is-started .power-icon { animation: none; }
+        @keyframes power-pulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px #ff1a2a) drop-shadow(0 0 10px rgba(255, 0, 20, 0.8)) drop-shadow(0 0 22px rgba(255, 0, 20, 0.5)); }
+          50% { transform: scale(1.06); filter: drop-shadow(0 0 5px #ff3a48) drop-shadow(0 0 18px rgba(255, 0, 20, 1)) drop-shadow(0 0 46px rgba(255, 0, 20, 0.85)); }
+        }
         @keyframes enter-pulse {
-          0%, 100% { box-shadow: inset 0 0 8px rgba(255, 120, 120, 0.4), 0 0 8px #ff0000, 0 0 20px rgba(255, 0, 0, 0.7), 0 0 40px rgba(255, 0, 0, 0.4); }
-          50% { box-shadow: inset 0 0 14px rgba(255, 140, 140, 0.6), 0 0 16px #ff1a1a, 0 0 40px rgba(255, 0, 0, 1), 0 0 90px rgba(255, 0, 0, 0.7); }
+          0%, 100% { box-shadow: inset 2px 2px 1px -1px rgba(255, 255, 255, 0.5), inset -2px -2px 1px -1px rgba(255, 255, 255, 0.18), inset 0 0 24px rgba(255, 0, 20, 0.12), 0 0 26px rgba(255, 0, 20, 0.18); }
+          50% { box-shadow: inset 2px 2px 1px -1px rgba(255, 255, 255, 0.5), inset -2px -2px 1px -1px rgba(255, 255, 255, 0.18), inset 0 0 44px rgba(255, 0, 20, 0.34), 0 0 60px rgba(255, 0, 20, 0.42); }
         }
-        @keyframes enter-ring { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.3, 1.9); } }
+        @keyframes enter-ring { 0% { opacity: 0.85; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35); } }
         @media (max-width: 639px) {
           .curtain { --g: min(64vw, 70dvh, 280px); }
           .curtain__word { display: none; }
         }
         @media (prefers-reduced-motion: reduce) {
           .curtain__panel, .curtain__center { transition-duration: 0.01s; }
-          .curtain__enter, .curtain__enter::before { animation: none; }
+          .curtain__enter, .curtain__enter::before, .power-icon { animation: none; }
         }
         /* the site waits behind the glass: every animation is held until the curtain starts to open */
         .app-root[data-site="loading"] > :not(.curtain),
