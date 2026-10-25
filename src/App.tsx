@@ -1785,7 +1785,7 @@ export default function App() {
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
         .conn-icon { width: 1em; height: 1em; flex: none; }
-        .conn-badge { height: 1.5em; width: auto; flex: none; display: block; user-select: none; }
+        .conn-badge { height: 1.0em; width: auto; flex: none; display: block; user-select: none; }
         .conn-list { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 1.1em; margin: 0; padding: 0.35em 0 0.2em; list-style: none; font-size: 1em; }
         .conn-social { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; text-decoration: none; transition: transform 0.3s ease; }
         .conn-social:hover { transform: translateY(-3px) scale(1.12); }
