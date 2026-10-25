@@ -1728,14 +1728,14 @@ export default function App() {
           .metrics-panel {
             --tr: 15%;
             position: relative; isolation: isolate; padding: 12px; border-radius: 28px;
-            /* neutral frosted glass: no colour tint */
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 60%), rgba(255, 255, 255, 0.08);
-            -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
-            border: 1px solid rgba(255, 255, 255, 0.35);
+            /* clear glassmorphism (like the reference): barely-there tint, heavy blur of what is behind, thin light edge */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0.07) 100%);
+            -webkit-backdrop-filter: blur(36px) saturate(1.25); backdrop-filter: blur(36px) saturate(1.25);
+            border: 1px solid rgba(255, 255, 255, 0.45);
             box-shadow:
-              inset 1px 1px 1px rgba(255, 255, 255, 0.5),
-              inset -1px -1px 1px rgba(255, 255, 255, 0.2),
-              0 18px 44px rgba(0, 0, 0, 0.3);
+              inset 0 1px 0 rgba(255, 255, 255, 0.35),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+              0 8px 32px rgba(31, 38, 135, 0.18);
             transform-origin: top right;
             transform: translateX(calc(100% + 24px)) scale(0.92);
             opacity: 0; visibility: hidden; pointer-events: none;
@@ -1745,8 +1745,7 @@ export default function App() {
             transform: none; opacity: 1; visibility: visible; pointer-events: auto;
             transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
           }
-          .metrics-panel > .fx-layer { display: block; }
-          .metrics-panel > .fx-layer::after { background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, transparent var(--tr), transparent calc(100% - var(--tr)), rgba(255, 255, 255, 0.6) 100%); }
+          .metrics-panel > .fx-layer { display: none; }
         }
         .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
         .widgets-btn.is-open svg { transform: rotate(180deg); }
