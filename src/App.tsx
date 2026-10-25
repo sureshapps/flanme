@@ -2729,15 +2729,47 @@ export default function App() {
             inset -8px -8px 24px -10px rgba(0, 0, 0, 0.45),     /* smooth shadowed emboss */
             inset 0 0 60px rgba(0, 0, 0, 0.16);                 /* gentle depth toward the centre */
         }
-        /* glossy gradient rim: bright at the top-left and bottom-right corners, clear in between */
+        /* glossy rim: two bright arcs (opposite each other) orbit the glass edge, live */
+        @property --pf-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         .page-frame::before {
-          content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+          content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 2px;
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.08) 24%, rgba(255, 255, 255, 0.04) 60%, rgba(255, 255, 255, 0.55) 100%);
+          background: conic-gradient(from var(--pf-a),
+            rgba(255, 255, 255, 0.95) 0deg, rgba(255, 255, 255, 0.35) 22deg, rgba(255, 255, 255, 0.10) 70deg,
+            rgba(255, 255, 255, 0.10) 110deg, rgba(255, 255, 255, 0.35) 158deg, rgba(255, 255, 255, 0.95) 180deg,
+            rgba(255, 255, 255, 0.35) 202deg, rgba(255, 255, 255, 0.10) 250deg, rgba(255, 255, 255, 0.10) 290deg,
+            rgba(255, 255, 255, 0.35) 338deg, rgba(255, 255, 255, 0.95) 360deg);
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask-composite: exclude;
+          animation: pf-orbit 7s linear infinite;
         }
+        @keyframes pf-orbit { to { --pf-a: 360deg; } }
+        /* corner flares (top-right and bottom-left of the glass), twinkling */
+        .pf-glint {
+          --gs: clamp(110px, 14vw, 240px);
+          position: absolute; width: var(--gs); height: var(--gs); pointer-events: none;
+          transform: translate(50%, -50%); transform-origin: center;
+          animation: pf-twinkle 3.4s ease-in-out infinite;
+        }
+        .pf-glint--tr { top: calc(var(--pf-r) * 0.29); right: calc(var(--pf-r) * 0.29); }
+        .pf-glint--bl { bottom: calc(var(--pf-r) * 0.29); left: calc(var(--pf-r) * 0.29); transform: translate(-50%, 50%); animation-delay: -1.7s; --flip: 1; }
+        .pf-glint i { position: absolute; inset: 0; display: block; }
+        /* hot core + soft bloom */
+        .pf-glint .pf-core {
+          background: radial-gradient(circle at 50% 50%, #fff 0 5%, rgba(255, 255, 255, 0.9) 8%, rgba(255, 238, 220, 0.45) 18%, rgba(255, 220, 190, 0.14) 38%, transparent 62%);
+          filter: blur(0.6px);
+        }
+        /* long light streaks along the glass edges */
+        .pf-glint .pf-h { background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.0) 12%, rgba(255, 255, 255, 0.85) 50%, rgba(255, 255, 255, 0.0) 88%, transparent 100%); top: calc(50% - 1px); bottom: calc(50% - 1px); filter: blur(0.4px); }
+        .pf-glint .pf-v { background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.0) 12%, rgba(255, 255, 255, 0.85) 50%, rgba(255, 255, 255, 0.0) 88%, transparent 100%); left: calc(50% - 1px); right: calc(50% - 1px); filter: blur(0.4px); }
+        @keyframes pf-twinkle {
+          0%, 100% { opacity: 0.55; scale: 0.82; rotate: 0deg; }
+          45% { opacity: 1; scale: 1.08; rotate: 6deg; }
+          70% { opacity: 0.8; scale: 0.95; rotate: -4deg; }
+        }
+        @media (prefers-reduced-motion: reduce) { .page-frame::before, .pf-glint { animation: none; } }
         /* faint top gloss, like light catching the upper glass edge */
         .page-frame::after {
           content: ''; position: absolute; left: 8%; right: 8%; top: 0; height: 22%;
@@ -3620,7 +3652,10 @@ export default function App() {
           .case-skel { animation: none; }
         }
       `}</style>
-      <div className="page-frame" aria-hidden="true" />
+      <div className="page-frame" aria-hidden="true">
+        <span className="pf-glint pf-glint--tr"><i className="pf-core" /><i className="pf-h" /><i className="pf-v" /></span>
+        <span className="pf-glint pf-glint--bl"><i className="pf-core" /><i className="pf-h" /><i className="pf-v" /></span>
+      </div>
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
           ref={navRef}
