@@ -21,6 +21,9 @@ const THREE_RGBE_URL = 'https://esm.sh/three@0.170.0/examples/jsm/loaders/RGBELo
 const THREE_ROOM_ENV_URL = 'https://esm.sh/three@0.170.0/examples/jsm/environments/RoomEnvironment.js';
 const GLASS_ENV_HDR = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/royal_esplanade_2k.hdr';
 // photo shown inside the glass frame: swap for any image URL that allows cross-origin loading
+// glass look (3D frame): tweak these two
+const GLASS_TINT = 0.14; // smoky body, 0 = fully clear, 0.3 = dark glass
+const GLASS_SHINE = 1.7; // reflection / shine strength, 0 = none, 3 = very glossy
 const GLASS_PHOTO = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
@@ -630,13 +633,24 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
         const group = new THREE.Group();
         scene.add(group);
 
+        // liquid glass: a faint smoky body plus an additive layer that only adds clean reflections
+        // (no transmission pass, so it stays truly transparent over the hero photo)
         const glassMat = new THREE.MeshPhysicalMaterial({
-          color: new THREE.Color('#ffffff'), transmission: 1.0, opacity: 0.5, metalness: 0.0, roughness: 0.02, ior: 1.5, thickness: 1.2,
-          specularIntensity: 1.0, envMapIntensity: 1.2, clearcoat: 1.0, clearcoatRoughness: 0.0, transparent: true, side: THREE.DoubleSide, depthWrite: false,
+          color: new THREE.Color('#070b18'), metalness: 0.0, roughness: 0.05, transparent: true, opacity: GLASS_TINT,
+          side: THREE.DoubleSide, depthWrite: false,
         });
         const glassMesh = new THREE.Mesh(new RoundedBoxGeometry(2.1, 2.1, 1.0, 32, 0.26), glassMat);
-        glassMesh.renderOrder = 2;
+        glassMesh.renderOrder = 1;
         group.add(glassMesh);
+
+        const shineMat = new THREE.MeshPhysicalMaterial({
+          color: 0x000000, metalness: 0.0, roughness: 0.04, ior: 1.5, specularIntensity: 1.0, envMapIntensity: GLASS_SHINE,
+          clearcoat: 1.0, clearcoatRoughness: 0.0, iridescence: 0.3, iridescenceIOR: 1.3, iridescenceThicknessRange: [120, 420],
+          transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false,
+        });
+        const shineMesh = new THREE.Mesh(glassMesh.geometry, shineMat);
+        shineMesh.renderOrder = 3;
+        group.add(shineMesh);
 
         // photo: rounded-square silhouette, slightly inset, planar UVs
         const w = 2.1, h = 2.1, r = 0.22, x = -w / 2, y = -h / 2;
@@ -666,7 +680,7 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
         photoGeo.computeVertexNormals();
         const photoMat = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: 0xffffff, roughness: 0.35, metalness: 0.05, transparent: true, opacity: 1.0 });
         const photoMesh = new THREE.Mesh(photoGeo, photoMat);
-        photoMesh.renderOrder = 1;
+        photoMesh.renderOrder = 2;
         photoMesh.visible = false; // until the image has loaded
         group.add(photoMesh);
 
@@ -725,6 +739,7 @@ function GlassFrame({ className = '', style }: { className?: string; style?: CSS
           glassMesh.geometry.dispose();
           photoGeo.dispose();
           glassMat.dispose();
+          shineMat.dispose();
           photoMat.map?.dispose();
           photoMat.dispose();
           scene.environment?.dispose?.();
