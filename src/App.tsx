@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, LayoutGrid, Link2, Download, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Link2, Download, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -45,27 +45,68 @@ function fetchBehanceProjects(): Promise<BehanceProject[]> {
   });
 }
 
-function BehanceIcon({ size = 22, strokeWidth = 2, className = '' }: { size?: number | string; strokeWidth?: number | string; className?: string }) {
+type IconProps = { size?: number | string; strokeWidth?: number | string; className?: string };
+
+function BehanceIcon({ size = 22, className = '' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-behance ${className}`} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={Math.max(Number(strokeWidth), 1.9)} strokeLinecap="round" strokeLinejoin="round">
-      <path fillRule="evenodd" d="M7 12a3 3 0 0 0 0-6H2v12h6a3 3 0 0 0 0-6H7zm8 2h7a4 4 0 1 0-4 4 3.99 3.99 0 0 0 2.638-1M2 12h6M15 6h6" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-behance ${className}`} aria-hidden="true" fill="currentColor">
+      <path fillRule="evenodd" clipRule="evenodd" d="M1 5a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H5a4 4 0 0 1-4-4V5Zm4-2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5Z" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M4 7a1 1 0 0 1 1-1h3.5a3.5 3.5 0 1 1 0 7H5a1 1 0 0 1-1-1V7Zm2 1v3h2.5a1.5 1.5 0 0 0 0-3H6Z" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M4 12a1 1 0 0 1 1-1h3.5a3.5 3.5 0 1 1 0 7H5a1 1 0 0 1-1-1v-5zm2 1v3h2.5a1.5 1.5 0 0 0 0-3H6zm8.768 2H19.5a1 1 0 0 0 1-1 4 4 0 1 0-1.189 2.845l-1.405-1.422A2 2 0 0 1 14.768 15zm1.732-3a2 2 0 0 0-1.732 1h3.464a2 2 0 0 0-1.732-1zM19 9h-5V7h5v2z" />
     </svg>
   );
 }
 
-function CvIcon({ size = 22, strokeWidth = 1.5, className = '' }: { size?: number | string; strokeWidth?: number | string; className?: string }) {
+function CvIcon({ size = 22, className = '' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width={size} height={size} className={`neon-cv ${className}`} aria-hidden="true" fill="none">
-      <path d="M13 9L15 15L17 9M10 15C9.06812 15 8.60218 15 8.23463 14.8478C7.74458 14.6448 7.35523 14.2554 7.15224 13.7654C7 13.3978 7 12.9319 7 12C7 11.0681 7 10.6022 7.15224 10.2346C7.35523 9.74458 7.74458 9.35523 8.23463 9.15224C8.60218 9 9.06812 9 10 9" stroke="currentColor" strokeWidth={Math.max(Number(strokeWidth), 1.4)} strokeLinecap="round" strokeLinejoin="round" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} className={`neon-cv ${className}`} aria-hidden="true" fill="currentColor">
+      <path d="M19 2H5a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Zm-1 18H6V4h12Zm-9-5h6a1 1 0 0 0 1-1v-1a4 4 0 0 0-1.62-3.2A3 3 0 0 0 15 8a3 3 0 0 0-6 0 3 3 0 0 0 .62 1.8A4 4 0 0 0 8 13v1a1 1 0 0 0 1 1Zm1-2a2 2 0 0 1 4 0Zm1-5a1 1 0 1 1 1 1 1 1 0 0 1-1-1ZM8 18a1 1 0 0 1 1-1h3a1 1 0 0 1 0 2H9a1 1 0 0 1-1-1Zm8 0a1 1 0 1 1-1-1 1 1 0 0 1 1 1Z" />
     </svg>
   );
 }
 
-const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon | typeof CvIcon }[] = [
+function GithubIcon({ size = 22, className = '' }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={size} height={size} className={`neon-github ${className}`} aria-hidden="true" fill="currentColor">
+      <path d="M27.106 0s-2.101 0-4.235 3.2c-1.056-1.057-4.267-1.067-5.331-1.067-1.068 0-4.277.01-5.334 1.067C10.072 0 7.976 0 7.976 0c-1.141 2.864-.248 4.807-.033 5.333C6.877 6.4 5.806 7.467 5.806 12.8s3.878 8.008 8.538 8.533c-.599.521-1.067 2.133-1.067 3.2-1.197.533-4.528 1.045-6.4-2.133 0 0-1.067-2.133-3.2-2.133 0 0-2.133-.201 0 1.067 0 0 1.067 1.067 2.133 3.2 0 0 1.629 4.456 7.467 3.2.012 1.735 0 4.267 0 4.267h8.528v-7.467c0-.844-.466-2.68-1.067-3.2 4.66-.525 8.533-3.2 8.533-8.533 0-5.333-1.067-6.4-2.133-7.467.217-.527 1.108-2.47-.032-5.334z" />
+    </svg>
+  );
+}
+
+type Repo = { slug: string; title: string; description: string; tech: string[]; live: string };
+const REPOS: Repo[] = [
+  { slug: 'shadcn-ui/ui', title: 'shadcn/ui', description: 'Beautifully designed React components that you can copy and customize.', tech: ['React', 'TypeScript', 'Tailwind'], live: 'https://ui.shadcn.com' },
+  { slug: 'vercel/next.js', title: 'Next.js', description: 'The React framework for production applications with routing and rendering built in.', tech: ['React', 'TypeScript', 'Node.js'], live: 'https://nextjs.org' },
+  { slug: 'vitejs/vite', title: 'Vite', description: 'A fast frontend tooling experience for modern web projects.', tech: ['JavaScript', 'Rollup', 'ESM'], live: 'https://vite.dev' },
+  { slug: 'withastro/astro', title: 'Astro', description: 'A content-focused web framework for building fast, flexible websites.', tech: ['JavaScript', 'Islands', 'SSR'], live: 'https://astro.build' },
+  { slug: 'mrdoob/three.js', title: 'Three.js', description: 'A JavaScript 3D library that makes it easier to create animated scenes.', tech: ['WebGL', 'JavaScript', '3D'], live: 'https://threejs.org' },
+  { slug: 'honojs/hono', title: 'Hono', description: 'A small, simple, and ultrafast web framework for the edge.', tech: ['TypeScript', 'Edge', 'Web APIs'], live: 'https://hono.dev' },
+  { slug: 'drizzle-team/drizzle-orm', title: 'Drizzle ORM', description: 'A lightweight TypeScript ORM with a SQL-like developer experience.', tech: ['TypeScript', 'SQL', 'ORM'], live: 'https://orm.drizzle.team' },
+  { slug: 'trpc/trpc', title: 'tRPC', description: 'End-to-end typesafe APIs made easy for TypeScript applications.', tech: ['TypeScript', 'RPC', 'React'], live: 'https://trpc.io' },
+  { slug: 'colinhacks/zod', title: 'Zod', description: 'TypeScript-first schema validation with static type inference.', tech: ['TypeScript', 'Validation', 'Schemas'], live: 'https://zod.dev' },
+  { slug: 'tailwindlabs/tailwindcss', title: 'Tailwind CSS', description: 'A utility-first CSS framework for rapidly building custom interfaces.', tech: ['CSS', 'PostCSS', 'Design'], live: 'https://tailwindcss.com' },
+  { slug: 'supabase/supabase', title: 'Supabase', description: 'An open source Firebase alternative built around PostgreSQL.', tech: ['PostgreSQL', 'Auth', 'Realtime'], live: 'https://supabase.com' },
+  { slug: 'prisma/prisma', title: 'Prisma', description: 'Next-generation ORM for Node.js and TypeScript applications.', tech: ['TypeScript', 'Database', 'ORM'], live: 'https://www.prisma.io' },
+  { slug: 'react-hook-form/react-hook-form', title: 'React Hook Form', description: 'Performant and flexible forms library for React applications.', tech: ['React', 'Forms', 'TypeScript'], live: 'https://react-hook-form.com' },
+  { slug: 'TanStack/query', title: 'TanStack Query', description: 'Powerful asynchronous state management for web applications.', tech: ['React', 'Caching', 'State'], live: 'https://tanstack.com/query' },
+  { slug: 'lucide-icons/lucide', title: 'Lucide', description: 'Beautiful and consistent open source icons for modern products.', tech: ['SVG', 'Icons', 'React'], live: 'https://lucide.dev' },
+  { slug: 'motiondivision/motion', title: 'Motion', description: 'A production-ready animation library for React and the web.', tech: ['React', 'Animation', 'UI'], live: 'https://motion.dev' },
+  { slug: 'pmndrs/zustand', title: 'Zustand', description: 'A small, fast, and scalable state management solution for React.', tech: ['React', 'State', 'Hooks'], live: 'https://zustand.docs.pmnd.rs' },
+  { slug: 'saadeghi/daisyui', title: 'daisyUI', description: 'Tailwind CSS component classes for building interfaces faster.', tech: ['Tailwind', 'CSS', 'Components'], live: 'https://daisyui.com' },
+  { slug: 'microsoft/playwright', title: 'Playwright', description: 'Reliable end-to-end testing for modern web applications.', tech: ['Testing', 'Browser', 'Automation'], live: 'https://playwright.dev' },
+  { slug: 'storybookjs/storybook', title: 'Storybook', description: 'Build, test, and document UI components in isolation.', tech: ['React', 'Testing', 'Components'], live: 'https://storybook.js.org' },
+  { slug: 'eslint/eslint', title: 'ESLint', description: 'Find and fix problems in JavaScript and TypeScript code.', tech: ['JavaScript', 'Linting', 'Tooling'], live: 'https://eslint.org' },
+  { slug: 'prettier/prettier', title: 'Prettier', description: 'An opinionated code formatter that keeps projects consistent.', tech: ['Formatting', 'JavaScript', 'DX'], live: 'https://prettier.io' },
+  { slug: 'fastapi/fastapi', title: 'FastAPI', description: 'A modern, fast web framework for building APIs with Python.', tech: ['Python', 'API', 'Async'], live: 'https://fastapi.tiangolo.com' },
+  { slug: 'pandas-dev/pandas', title: 'Pandas', description: 'Powerful data structures and analysis tools for Python.', tech: ['Python', 'Data', 'Analytics'], live: 'https://pandas.pydata.org' },
+  { slug: 'opencv/opencv', title: 'OpenCV', description: 'Open source computer vision and machine learning software library.', tech: ['C++', 'Python', 'Computer Vision'], live: 'https://opencv.org' },
+];
+
+const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon }[] = [
   { label: 'Module', Icon: Home },
   { label: 'Case Records', Icon: BehanceIcon },
   { label: 'CV', Icon: CvIcon },
-  { label: 'Tiers', Icon: LayoutGrid },
+  { label: 'GitHub', Icon: GithubIcon },
   { label: 'Live Demo', Icon: Navigation },
 ];
 const STATS = [
@@ -814,6 +855,9 @@ export default function App() {
   const cvPopRef = useRef<HTMLDivElement>(null);
   const cvPagesRef = useRef<HTMLDivElement>(null);
   const cvStarted = useRef(false);
+  const [ghOpen, setGhOpen] = useState(false);
+  const [ghQuery, setGhQuery] = useState('');
+  const ghPopRef = useRef<HTMLDivElement>(null);
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [soundOn, setSoundOn] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -1067,6 +1111,22 @@ export default function App() {
   }, [cvOpen]);
 
   useEffect(() => {
+    if (!ghOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setGhOpen(false);
+    };
+    const closeOnOutside = (event: PointerEvent) => {
+      if (ghPopRef.current && !ghPopRef.current.contains(event.target as Node)) setGhOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('pointerdown', closeOnOutside);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('pointerdown', closeOnOutside);
+    };
+  }, [ghOpen]);
+
+  useEffect(() => {
     const root = signatureRef.current;
     if (!root) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1092,6 +1152,7 @@ export default function App() {
       setInfoOpen(false);
       setWidgetsOpen(false);
       setCvOpen(false);
+      setGhOpen(false);
       setCaseOpen(true);
       return;
     }
@@ -1099,13 +1160,25 @@ export default function App() {
       setInfoOpen(false);
       setWidgetsOpen(false);
       setCaseOpen(false);
+      setGhOpen(false);
       setCvOpen(true);
+      return;
+    }
+    if (label === 'GitHub') {
+      setInfoOpen(false);
+      setWidgetsOpen(false);
+      setCaseOpen(false);
+      setCvOpen(false);
+      setGhOpen(true);
       return;
     }
     if (label === 'Live Demo') {
       cursorTarget.current = { x: window.innerWidth * 0.62, y: window.innerHeight * 0.42 };
     }
   }
+
+  const ghTerm = ghQuery.toLowerCase().trim();
+  const ghRepos = REPOS.filter((repo) => [repo.title, repo.description, repo.slug, ...repo.tech].join(' ').toLowerCase().includes(ghTerm));
 
   function openNotice(value: 'reserve' | 'connect') {
     setMenuOpen(false);
@@ -1436,16 +1509,24 @@ export default function App() {
         }
         .sig-line { opacity: 0; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; text-transform: uppercase; }
 
-        /* Neon Behance icon */
+        /* Neon Behance icon (pink) */
         .neon-behance {
-          color: #7f8bff;
+          color: #ff7bd5;
           animation: neon-behance-pulse 2.2s ease-in-out infinite;
         }
         @keyframes neon-behance-pulse {
-          0%, 100% { filter: drop-shadow(0 0 1.5px #3d4dff) drop-shadow(0 0 4px #0005f8); }
-          50% { filter: drop-shadow(0 0 2px #c9d0ff) drop-shadow(0 0 6px #4a5bff) drop-shadow(0 0 13px #0005f8); }
+          0%, 100% { filter: drop-shadow(0 0 1.5px #ff4fc3) drop-shadow(0 0 4px #ff1fa8); }
+          50% { filter: drop-shadow(0 0 2px #ffd0f0) drop-shadow(0 0 6px #ff5ccf) drop-shadow(0 0 13px #ff1fa8); }
         }
-
+        /* Neon GitHub icon (#00ff88) */
+        .neon-github {
+          color: #00ff88;
+          animation: neon-github-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes neon-github-pulse {
+          0%, 100% { filter: drop-shadow(0 0 1.5px #00ff88) drop-shadow(0 0 4px #00cc6a); }
+          50% { filter: drop-shadow(0 0 2px #b9ffe0) drop-shadow(0 0 6px #00ff88) drop-shadow(0 0 13px #00ff88); }
+        }
         /* Neon CV icon (yellow) */
         .neon-cv {
           color: #ffe14d;
@@ -1466,6 +1547,73 @@ export default function App() {
         }
         @media (prefers-reduced-motion: reduce) {
           .neon-cv { animation: none; filter: drop-shadow(0 0 2px #ffd400) drop-shadow(0 0 6px #ffb000); }
+        }
+        /* GitHub showcase popup (glassmorphic, same look as the showcase page) */
+        .case-pop.gh-pop {
+          width: min(1240px, calc(100vw - 2.5rem)); height: min(88dvh, 860px);
+          background:
+            radial-gradient(circle at 8% 0%, rgba(122, 92, 255, 0.32), transparent 22rem),
+            radial-gradient(circle at 100% 12%, rgba(0, 198, 255, 0.2), transparent 20rem),
+            radial-gradient(circle at 60% 100%, rgba(255, 79, 187, 0.16), transparent 22rem),
+            rgba(9, 11, 22, 0.55);
+          border-color: rgba(255, 255, 255, 0.14);
+        }
+        .gh-title { font-size: clamp(20px, 3.2vw, 34px); font-weight: 800; letter-spacing: -0.06em; line-height: 1; }
+        .gh-title span { color: transparent; background: linear-gradient(100deg, #ffffff, #a58aff 45%, #67dcff); -webkit-background-clip: text; background-clip: text; }
+        .gh-toolbar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 20px 4px; }
+        .gh-section { font-size: 14px; letter-spacing: -0.02em; white-space: nowrap; }
+        .gh-section span { color: #747c9d; font-weight: 400; }
+        .gh-search {
+          width: min(280px, 100%); padding: 10px 14px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; outline: none;
+          background: rgba(255, 255, 255, 0.08); color: #f7f8ff; font: inherit; font-size: 13px; transition: 0.25s ease;
+        }
+        .gh-search::placeholder { color: #747c9d; }
+        .gh-search:focus { border-color: rgba(154, 124, 255, 0.8); box-shadow: 0 0 0 4px rgba(154, 124, 255, 0.12); }
+        .gh-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+        .gh-card {
+          position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 20px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)), rgba(15, 18, 37, 0.7);
+          box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+          -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+          transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+          animation: gh-card-in 0.55s both;
+        }
+        .gh-card:hover { border-color: rgba(255, 255, 255, 0.28); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5); transform: translateY(-6px); }
+        @keyframes gh-card-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .gh-img { position: relative; height: 150px; overflow: hidden; background: #191d39; }
+        .gh-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(9, 11, 22, 0.72), transparent 60%); pointer-events: none; }
+        .gh-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s ease; }
+        .gh-card:hover .gh-img img { transform: scale(1.07); }
+        .gh-num {
+          position: absolute; z-index: 2; top: 11px; left: 11px; display: grid; width: 28px; height: 28px; place-items: center;
+          border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 9px; background: rgba(8, 10, 21, 0.55);
+          -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; font-size: 10px; font-weight: 800;
+        }
+        .gh-body { display: flex; flex: 1; flex-direction: column; padding: 16px; }
+        .gh-name { margin-bottom: 8px; font-size: 16px; line-height: 1.25; letter-spacing: -0.04em; font-weight: 700; }
+        .gh-desc { min-height: 60px; color: #a9afc7; font-size: 12.5px; line-height: 1.6; }
+        .gh-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
+        .gh-tag { padding: 5px 9px; border: 1px solid rgba(154, 124, 255, 0.24); border-radius: 999px; background: rgba(154, 124, 255, 0.1); color: #c9c0ff; font-size: 10px; font-weight: 700; }
+        .gh-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .gh-src { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #747c9d; font-size: 10.5px; }
+        .gh-live {
+          flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid rgba(103, 220, 255, 0.28); border-radius: 10px;
+          background: rgba(103, 220, 255, 0.1); color: #a6ebff; font-size: 11px; font-weight: 700; text-decoration: none; transition: 0.25s ease;
+        }
+        .gh-live:hover { background: rgba(103, 220, 255, 0.2); color: #fff; transform: translateX(2px); }
+        @media (min-width: 640px) and (max-width: 1179px) {
+          .gh-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (min-width: 640px) and (max-width: 819px) {
+          .gh-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 639px) {
+          .case-pop.gh-pop { width: calc(100vw - 1.5rem); height: 88dvh; }
+          .gh-toolbar { flex-direction: column; align-items: stretch; gap: 8px; padding: 6px 14px 2px; }
+          .gh-search { width: 100%; }
+          .gh-grid { grid-template-columns: 1fr; gap: 14px; }
+          .gh-img { height: 190px; }
         }
         /* Behance popup: falls from the top, goes back up */
         .case-pop {
@@ -1527,7 +1675,9 @@ export default function App() {
           .case-card-stats { font-size: 9.5px; padding: 0 9px 9px; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .neon-behance { animation: none; filter: drop-shadow(0 0 2px #4a5bff) drop-shadow(0 0 6px #0005f8); }
+          .neon-behance { animation: none; filter: drop-shadow(0 0 2px #ff5ccf) drop-shadow(0 0 6px #ff1fa8); }
+          .neon-github { animation: none; filter: drop-shadow(0 0 2px #00ff88) drop-shadow(0 0 6px #00ff88); }
+          .gh-card { animation: none; }
           .case-pop, .case-pop.is-open { transition-duration: 0.01s; }
           .case-skel { animation: none; }
         }
@@ -1710,6 +1860,54 @@ export default function App() {
           <div ref={cvPagesRef} className="cv-pages" style={{ display: cvState === 'error' ? 'none' : undefined }} />
         </div>
         <p className="case-foot">Suresh Kaleyannan · DevOps</p>
+      </div>
+
+      <div ref={ghPopRef} id="github-popup" role="dialog" aria-label="GitHub showcase" aria-hidden={!ghOpen} className={`case-pop gh-pop ${ghOpen ? 'is-open' : ''}`}>
+        <div className="case-head">
+          <h2 className="gh-title">Ideas worth <span>exploring.</span></h2>
+          <button type="button" className="case-close" aria-label="Close GitHub showcase" tabIndex={ghOpen ? 0 : -1} onClick={() => setGhOpen(false)}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="gh-toolbar">
+          <h3 className="gh-section">Featured repositories <span>({ghRepos.length})</span></h3>
+          <input
+            type="search"
+            className="gh-search"
+            placeholder="Search repositories..."
+            aria-label="Search repositories"
+            value={ghQuery}
+            tabIndex={ghOpen ? 0 : -1}
+            onChange={(event) => setGhQuery(event.target.value)}
+          />
+        </div>
+        <div className="case-scroll">
+          {ghRepos.length === 0 ? (
+            <p className="case-state">No repositories match your search.</p>
+          ) : (
+            <div className="gh-grid">
+              {ghRepos.map((repo, index) => (
+                <article key={repo.slug} className="gh-card" style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}>
+                  <div className="gh-img">
+                    <span className="gh-num">{String(index + 1).padStart(2, '0')}</span>
+                    <img src={`https://opengraph.githubassets.com/1/${repo.slug}`} alt={`${repo.title} repository preview`} loading="lazy" draggable={false} />
+                  </div>
+                  <div className="gh-body">
+                    <h4 className="gh-name">{repo.title}</h4>
+                    <p className="gh-desc">{repo.description}</p>
+                    <div className="gh-tags">
+                      {repo.tech.map((tech) => <span key={tech} className="gh-tag">{tech}</span>)}
+                    </div>
+                    <div className="gh-foot">
+                      <span className="gh-src">github.com/{repo.slug}</span>
+                      <a className="gh-live" href={repo.live} target="_blank" rel="noopener noreferrer" tabIndex={ghOpen ? 0 : -1}>See live <span aria-hidden="true">↗</span></a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
