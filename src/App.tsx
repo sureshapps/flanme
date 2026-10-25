@@ -112,12 +112,8 @@ function EmailIcon({ size = 22, className = '' }: IconProps) {
 
 function GalleryIcon({ size = 22, className = '' }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={size} height={size} className={`neon-gallery ${className}`} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10">
-      <polygon points="16 3 17.236 5.504 20 5.906 18 7.855 18.472 10.608 16 9.309 13.528 10.608 14 7.855 12 5.906 14.764 5.504" />
-      <polygon points="26 5.392 27.236 7.896 30 8.298 28 10.247 28.472 13 26 11.7 23.528 13 24 10.247 22 8.298 24.764 7.896" />
-      <polygon points="6 5.392 4.764 7.896 2 8.298 4 10.247 3.528 13 6 11.7 8.472 13 8 10.247 10 8.298 7.236 7.896" />
-      <path d="M8,20l3,0c1.997-1.36,3.112-3.153,3.752-5.076C14.919,14.421,15.257,14,15.789,14c1.607,0,2.758,1.512,2.342,3.049C17.833,18.147,17.554,18.958,17,20h4.616c0.886,0,1.544,0.82,1.352,1.685l-1.384,6.228C21.441,28.548,20.878,29,20.228,29H15c-2,0-2.844-0.844-4-2H8" />
-      <rect width="10" height="4" x=".999" y="22" transform="rotate(-90 6 24)" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={size} height={size} className={`neon-gallery ${className}`} aria-hidden="true" fill="currentColor">
+      <path d="M3.3330078,30h20.1806641c0.3935547,0,0.7509766-0.230957,0.9121094-0.5898438l5.0419922-11.2290039c0.3837891-1.1298828,0.1982422-2.3828125-0.4951172-3.3510742c-0.6972656-0.9726562-1.7792969-1.5302734-2.9707031-1.5302734h-7.140625l0.0400391-0.0957031c0.84375-2.0102539,1.3535156-3.2236328,1.3535156-6.0625c0-0.0060425-0.0032959-0.0109863-0.003418-0.0170288c0.0001221-0.0060425,0.003418-0.0111084,0.003418-0.0171509c0-1.75-1.2714844-3.2641602-2.3798828-4.3886719c-0.8759766-0.8852539-2.1953125-0.9570312-3.1425781-0.1674805c-0.8994141,0.7524414-0.9023438,1.8061523-0.9052734,2.652832c-0.0009766,0.2241211-0.0009766,0.4575195-0.0175781,0.6953125l-0.0719604,0.9909058c-0.7571411,1.7475586-1.6392212,2.6170654-2.7503052,3.7014771c-0.5888672,0.574707-1.2558594,1.2260742-1.9541016,2.0698242l-0.5283203,0.6381836h-5.171875c-0.5527344,0-1,0.4477539-1,1V29C2.3330078,29.5522461,2.7802734,30,3.3330078,30z" />
     </svg>
   );
 }
@@ -144,12 +140,6 @@ const GALLERY_SOURCES: { src: string; title: string }[] = [
   { src: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', title: 'Big Buck Bunny (YouTube)' },
   { src: 'https://picsum.photos/id/1018/900/700.webp', title: 'Mountain mist' },
   { src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', title: 'Flower (MP4)' },
-  { src: 'https://picsum.photos/id/1025/900/700.jpg', title: 'Pug portrait' },
-  { src: 'https://vimeo.com/76979871', title: 'Vimeo player demo' },
-  { src: 'https://picsum.photos/id/1035/900/700.jpg', title: 'Waterfall' },
-  { src: 'https://picsum.photos/id/1020/900/700.webp', title: 'Brown bear' },
-  { src: 'https://picsum.photos/id/1043/900/700.jpg', title: 'Forest road' },
-  { src: 'https://youtu.be/YE7VzlLtp-4', title: 'Big Buck Bunny (short link)' },
   { src: 'https://picsum.photos/id/1025/900/700.jpg', title: 'Pug portrait' },
   { src: 'https://vimeo.com/76979871', title: 'Vimeo player demo' },
   { src: 'https://picsum.photos/id/1035/900/700.jpg', title: 'Waterfall' },
@@ -1277,10 +1267,10 @@ export default function App() {
         cursor = neonCursor({
           el,
           shaderPoints: 16,
-          curvePoints: 40,
+          curvePoints: 80,
           curveLerp: 0.5,
           radius1: 5,
-          radius2: 15,
+          radius2: 30,
           velocityTreshold: 10,
           sleepRadiusX: 100,
           sleepRadiusY: 100,
