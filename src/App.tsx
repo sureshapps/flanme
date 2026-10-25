@@ -1576,14 +1576,13 @@ export default function App() {
         .gh-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
         .gh-card {
           position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 20px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)), rgba(15, 18, 37, 0.7);
-          box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
-          -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
-          transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 16px; color: #fff;
+          background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.28);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.22);
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
           animation: gh-card-in 0.55s both;
         }
-        .gh-card:hover { border-color: rgba(255, 255, 255, 0.28); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5); transform: translateY(-6px); }
+        .gh-card:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.16); }
         @keyframes gh-card-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .gh-img { position: relative; height: 150px; overflow: hidden; background: #191d39; }
         .gh-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(9, 11, 22, 0.72), transparent 60%); pointer-events: none; }
@@ -1594,25 +1593,7 @@ export default function App() {
           border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 9px; background: rgba(8, 10, 21, 0.55);
           -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; font-size: 10px; font-weight: 800;
         }
-        /* transparent liquid glass: dimmed blurred repo image behind a clear, light-catching surface */
-        .gh-body {
-          position: relative; isolation: isolate; overflow: hidden; display: flex; flex: 1; flex-direction: column; padding: 16px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.08));
-          border-top: 1px solid rgba(255, 255, 255, 0.35);
-          box-shadow:
-            inset 2px 2px 0.5px -2px rgba(255, 255, 255, 0.9),
-            inset -2px -2px 0.5px -2px rgba(255, 255, 255, 0.7),
-            inset 0 0 16px rgba(255, 255, 255, 0.06);
-        }
-        .gh-body::before {
-          content: ''; position: absolute; inset: -24px; z-index: -2;
-          background: var(--img) center / cover no-repeat;
-          filter: blur(18px) saturate(1.6) brightness(0.42);
-        }
-        .gh-body::after {
-          content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-          background: linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0%, transparent 28%, transparent 72%, rgba(255, 255, 255, 0.1) 100%);
-        }
+        .gh-body { position: relative; display: flex; flex: 1; flex-direction: column; padding: 16px; }
         .gh-name { color: #fff; margin-bottom: 8px; font-size: 16px; line-height: 1.25; letter-spacing: -0.04em; font-weight: 700; }
         .gh-desc { min-height: 60px; color: rgba(255, 255, 255, 0.78); font-size: 12.5px; line-height: 1.6; }
         .gh-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
