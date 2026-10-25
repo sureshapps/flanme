@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Link2, Download, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Link2, Download, Play, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -110,6 +110,86 @@ function EmailIcon({ size = 22, className = '' }: IconProps) {
   );
 }
 
+function GalleryIcon({ size = 22, className = '' }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width={size} height={size} className={`neon-gallery ${className}`} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10">
+      <polygon points="16 3 17.236 5.504 20 5.906 18 7.855 18.472 10.608 16 9.309 13.528 10.608 14 7.855 12 5.906 14.764 5.504" />
+      <polygon points="26 5.392 27.236 7.896 30 8.298 28 10.247 28.472 13 26 11.7 23.528 13 24 10.247 22 8.298 24.764 7.896" />
+      <polygon points="6 5.392 4.764 7.896 2 8.298 4 10.247 3.528 13 6 11.7 8.472 13 8 10.247 10 8.298 7.236 7.896" />
+      <path d="M8,20l3,0c1.997-1.36,3.112-3.153,3.752-5.076C14.919,14.421,15.257,14,15.789,14c1.607,0,2.758,1.512,2.342,3.049C17.833,18.147,17.554,18.958,17,20h4.616c0.886,0,1.544,0.82,1.352,1.685l-1.384,6.228C21.441,28.548,20.878,29,20.228,29H15c-2,0-2.844-0.844-4-2H8" />
+      <rect width="10" height="4" x=".999" y="22" transform="rotate(-90 6 24)" />
+    </svg>
+  );
+}
+
+/* ---------- Gallery (photos + videos) ----------
+   Add an entry with any of these links:
+   photos: .gif .jpg .jpeg .png .webp
+   videos: YouTube, Vimeo, .mp4 (also .webm/.mov; .avi is accepted but most browsers can't play it) */
+type MediaKind = 'image' | 'youtube' | 'vimeo' | 'video';
+type MediaInfo = { kind: MediaKind; thumb?: string; embed?: string };
+
+function parseMedia(src: string): MediaInfo {
+  const url = src.trim();
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/i);
+  if (yt) return { kind: 'youtube', thumb: `https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`, embed: `https://www.youtube-nocookie.com/embed/${yt[1]}?autoplay=1&rel=0` };
+  const vm = url.match(/vimeo\.com\/(?:video\/|channels\/[\w-]+\/|groups\/[\w-]+\/videos\/)?(\d+)/i);
+  if (vm) return { kind: 'vimeo', thumb: `https://vumbnail.com/${vm[1]}.jpg`, embed: `https://player.vimeo.com/video/${vm[1]}?autoplay=1` };
+  if (/\.(mp4|avi|webm|mov|m4v|ogv)(\?|#|$)/i.test(url)) return { kind: 'video' };
+  return { kind: 'image' };
+}
+
+const GALLERY_SOURCES: { src: string; title: string }[] = [
+  { src: 'https://picsum.photos/id/1015/900/700.jpg', title: 'River valley' },
+  { src: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ', title: 'Big Buck Bunny (YouTube)' },
+  { src: 'https://picsum.photos/id/1018/900/700.webp', title: 'Mountain mist' },
+  { src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', title: 'Flower (MP4)' },
+  { src: 'https://picsum.photos/id/1025/900/700.jpg', title: 'Pug portrait' },
+  { src: 'https://vimeo.com/76979871', title: 'Vimeo player demo' },
+  { src: 'https://picsum.photos/id/1035/900/700.jpg', title: 'Waterfall' },
+  { src: 'https://picsum.photos/id/1020/900/700.webp', title: 'Brown bear' },
+  { src: 'https://picsum.photos/id/1043/900/700.jpg', title: 'Forest road' },
+  { src: 'https://youtu.be/YE7VzlLtp-4', title: 'Big Buck Bunny (short link)' },
+];
+const GALLERY = GALLERY_SOURCES.map((item) => ({ ...item, media: parseMedia(item.src) }));
+type GalleryEntry = (typeof GALLERY)[number];
+
+function GalleryThumb({ item }: { item: GalleryEntry }) {
+  const [failed, setFailed] = useState(false);
+  const { media } = item;
+  return (
+    <>
+      {media.kind === 'video' ? (
+        failed ? <span className="gal-ph" aria-hidden="true" /> : <video src={`${item.src}#t=0.5`} muted playsInline preload="metadata" onError={() => setFailed(true)} />
+      ) : (
+        <img src={media.thumb ?? item.src} alt="" loading="lazy" draggable={false} />
+      )}
+      <span className="gal-badge">{media.kind === 'image' ? 'Photo' : 'Video'}</span>
+      {media.kind !== 'image' && <span className="gal-play" aria-hidden="true"><Play size={16} fill="currentColor" strokeWidth={0} /></span>}
+      <span className="gal-cap">{item.title}</span>
+    </>
+  );
+}
+
+function LightboxMedia({ item }: { item: GalleryEntry }) {
+  const [failed, setFailed] = useState(false);
+  const { media } = item;
+  if (media.kind === 'youtube' || media.kind === 'vimeo') {
+    return <iframe className="lb-frame" src={media.embed} title={item.title} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen />;
+  }
+  if (media.kind === 'video') {
+    return failed ? (
+      <div className="lb-fail">
+        This browser can't play this video file (AVI is rarely supported).{' '}
+        <a href={item.src} target="_blank" rel="noopener noreferrer">Open or download it</a>
+      </div>
+    ) : (
+      <video className="lb-media" src={item.src} controls autoPlay playsInline onError={() => setFailed(true)} />
+    );
+  }
+  return <img className="lb-media" src={item.src} alt={item.title} draggable={false} />;
+}
+
 const CONTACTS: { name: string; href: string; Icon: typeof InstagramIcon; glow: string; external: boolean }[] = [
   { name: 'Instagram', href: 'https://www.instagram.com/sureshksmy', Icon: InstagramIcon, glow: 'glow-ig', external: true },
   { name: 'Facebook', href: 'https://www.facebook.com/mesurreshks', Icon: FacebookIcon, glow: 'glow-fb', external: true },
@@ -150,7 +230,7 @@ const NAV_ITEMS: { label: string; Icon: LucideIcon | typeof BehanceIcon }[] = [
   { label: 'Case Records', Icon: BehanceIcon },
   { label: 'CV', Icon: CvIcon },
   { label: 'GitHub', Icon: GithubIcon },
-  { label: 'Live Demo', Icon: Navigation },
+  { label: 'Gallery', Icon: GalleryIcon },
 ];
 const STATS = [
   { radius: 330, start: -92, end: 16, dot: -49 },
@@ -862,6 +942,9 @@ export default function App() {
   const cvStarted = useRef(false);
   const [ghOpen, setGhOpen] = useState(false);
   const ghPopRef = useRef<HTMLDivElement>(null);
+  const [galOpen, setGalOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const galPopRef = useRef<HTMLDivElement>(null);
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [soundOn, setSoundOn] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -1059,6 +1142,24 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseOpen]);
 
+  useEffect(() => {
+    if (!galOpen) { setLightbox(null); return; }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (lightbox !== null) setLightbox(null); else setGalOpen(false);
+    };
+    const closeOnOutside = (event: PointerEvent) => {
+      if (lightbox !== null) return; // the lightbox has its own backdrop + close button
+      if (galPopRef.current && !galPopRef.current.contains(event.target as Node)) setGalOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('pointerdown', closeOnOutside);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('pointerdown', closeOnOutside);
+    };
+  }, [galOpen, lightbox]);
+
   async function loadCv() {
     setCvState('loading');
     try {
@@ -1201,6 +1302,7 @@ export default function App() {
       setWidgetsOpen(false);
       setCvOpen(false);
       setGhOpen(false);
+      setGalOpen(false);
       setCaseOpen(true);
       return;
     }
@@ -1209,6 +1311,7 @@ export default function App() {
       setWidgetsOpen(false);
       setCaseOpen(false);
       setGhOpen(false);
+      setGalOpen(false);
       setCvOpen(true);
       return;
     }
@@ -1217,11 +1320,17 @@ export default function App() {
       setWidgetsOpen(false);
       setCaseOpen(false);
       setCvOpen(false);
+      setGalOpen(false);
       setGhOpen(true);
       return;
     }
-    if (label === 'Live Demo') {
-      cursorTarget.current = { x: window.innerWidth * 0.62, y: window.innerHeight * 0.42 };
+    if (label === 'Gallery') {
+      setInfoOpen(false);
+      setWidgetsOpen(false);
+      setCaseOpen(false);
+      setCvOpen(false);
+      setGhOpen(false);
+      setGalOpen(true);
     }
   }
 
@@ -1606,6 +1715,15 @@ export default function App() {
           0%, 100% { filter: drop-shadow(0 0 1.5px #ffcc00) drop-shadow(0 0 4px #ff9d00); }
           50% { filter: drop-shadow(0 0 2px #fff4b0) drop-shadow(0 0 6px #ffd400) drop-shadow(0 0 13px #ffb000); }
         }
+        /* Neon Gallery icon (purple) */
+        .neon-gallery {
+          color: #c58bff;
+          animation: neon-gallery-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes neon-gallery-pulse {
+          0%, 100% { filter: drop-shadow(0 0 1.5px #a855f7) drop-shadow(0 0 4px #7c3aed); }
+          50% { filter: drop-shadow(0 0 2px #ead5ff) drop-shadow(0 0 6px #a855f7) drop-shadow(0 0 13px #7c3aed); }
+        }
         .cv-pop { width: min(900px, calc(100vw - 2.5rem)); height: min(88dvh, 880px); }
         .cv-head-actions { display: flex; align-items: center; gap: 8px; }
         .cv-pages { display: flex; flex-direction: column; gap: 14px; }
@@ -1617,6 +1735,8 @@ export default function App() {
         }
         @media (prefers-reduced-motion: reduce) {
           .neon-cv { animation: none; filter: drop-shadow(0 0 2px #ffd400) drop-shadow(0 0 6px #ffb000); }
+          .neon-gallery { animation: none; filter: drop-shadow(0 0 2px #a855f7) drop-shadow(0 0 6px #7c3aed); }
+          .lb, .lb-panel { animation: none; }
         }
         /* GitHub showcase popup (glassmorphic, same look as the showcase page) */
         .case-pop.gh-pop { width: min(1240px, calc(100vw - 2.5rem)); height: min(88dvh, 860px); }
@@ -1635,6 +1755,67 @@ export default function App() {
           background: linear-gradient(145deg, rgba(0, 255, 136, 0.09), rgba(0, 204, 106, 0.03) 60%), rgba(4, 22, 14, 0.3);
           border-color: rgba(0, 255, 136, 0.34);
           box-shadow: inset 1px 1px 1px rgba(185, 255, 224, 0.45), inset -1px -1px 1px rgba(0, 255, 136, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4), 0 0 38px rgba(0, 255, 136, 0.12);
+        }
+
+        .case-pop.pop-purple {
+          background: linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.03) 60%), rgba(22, 8, 40, 0.25);
+          border-color: rgba(197, 139, 255, 0.38);
+          box-shadow: inset 1px 1px 1px rgba(234, 213, 255, 0.45), inset -1px -1px 1px rgba(168, 85, 247, 0.2), 0 24px 70px rgba(0, 0, 0, 0.4), 0 0 38px rgba(168, 85, 247, 0.14);
+        }
+        /* Gallery popup: 5 columns on desktop, 3 on tablet, 2 on mobile */
+        .case-pop.gal-pop { width: min(1240px, calc(100vw - 2.5rem)); height: min(88dvh, 860px); }
+        .gal-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+        .gal-item {
+          position: relative; display: block; width: 100%; padding: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 16px; cursor: pointer; color: #fff;
+          background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.28);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.22);
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+        .gal-item:hover, .gal-item:focus-visible { transform: translateY(-4px); outline: none; box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.45), 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 22px rgba(168, 85, 247, 0.4); }
+        .gal-item img, .gal-item video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s ease; }
+        .gal-item:hover img, .gal-item:hover video { transform: scale(1.07); }
+        .gal-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(9, 5, 22, 0.75), transparent 55%); pointer-events: none; }
+        .gal-ph { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(30, 10, 60, 0.7)); }
+        .gal-badge {
+          position: absolute; top: 8px; left: 8px; z-index: 2; padding: 3px 8px; border-radius: 999px; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+          background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.3); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+        }
+        .gal-play {
+          position: absolute; top: 50%; left: 50%; z-index: 2; width: 42px; height: 42px; margin: -21px 0 0 -21px; display: grid; place-items: center; border-radius: 50%; padding-left: 2px;
+          background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 0 18px rgba(168, 85, 247, 0.55);
+        }
+        .gal-cap { position: absolute; left: 10px; right: 10px; bottom: 8px; z-index: 2; text-align: left; font-size: 11.5px; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+        /* lightbox (glassmorphic) */
+        .lb {
+          position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1rem; font-family: 'Anek Odia', sans-serif; color: #fff;
+          background: rgba(8, 3, 20, 0.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); animation: lb-fade 0.3s ease both;
+        }
+        .lb-panel {
+          position: relative; max-width: 100%; padding: 10px; border-radius: 26px;
+          background: linear-gradient(145deg, rgba(168, 85, 247, 0.16), rgba(255, 255, 255, 0.04) 60%), rgba(22, 8, 40, 0.38);
+          -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+          border: 1px solid rgba(216, 180, 254, 0.4);
+          box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.45), inset -1px -1px 1px rgba(192, 132, 252, 0.2), 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 40px rgba(168, 85, 247, 0.18);
+          animation: lb-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .lb-media { display: block; max-width: min(92vw, 1100px); max-height: calc(100dvh - 9rem); border-radius: 18px; object-fit: contain; background: rgba(0, 0, 0, 0.35); }
+        .lb-frame { display: block; width: min(92vw, 1000px, calc((100dvh - 9rem) * 16 / 9)); aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #000; }
+        .lb-fail { max-width: min(86vw, 420px); padding: 36px 24px; text-align: center; font-size: 14px; line-height: 1.5; }
+        .lb-fail a { color: #fff; text-decoration: underline; }
+        .lb-cap { padding: 10px 8px 2px; text-align: center; font-size: 13px; letter-spacing: -0.01em; color: rgba(255, 255, 255, 0.9); }
+        .lb-close { position: absolute; top: -12px; right: -12px; z-index: 2; width: 38px; height: 38px; border: 1px solid rgba(255, 255, 255, 0.35); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); background: rgba(40, 14, 70, 0.55); box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.4), 0 6px 18px rgba(0, 0, 0, 0.4); }
+        .lb-close:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
+        @keyframes lb-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes lb-pop { from { opacity: 0; transform: translateY(18px) scale(0.95); } to { opacity: 1; transform: none; } }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .gal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 639px) {
+          .case-pop.gal-pop { width: calc(100vw - 1.5rem); height: 86dvh; }
+          .gal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+          .gal-item { border-radius: 13px; }
+          .gal-cap { font-size: 10.5px; left: 8px; right: 8px; }
+          .lb-media { max-width: 92vw; }
         }
         .gh-title { font-size: clamp(20px, 3.2vw, 34px); font-weight: 800; letter-spacing: -0.06em; line-height: 1; }
         .gh-title span { color: transparent; background: linear-gradient(100deg, #ffffff, #a58aff 45%, #67dcff); -webkit-background-clip: text; background-clip: text; }
@@ -1810,7 +1991,7 @@ export default function App() {
         .conn-close:hover { background: rgba(255, 255, 255, 0.26); }
         @media (prefers-reduced-motion: reduce) { .connect-dialog[open] .conn-card { animation: none; } }
         /* Behance + GitHub popups use Anek Odia (CV popup keeps its own fonts) */
-        .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green * { font-family: 'Anek Odia', sans-serif; }
+        .case-pop.pop-pink, .case-pop.pop-pink *, .case-pop.pop-green, .case-pop.pop-green *, .case-pop.pop-purple, .case-pop.pop-purple * { font-family: 'Anek Odia', sans-serif; }
         @media (min-width: 640px) and (max-width: 1023px) {
           .case-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
@@ -2043,6 +2224,37 @@ export default function App() {
             </div>
         </div>
       </div>
+
+      <div ref={galPopRef} id="gallery-popup" role="dialog" aria-label="Photo and video gallery" aria-hidden={!galOpen} className={`case-pop gal-pop pop-purple ${galOpen ? 'is-open' : ''}`}>
+        <div className="case-head">
+          <h2 className="case-title">Gallery</h2>
+          <button type="button" className="case-close" aria-label="Close gallery" tabIndex={galOpen ? 0 : -1} onClick={() => setGalOpen(false)}>
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+        <div className="case-scroll">
+          <div className="gal-grid">
+            {GALLERY.map((item, index) => (
+              <button key={item.src} type="button" className="gal-item" aria-label={`Open ${item.title}`} tabIndex={galOpen ? 0 : -1} onClick={() => setLightbox(index)}>
+                <GalleryThumb item={item} />
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="case-foot">Photos · GIFs · Videos</p>
+      </div>
+
+      {lightbox !== null && GALLERY[lightbox] && (
+        <div className="lb" role="dialog" aria-modal="true" aria-label={GALLERY[lightbox].title} onClick={(event) => { if (event.target === event.currentTarget) setLightbox(null); }}>
+          <div className="lb-panel">
+            <button type="button" className="case-close lb-close" aria-label="Close preview" autoFocus onClick={() => setLightbox(null)}>
+              <X size={18} strokeWidth={2} />
+            </button>
+            <LightboxMedia key={lightbox} item={GALLERY[lightbox]} />
+            <p className="lb-cap">{GALLERY[lightbox].title}</p>
+          </div>
+        </div>
+      )}
 
       <main id="module" className="relative h-[100dvh] touch-none overflow-hidden">
         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" style={{ opacity: 0.1 }} aria-hidden="true">
