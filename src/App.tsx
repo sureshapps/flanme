@@ -1485,7 +1485,7 @@ export default function App() {
           font-family: 'Poppins', sans-serif; font-weight: 300; letter-spacing: 0.02em;
           font-size: clamp(0.6rem, 0.45vw + 0.42rem, 0.8rem);
         }
-        .title span { position: relative; font-family: 'Vanilla Creamy', cursive; font-size: 1.4em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+        .title span { position: relative; font-family: 'Vanilla Creamy', cursive; font-size: 1.9em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
         .title span:before {
           content: ''; position: absolute; top: 50%; left: 63%; translate: -50% 0;
           width: 250%; aspect-ratio: 1 / 1; z-index: -1;
