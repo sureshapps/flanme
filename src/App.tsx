@@ -1725,7 +1725,7 @@ export default function App() {
         .glass-frame { position: relative; pointer-events: none; }
         .glass-frame canvas { display: block; width: 100%; height: 100%; }
         .glass-frame--desktop { align-self: flex-end; width: clamp(450px, 42.5vw, 510px); aspect-ratio: 1; margin-bottom: -12px; }
-        .glass-frame--mobile { position: absolute; z-index: 45; right: 9vw; top: 5%; width: 51vw; aspect-ratio: 1; }
+        .glass-frame--mobile { position: absolute; z-index: 45; right: 9vw; top: 85%; width: 51vw; aspect-ratio: 1; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
         .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.5em; padding: 0.95em 1.4em; }
