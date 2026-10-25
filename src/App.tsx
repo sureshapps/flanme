@@ -1590,18 +1590,29 @@ export default function App() {
           border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 9px; background: rgba(8, 10, 21, 0.55);
           -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; font-size: 10px; font-weight: 800;
         }
-        .gh-body { display: flex; flex: 1; flex-direction: column; padding: 16px; }
-        .gh-name { margin-bottom: 8px; font-size: 16px; line-height: 1.25; letter-spacing: -0.04em; font-weight: 700; }
-        .gh-desc { min-height: 60px; color: #a9afc7; font-size: 12.5px; line-height: 1.6; }
-        .gh-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
-        .gh-tag { padding: 5px 9px; border: 1px solid rgba(154, 124, 255, 0.24); border-radius: 999px; background: rgba(154, 124, 255, 0.1); color: #c9c0ff; font-size: 10px; font-weight: 700; }
-        .gh-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
-        .gh-src { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #747c9d; font-size: 10.5px; }
-        .gh-live {
-          flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid rgba(103, 220, 255, 0.28); border-radius: 10px;
-          background: rgba(103, 220, 255, 0.1); color: #a6ebff; font-size: 11px; font-weight: 700; text-decoration: none; transition: 0.25s ease;
+        /* forest blur glass: the repo image, blurred, under a deep-green tint */
+        .gh-body {
+          position: relative; isolation: isolate; overflow: hidden; display: flex; flex: 1; flex-direction: column; padding: 16px;
+          background: linear-gradient(160deg, rgba(34, 110, 66, 0.55), rgba(6, 38, 24, 0.82));
+          border-top: 1px solid rgba(160, 255, 200, 0.28);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -18px 40px rgba(0, 20, 10, 0.35);
         }
-        .gh-live:hover { background: rgba(103, 220, 255, 0.2); color: #fff; transform: translateX(2px); }
+        .gh-body::before {
+          content: ''; position: absolute; inset: -24px; z-index: -1;
+          background: var(--img) center / cover no-repeat;
+          filter: blur(22px) saturate(1.4); opacity: 0.55;
+        }
+        .gh-name { color: #f2fff7; margin-bottom: 8px; font-size: 16px; line-height: 1.25; letter-spacing: -0.04em; font-weight: 700; }
+        .gh-desc { min-height: 60px; color: #c4dccb; font-size: 12.5px; line-height: 1.6; }
+        .gh-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; }
+        .gh-tag { padding: 5px 9px; border: 1px solid rgba(150, 255, 190, 0.3); border-radius: 999px; background: rgba(120, 255, 170, 0.1); color: #c6f7d9; font-size: 10px; font-weight: 700; }
+        .gh-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .gh-src { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8fb59c; font-size: 10.5px; }
+        .gh-live {
+          flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border: 1px solid rgba(150, 255, 190, 0.34); border-radius: 10px;
+          background: rgba(120, 255, 170, 0.12); color: #c6ffdc; font-size: 11px; font-weight: 700; text-decoration: none; transition: 0.25s ease;
+        }
+        .gh-live:hover { background: rgba(120, 255, 170, 0.24); color: #fff; transform: translateX(2px); }
         @media (min-width: 640px) and (max-width: 1179px) {
           .gh-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
@@ -1887,7 +1898,7 @@ export default function App() {
           ) : (
             <div className="gh-grid">
               {ghRepos.map((repo, index) => (
-                <article key={repo.slug} className="gh-card" style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}>
+                <article key={repo.slug} className="gh-card" style={{ animationDelay: `${Math.min(index, 12) * 45}ms`, '--img': `url("https://opengraph.githubassets.com/1/${repo.slug}")` } as CSSProperties}>
                   <div className="gh-img">
                     <span className="gh-num">{String(index + 1).padStart(2, '0')}</span>
                     <img src={`https://opengraph.githubassets.com/1/${repo.slug}`} alt={`${repo.title} repository preview`} loading="lazy" draggable={false} />
