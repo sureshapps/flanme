@@ -22,9 +22,9 @@ const THREE_ROOM_ENV_URL = 'https://esm.sh/three@0.170.0/examples/jsm/environmen
 const GLASS_ENV_HDR = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/royal_esplanade_2k.hdr';
 // photo shown inside the glass frame: swap for any image URL that allows cross-origin loading
 // glass look (3D frame): tweak these two
-const GLASS_TINT = 0.14; // smoky body, 0 = fully clear, 0.3 = dark glass
+const GLASS_TINT = 0; // smoky body, 0 = fully clear, 0.3 = dark glass
 const GLASS_SHINE = 1.7; // reflection / shine strength, 0 = none, 3 = very glossy
-const GLASS_PHOTO = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
+const GLASS_PHOTO = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/designer.webp';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
