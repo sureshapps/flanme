@@ -1780,12 +1780,12 @@ export default function App() {
         .conn-cover { grid-area: stack; display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: 50% 28%; }
         .conn-body { grid-area: stack; z-index: 1; align-self: end; min-height: 0; padding: 1rem clamp(1rem, 5vw, 2rem); }
         .conn-header, .conn-header .conn-chips { font-family: 'Super Guardian', 'SuperGuardianBackup', sans-serif !important; }
-        .conn-header { margin: 0; font-size: 2.47em; font-weight: 400; line-height: 1.15; letter-spacing: 1; }
+        .conn-header { margin: 0; font-size: 1.6em; font-weight: 400; line-height: 1.15; letter-spacing: 1; }
         .conn-body p { margin-block: 0.7em 0.9em; font-size: 0.72em; line-height: 1.5; color: rgba(255, 255, 255, 0.92); }
         .conn-chips { display: flex; align-items: center; gap: 0.5em; font-weight: 400; color: inherit; text-decoration: none; }
         a.conn-chips:hover { text-decoration: underline; }
         .conn-icon { width: 1em; height: 1em; flex: none; }
-        .conn-badge { height: 1.0em; width: auto; flex: none; display: block; user-select: none; }
+        .conn-badge { height: 1.0em; width: auto; flex: none; display: block; user-select: none; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));}
         .conn-list { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: nowrap; gap: 1.1em; margin: 0; padding: 0.35em 0 0.2em; list-style: none; font-size: 1em; }
         .conn-social { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; text-decoration: none; transition: transform 0.3s ease; }
         .conn-social:hover { transform: translateY(-3px) scale(1.12); }
