@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { AudioLines, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Layers, LayoutGrid, Link2, Navigation, Sun, X, type LucideIcon } from 'lucide-react';
+import { AudioLines, ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Layers, LayoutGrid, Link2, Navigation, Sun, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
@@ -331,9 +331,11 @@ function WeatherCard() {
   );
 }
 
-function Metrics() {
+function Metrics({ open }: { open: boolean }) {
   return (
-    <div className="hero-rise pointer-events-none absolute right-3 top-[88px] z-[55] w-[60vw] max-w-[280px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none" style={{ animationDelay: '1.1s' }}>
+    <div className="hero-rise pointer-events-none absolute right-3 top-[148px] z-[55] w-[calc(100vw-1.5rem)] max-w-[300px] sm:hidden lg:right-[5%] lg:top-auto lg:bottom-[7%] lg:block lg:w-[clamp(340px,30vw,500px)] lg:max-w-none" style={{ animationDelay: '1.1s' }}>
+      <div id="widgets-panel" className={`metrics-panel ${open ? 'is-open' : ''}`}>
+      <span className="fx-layer" aria-hidden="true" />
       <div className="metrics-scale flex flex-col-reverse gap-2 lg:flex-col lg:gap-3">
         <ClockCard />
         <div className="info-extra grid grid-cols-2 gap-2 lg:gap-3">
@@ -346,6 +348,7 @@ function Metrics() {
           <SpeedCard />
           <ExperienceCard />
         </div>
+      </div>
       </div>
     </div>
   );
@@ -734,6 +737,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [widgetsOpen, setWidgetsOpen] = useState(false);
   const revealRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const patternRef = useRef<SVGPatternElement>(null);
@@ -842,6 +846,20 @@ export default function App() {
       window.removeEventListener('pointerdown', closeOnOutside);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!widgetsOpen) return;
+    const close = () => setWidgetsOpen(false);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+    };
+    window.addEventListener('click', close);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [widgetsOpen]);
 
   useEffect(() => {
     if (!infoOpen) return;
@@ -1037,7 +1055,7 @@ export default function App() {
           .metric-label { font-size: 7.5px; letter-spacing: 0.08em; }
           .metric-value { font-size: 12.5px; }
           .metric-value-lg { font-size: 15px; }
-          .info-card { font-size: 6.6px; }
+          .info-card { font-size: 7.2px; }
         }
         /* Info row: clock, weather, calendar */
         .info-card { font-size: 9.5px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; }
@@ -1045,7 +1063,6 @@ export default function App() {
         .metrics-scale { transform-origin: bottom right; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
-        @media (max-width: 639px) and (max-height: 700px) { .info-extra { display: none !important; } }
         .clock-card { align-self: flex-end; align-items: center; justify-content: center; gap: 0.4em; padding: 0.8em 1.2em; }
         .seg-digit { width: 1.5em; height: 2.55em; flex: none; filter: drop-shadow(0 0 2px rgba(255, 90, 90, 0.7)); }
         .seg-on { fill: #ffd6d6; }
@@ -1071,6 +1088,34 @@ export default function App() {
         .cal-day { height: 1.7em; line-height: 1.7em; }
         .cal-weekend { opacity: 0.55; }
         .cal-today { width: 1.7em; margin: 0 auto; border-radius: 50%; background: #ffe6bd; color: #8a0f08; font-weight: 700; opacity: 1; box-shadow: 0 0 8px rgba(255, 214, 150, 0.7); }
+        /* Mobile: every widget lives in one liquid-glass panel that slides in from the << button */
+        .metrics-panel > .fx-layer { display: none; }
+        @media (max-width: 639px) {
+          .metrics-panel {
+            --tr: 15%;
+            position: relative; isolation: isolate; padding: 12px; border-radius: 28px;
+            background: rgba(255, 255, 255, 0.07);
+            -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+            box-shadow:
+              inset 3px 3px 0.5px -3px rgba(255, 255, 255, 0.9),
+              inset -3px -3px 0.5px -3px rgba(255, 255, 255, 0.85),
+              inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.6),
+              inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
+              inset 0 0 3px -1px rgba(0, 0, 0, 0.8),
+              0 18px 44px rgba(0, 0, 0, 0.3);
+            transform-origin: top right;
+            transform: translateX(calc(100% + 24px)) scale(0.92);
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s linear 0.6s;
+          }
+          .metrics-panel.is-open {
+            transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, visibility 0s;
+          }
+          .metrics-panel > .fx-layer { display: block; }
+        }
+        .widgets-btn svg { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+        .widgets-btn.is-open svg { transform: rotate(180deg); }
         /* Info button + mesh popup (pulls out of the button) */
         .info-btn { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease; }
         .info-btn:hover { transform: scale(1.06); }
@@ -1078,7 +1123,7 @@ export default function App() {
         .info-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
         .info-btn.is-open { background: rgba(255, 255, 255, 0.18); }
         .info-pop {
-          position: fixed; top: 88px; right: 20px; z-index: 65;
+          position: fixed; top: 148px; right: 20px; z-index: 65;
           width: min(340px, calc(100vw - 2.5rem));
           border-radius: 24px; overflow: hidden; isolation: isolate; color: #fff;
           background: rgba(40, 6, 6, 0.18);
@@ -1119,7 +1164,7 @@ export default function App() {
         .info-foot { margin-top: 14px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
         @media (prefers-reduced-motion: reduce) {
           .info-mesh, .clock-colon i { animation: none; }
-          .info-pop, .info-pop.is-open { transition-duration: 0.01s; }
+          .info-pop, .info-pop.is-open, .metrics-panel, .metrics-panel.is-open { transition-duration: 0.01s; }
         }
         .ring-fill { stroke-dashoffset: var(--off); animation: ring-fill 1.6s cubic-bezier(0.22, 1, 0.36, 1) 1.3s backwards; }
         @keyframes ring-fill { from { stroke-dashoffset: var(--c); } }
@@ -1193,12 +1238,27 @@ export default function App() {
           aria-label={infoOpen ? 'Close info' : 'About this module'}
           aria-expanded={infoOpen}
           aria-controls="info-popup"
-          onClick={(event) => { event.stopPropagation(); setInfoOpen((open) => !open); }}
+          onClick={(event) => { event.stopPropagation(); setWidgetsOpen(false); setInfoOpen((open) => !open); }}
           className={`glass info-btn pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
         >
           <span className="fx-layer" aria-hidden="true" />
           <Info size={26} strokeWidth={1.75} />
+        </button>
+      </div>
+
+      <div className="pointer-events-none fixed top-[88px] right-6 z-[70] sm:hidden">
+        <button
+          type="button"
+          aria-label={widgetsOpen ? 'Hide widgets' : 'Show widgets'}
+          aria-expanded={widgetsOpen}
+          aria-controls="widgets-panel"
+          onClick={(event) => { event.stopPropagation(); setInfoOpen(false); setWidgetsOpen((open) => !open); }}
+          className={`glass info-btn widgets-btn pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center text-white ${widgetsOpen ? 'is-open' : ''}`}
+          style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
+        >
+          <span className="fx-layer" aria-hidden="true" />
+          <ChevronsLeft size={22} strokeWidth={1.75} />
         </button>
       </div>
 
@@ -1234,7 +1294,7 @@ export default function App() {
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <Statistics />
-        <Metrics />
+        <Metrics open={widgetsOpen} />
         <div className="hero-rise absolute right-[8.6%] bottom-[10.8%] z-50 w-[33.6vw] sm:right-[12%] sm:bottom-auto sm:top-[16.5%] sm:w-[clamp(162px,18.9vw,324px)]" style={{ animationDelay: '0.9s' }}>
           <RobotCard />
         </div>
