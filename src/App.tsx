@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { AudioLines, ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Layers, LayoutGrid, Link2, Navigation, Sun, X, type LucideIcon } from 'lucide-react';
+import { AudioLines, ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Flame, Home, Info, Layers, LayoutGrid, Link2, Navigation, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
 const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
 const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
 const SIGNATURE = '/signature.png';
+const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 const LOGO_PATH = 'M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z';
 const NAV_ITEMS = [
   { label: 'Module', Icon: Home },
@@ -738,6 +739,10 @@ export default function App() {
   const [notice, setNotice] = useState<'reserve' | 'connect' | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [widgetsOpen, setWidgetsOpen] = useState(false);
+  const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [soundOn, setSoundOn] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const infoOpenRef = useRef(false);
   const revealRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const patternRef = useRef<SVGPatternElement>(null);
@@ -860,6 +865,35 @@ export default function App() {
       window.removeEventListener('keydown', closeOnEscape);
     };
   }, [widgetsOpen]);
+
+  useEffect(() => {
+    infoOpenRef.current = infoOpen;
+    const video = videoRef.current;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (infoOpen) {
+      if (video?.src) {
+        setVideoState('ready');
+        if (!reduced) video.play().catch(() => {});
+      } else if (!document.querySelector('script[data-cv]')) {
+        // cv.js embeds the video (~11 MB), so it is only fetched the first time the popup opens
+        const script = document.createElement('script');
+        script.src = CV_SCRIPT;
+        script.async = true;
+        script.dataset.cv = 'true';
+        script.onerror = () => setVideoState('error');
+        document.body.appendChild(script);
+        setVideoState('loading');
+      }
+      return;
+    }
+    setSoundOn(false);
+    const id = window.setTimeout(() => video?.pause(), 650);
+    return () => window.clearTimeout(id);
+  }, [infoOpen]);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = !soundOn;
+  }, [soundOn]);
 
   useEffect(() => {
     if (!infoOpen) return;
@@ -1154,6 +1188,29 @@ export default function App() {
         }
         @keyframes mesh-drift { 0% { transform: translate(-4%, -3%) rotate(0deg) scale(1); } 100% { transform: translate(4%, 3%) rotate(14deg) scale(1.12); } }
         .info-body { position: relative; padding: 20px 22px 18px; }
+        .info-head { display: flex; align-items: flex-start; gap: 14px; }
+        .info-head-text { flex: 1 1 0; min-width: 0; }
+        .info-video {
+          position: relative; flex: none; width: 132px; height: 100px; overflow: hidden; border-radius: 16px;
+          background: rgba(255, 255, 255, 0.12);
+          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4), 0 8px 22px rgba(0, 0, 0, 0.3);
+        }
+        .info-video video { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.6s ease; }
+        .info-video.is-ready video { opacity: 1; }
+        .info-video.is-loading::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.35) 50%, transparent 80%);
+          background-size: 200% 100%; animation: video-shimmer 1.4s linear infinite;
+        }
+        .info-video.is-error { display: none; }
+        @keyframes video-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        .info-sound {
+          position: absolute; right: 6px; bottom: 6px; z-index: 1; display: none; align-items: center; justify-content: center;
+          width: 24px; height: 24px; border: 0; border-radius: 50%; cursor: pointer; color: #fff;
+          background: rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+        }
+        .info-video.is-ready .info-sound { display: flex; }
+        .info-sound:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 2px; }
         .info-kicker { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); }
         .info-title { margin-top: 8px; font-size: 20px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.15; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3); }
         .info-role { margin-top: 2px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
@@ -1163,7 +1220,7 @@ export default function App() {
         .info-list li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: #ffd98a; box-shadow: 0 0 6px rgba(255, 190, 90, 0.9); }
         .info-foot { margin-top: 14px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
         @media (prefers-reduced-motion: reduce) {
-          .info-mesh, .clock-colon i { animation: none; }
+          .info-mesh, .clock-colon i, .info-video.is-loading::after { animation: none; }
           .info-pop, .info-pop.is-open, .metrics-panel, .metrics-panel.is-open { transition-duration: 0.01s; }
         }
         .ring-fill { stroke-dashoffset: var(--off); animation: ring-fill 1.6s cubic-bezier(0.22, 1, 0.36, 1) 1.3s backwards; }
@@ -1265,9 +1322,37 @@ export default function App() {
       <div id="info-popup" role="dialog" aria-label="About this module" aria-hidden={!infoOpen} className={`info-pop ${infoOpen ? 'is-open' : ''}`}>
         <div className="info-mesh" aria-hidden="true" />
         <div className="info-body">
-          <p className="info-kicker">About</p>
-          <h2 className="info-title">Suresh Kaleyannan</h2>
-          <p className="info-role">DevOps · Web Developer · MY</p>
+          <div className="info-head">
+            <div className="info-head-text">
+              <p className="info-kicker">About</p>
+              <h2 className="info-title">Suresh Kaleyannan</h2>
+              <p className="info-role">DevOps · Web Developer · MY</p>
+            </div>
+            <div className={`info-video is-${videoState}`}>
+              <video
+                id="myVideo"
+                ref={videoRef}
+                muted
+                loop
+                playsInline
+                preload="auto"
+                aria-label="Introduction video"
+                onLoadedData={() => {
+                  setVideoState('ready');
+                  if (infoOpenRef.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) videoRef.current?.play().catch(() => {});
+                }}
+                onError={() => setVideoState('error')}
+              />
+              <button
+                type="button"
+                className="info-sound"
+                aria-label={soundOn ? 'Mute video' : 'Unmute video'}
+                onClick={(event) => { event.stopPropagation(); setSoundOn((on) => !on); }}
+              >
+                {soundOn ? <Volume2 size={13} strokeWidth={2} /> : <VolumeX size={13} strokeWidth={2} />}
+              </button>
+            </div>
+          </div>
           <p className="info-text">I bridge today's technology with tomorrow's possibilities, transforming code, design and imagination into digital experiences that push beyond the boundaries of what's possible.</p>
       
            <p className="info-role"> The Digital Dimension of Suresh</p>
