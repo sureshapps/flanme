@@ -1825,7 +1825,7 @@ export default function App() {
         .glass-frame { position: relative; pointer-events: none; }
         .glass-frame canvas { display: block; width: 100%; height: 100%; }
         /* desktop: sits in the lower-left area, centred in the box under the face (about 2.6vw to 49vw across, 5vh up from the bottom) */
-        .glass-frame--desktop { --s: clamp(280px, min(46vw, 48vh), 560px); position: absolute; z-index: 45; bottom: 5vh; left: calc(2.6vw + (46.4vw - var(--s)) / 2); width: var(--s); aspect-ratio: 1; }
+        .glass-frame--desktop { --s: clamp(280px, min(46vw, 48vh), 560px); position: absolute; z-index: 45; bottom: 5vh; right: calc(2.6vw + (46.4vw - var(--s)) / 2); width: var(--s); aspect-ratio: 1; }
         .glass-frame--mobile { position: absolute; z-index: 45; right: -7vw; top: 45%; width: 71vw; aspect-ratio: 1; }
         @media (min-width: 1024px) and (max-height: 820px) { .metrics-scale { transform: scale(0.86); } }
         @media (min-width: 1024px) and (max-height: 700px) { .metrics-scale { transform: scale(0.74); } }
