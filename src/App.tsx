@@ -1186,7 +1186,7 @@ export default function App() {
         @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
         @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
-        @import url('https://fonts.cdnfonts.com/css/bastian-script');
+        @import url('https://fonts.cdnfonts.com/css/ngopie');
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
@@ -1485,10 +1485,10 @@ export default function App() {
           font-family: 'Poppins', sans-serif; font-weight: 300; letter-spacing: 0.02em;
           font-size: clamp(0.6rem, 0.45vw + 0.42rem, 0.8rem);
         }
-        .title span { position: relative; color: #fff700; font-family: 'Bastian Script', cursive; font-size: 1.9em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+        .title span { position: relative; color: #fff700; font-family: 'Ngopie', cursive; font-size: 2.1em; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
         .title span:before {
-          content: ''; position: absolute; top: 20%; left: 63%; translate: -50% 0;
-          width: 250%; aspect-ratio: 1 / 1; z-index: -1;
+          content: ''; position: absolute; top: 20%; left: 73%; translate: -40% 0;
+          width: 350%; aspect-ratio: 1 / 1; z-index: -1;
           border: 0.9em solid #eb0027; border-radius: 50%; opacity: 1;
           transition: --mask-progress 0.5s; transition-delay: 0.3s;
           -webkit-mask-image: conic-gradient(from -27deg, #000 var(--mask-progress), #0000 0);
