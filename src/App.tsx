@@ -1889,24 +1889,13 @@ export default function App() {
       </div>
 
       <div ref={ghPopRef} id="github-popup" role="dialog" aria-label="GitHub showcase" aria-hidden={!ghOpen} className={`case-pop gh-pop pop-green ${ghOpen ? 'is-open' : ''}`}>
-        <div className="case-head">
-          <h2 className="gh-title">Ideas worth <span>exploring.</span></h2>
+       <div className="case-head">
+          <h2 className="case-title">Github Repositories</h2>
           <button type="button" className="case-close" aria-label="Close GitHub showcase" tabIndex={ghOpen ? 0 : -1} onClick={() => setGhOpen(false)}>
             <X size={18} strokeWidth={2} />
           </button>
         </div>
-        <div className="gh-toolbar">
-          <h3 className="gh-section">Featured repositories <span>({ghRepos.length})</span></h3>
-          <input
-            type="search"
-            className="gh-search"
-            placeholder="Search repositories..."
-            aria-label="Search repositories"
-            value={ghQuery}
-            tabIndex={ghOpen ? 0 : -1}
-            onChange={(event) => setGhQuery(event.target.value)}
-          />
-        </div>
+       
         <div className="case-scroll">
           {ghRepos.length === 0 ? (
             <p className="case-state">No repositories match your search.</p>
