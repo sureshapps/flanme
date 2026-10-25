@@ -29,6 +29,564 @@ const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
 
+/* ---------- Sound design ----------
+   Every sound is synthesised live with the Web Audio API: no audio files to host, download or license.
+   Palette
+   - glass: inharmonic sine partials (wine-glass / bell ratios) plus a hairline noise tick
+   - tech : band-passed noise sweeps, pitch-dropped sines, soft triangle blips
+   - space: one short, bright, high-passed reverb so everything feels like it lives inside glass
+   All pitches come from one pentatonic scale, so overlapping sounds (and your music) never clash.
+   Browsers keep audio locked until the first tap / key press; the engine unlocks itself on that first gesture. */
+const SFX_STORAGE_KEY = 'sfx-enabled';
+const SFX_VOLUME = 0.9; // master level: 0 = silent, 1 = full
+
+type SfxVoice = { t?: number; g?: number; send?: number; pan?: number };
+type ToneOpts = SfxVoice & { f: number; to?: number; type?: OscillatorType; a?: number; d?: number; lp?: number; vib?: [number, number] };
+type NoiseOpts = SfxVoice & { f: number; to?: number; type?: BiquadFilterType; q?: number; a?: number; d?: number; panTo?: number };
+type GlassOpts = SfxVoice & { f: number; d?: number };
+type SfxPanel = 'menu' | 'info' | 'widgets' | 'drop' | 'notice' | 'lightbox';
+
+const PENT = [0, 2, 4, 7, 9];
+// pentatonic pitch: i is a scale step (it may run past 4 into higher octaves), base is the MIDI note of step 0
+const hz = (i: number, base = 76) => 440 * 2 ** ((base + 12 * Math.floor(i / 5) + (PENT[((i % 5) + 5) % 5] ?? 0) - 69) / 12);
+// [frequency ratio, gain, decay multiplier] of the glass partials
+const GLASS_PARTIALS: [number, number, number][] = [[1, 1, 1], [2.76, 0.5, 0.6], [5.4, 0.28, 0.4], [8.93, 0.14, 0.25]];
+
+const sfx = (() => {
+  type Graph = { c: AudioContext; bus: GainNode; send: GainNode; noise: AudioBuffer };
+  let graph: Graph | null = null;
+  let enabled = true;
+  let T0 = 0; // start time shared by every voice of the sound being played, so layers stay in sync
+  let lastHover = 0;
+  let lastScrub = 0;
+  let quietMenuUntil = 0;
+  try {
+    if (typeof window !== 'undefined') enabled = window.localStorage.getItem(SFX_STORAGE_KEY) !== 'off';
+  } catch { /* storage blocked: sound stays on */ }
+
+  const impulse = (c: AudioContext, seconds: number, decay: number) => {
+    const len = Math.floor(c.sampleRate * seconds);
+    const buf = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch += 1) {
+      const data = buf.getChannelData(ch);
+      let lp = 0;
+      for (let i = 0; i < len; i += 1) {
+        const k = i / len;
+        lp += ((Math.random() * 2 - 1) - lp) * (0.9 - 0.7 * k); // the tail darkens as it fades, like a real room
+        data[i] = lp * (1 - k) ** decay;
+      }
+    }
+    return buf;
+  };
+
+  const build = (): Graph | null => {
+    if (typeof window === 'undefined') return null;
+    const Ctor: typeof AudioContext | undefined = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return null;
+    try {
+      const c = new Ctor({ latencyHint: 'interactive' });
+      const master = c.createGain();
+      master.gain.value = SFX_VOLUME;
+      const comp = c.createDynamicsCompressor();
+      comp.threshold.value = -16;
+      comp.knee.value = 20;
+      comp.ratio.value = 4;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.2;
+      master.connect(comp);
+      comp.connect(c.destination);
+      const bus = c.createGain();
+      bus.connect(master);
+      const send = c.createGain();
+      const verb = c.createConvolver();
+      verb.buffer = impulse(c, 1.5, 3);
+      const hp = c.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 320; // airy tail, never muddy
+      const ret = c.createGain();
+      ret.gain.value = 0.6;
+      send.connect(verb);
+      verb.connect(hp);
+      hp.connect(ret);
+      ret.connect(master);
+      const noise = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+      const data = noise.getChannelData(0);
+      for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+      return { c, bus, send, noise };
+    } catch {
+      return null;
+    }
+  };
+
+  const unlock = () => {
+    if (!enabled || (graph && graph.c.state === 'running')) return;
+    if (!graph) graph = build();
+    if (graph && graph.c.state !== 'running') graph.c.resume().catch(() => {});
+  };
+  const bindUnlock = () => {
+    const events = ['pointerdown', 'pointerup', 'click', 'keydown', 'touchend'] as const;
+    events.forEach((name) => window.addEventListener(name, unlock, { capture: true, passive: true }));
+    return () => events.forEach((name) => window.removeEventListener(name, unlock, { capture: true }));
+  };
+
+  const get = (): Graph | null => {
+    if (!enabled || !graph || document.hidden || graph.c.state !== 'running') return null;
+    return graph;
+  };
+  const begin = () => {
+    const G = get();
+    if (!G) return false;
+    T0 = G.c.currentTime + 0.006;
+    return true;
+  };
+
+  const env = (p: AudioParam, t: number, peak: number, a: number, d: number) => {
+    p.setValueAtTime(0.0001, t);
+    p.exponentialRampToValueAtTime(Math.max(peak, 0.0002), t + a);
+    p.exponentialRampToValueAtTime(0.0001, t + a + d);
+  };
+
+  const route = (G: Graph, node: AudioNode, v: SfxVoice & { panTo?: number }, dur: number, t: number) => {
+    let out: AudioNode = node;
+    if (v.pan !== undefined) {
+      const p = G.c.createStereoPanner();
+      p.pan.setValueAtTime(v.pan, t);
+      if (v.panTo !== undefined) p.pan.linearRampToValueAtTime(v.panTo, t + dur);
+      out.connect(p);
+      out = p;
+    }
+    out.connect(G.bus);
+    const s = v.send ?? 0.25;
+    if (s > 0) {
+      const sg = G.c.createGain();
+      sg.gain.value = s;
+      out.connect(sg);
+      sg.connect(G.send);
+    }
+  };
+
+  const tone = (o: ToneOpts) => {
+    const G = get();
+    if (!G) return;
+    const { c } = G;
+    const a = o.a ?? 0.004;
+    const d = o.d ?? 0.12;
+    const t = T0 + (o.t ?? 0);
+    const osc = c.createOscillator();
+    osc.type = o.type ?? 'sine';
+    osc.frequency.setValueAtTime(o.f, t);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + a + d);
+    const g = c.createGain();
+    env(g.gain, t, o.g ?? 0.1, a, d);
+    if (o.lp) {
+      const f = c.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = o.lp;
+      f.Q.value = 0.7;
+      osc.connect(f);
+      f.connect(g);
+    } else {
+      osc.connect(g);
+    }
+    if (o.vib) {
+      const lfo = c.createOscillator();
+      lfo.frequency.value = o.vib[0];
+      const depth = c.createGain();
+      depth.gain.value = o.vib[1];
+      lfo.connect(depth);
+      depth.connect(osc.frequency);
+      lfo.start(t);
+      lfo.stop(t + a + d + 0.05);
+    }
+    route(G, g, o, a + d, t);
+    osc.start(t);
+    osc.stop(t + a + d + 0.05);
+  };
+
+  const noise = (o: NoiseOpts) => {
+    const G = get();
+    if (!G) return;
+    const { c } = G;
+    const a = o.a ?? 0.003;
+    const d = o.d ?? 0.1;
+    const t = T0 + (o.t ?? 0);
+    const src = c.createBufferSource();
+    src.buffer = G.noise;
+    src.loop = true;
+    const f = c.createBiquadFilter();
+    f.type = o.type ?? 'bandpass';
+    f.Q.value = o.q ?? 0.8;
+    f.frequency.setValueAtTime(o.f, t);
+    if (o.to) f.frequency.exponentialRampToValueAtTime(o.to, t + a + d);
+    const g = c.createGain();
+    env(g.gain, t, o.g ?? 0.1, a, d);
+    src.connect(f);
+    f.connect(g);
+    route(G, g, o, a + d, t);
+    src.start(t, Math.random() * 1.5);
+    src.stop(t + a + d + 0.05);
+  };
+
+  // the signature glass voice: a struck pane
+  const glass = (o: GlassOpts) => {
+    const d = o.d ?? 0.5;
+    const g = o.g ?? 0.1;
+    GLASS_PARTIALS.forEach(([ratio, gain, decay]) => {
+      const f = o.f * ratio;
+      if (f > 12000) return;
+      tone({ f, g: g * gain, a: 0.002, d: d * decay, t: o.t, send: o.send ?? 0.4, pan: o.pan });
+    });
+    noise({ type: 'highpass', f: 6000, d: 0.012, g: g * 0.45, t: o.t, send: 0, pan: o.pan });
+  };
+
+  const S: Record<string, (i: number) => void> = {
+    /* ---- hover ---- */
+    hover: (i) => glass({ f: hz(i, 83), g: 0.03, d: 0.09, send: 0.2 }),
+    hoverCard: (i) => {
+      glass({ f: hz(i, 71), g: 0.04, d: 0.18, send: 0.35 });
+      noise({ type: 'bandpass', f: 3200, to: 6500, q: 1.2, a: 0.04, d: 0.1, g: 0.012, send: 0.2 });
+    },
+    hoverTech: () => {
+      tone({ f: 520, to: 880, type: 'triangle', d: 0.08, g: 0.045, lp: 3200, send: 0.2 });
+      glass({ f: hz(7, 79), t: 0.04, g: 0.035, d: 0.14 });
+    },
+    hoverWidget: (i) => {
+      tone({ f: hz(i, 76), d: 0.09, g: 0.035, send: 0.25 });
+      tone({ f: hz(i, 76) * 1.5, t: 0.035, d: 0.08, g: 0.022, send: 0.25 });
+      glass({ f: hz(i + 5, 83), t: 0.02, g: 0.02, d: 0.12 });
+    },
+
+    /* ---- click / press ---- */
+    click: (i) => {
+      noise({ type: 'highpass', f: 4200, d: 0.014, g: 0.07, send: 0 });
+      tone({ f: 1500, to: 960, d: 0.06, g: 0.075, send: 0.2 });
+      tone({ f: 230, to: 110, d: 0.09, g: 0.07, send: 0.05 });
+      glass({ f: hz(i + 3, 83), t: 0.01, g: 0.04, d: 0.22, send: 0.35 });
+    },
+    widgetTap: (i) => {
+      tone({ f: hz(i, 76), type: 'triangle', d: 0.1, g: 0.07, lp: 3500 });
+      tone({ f: hz(i + 2, 76), type: 'triangle', t: 0.06, d: 0.12, g: 0.06, lp: 3500 });
+      glass({ f: hz(i + 5, 76), t: 0.06, g: 0.05, d: 0.4 });
+    },
+    nav: (i) => {
+      const k = [0, 2, 3, 5][((i % 4) + 4) % 4] ?? 0; // each menu item has its own note
+      S.click?.(k);
+      glass({ f: hz(k, 76), t: 0.02, g: 0.1, d: 0.7, send: 0.5 });
+      glass({ f: hz(k + 2, 76), t: 0.08, g: 0.07, d: 0.6, send: 0.5, pan: 0.2 });
+    },
+    linkOut: () => {
+      S.click?.(1);
+      noise({ type: 'bandpass', f: 1500, to: 6500, q: 1.2, a: 0.05, d: 0.16, g: 0.06, pan: -0.2, panTo: 0.5, send: 0.3 });
+      glass({ f: hz(5, 79), t: 0.05, g: 0.07, d: 0.5 });
+      glass({ f: hz(8, 79), t: 0.12, g: 0.07, d: 0.7 });
+    },
+    mail: () => {
+      S.click?.(2);
+      tone({ f: 700, to: 1700, type: 'triangle', t: 0.03, d: 0.12, g: 0.06, lp: 4500 });
+      noise({ type: 'bandpass', f: 2000, to: 7000, q: 1, a: 0.04, d: 0.14, g: 0.04, t: 0.04, pan: -0.3, panTo: 0.6 });
+      glass({ f: hz(7, 79), t: 0.12, g: 0.06, d: 0.5 });
+    },
+    download: () => {
+      S.click?.(0);
+      tone({ f: 1300, to: 520, t: 0.03, d: 0.16, g: 0.06 });
+      tone({ f: 300, to: 130, t: 0.2, d: 0.12, g: 0.1, send: 0.1 });
+      glass({ f: hz(4, 76), t: 0.2, g: 0.07, d: 0.6 });
+      glass({ f: hz(7, 76), t: 0.28, g: 0.06, d: 0.7 });
+    },
+    retry: () => {
+      S.click?.(0);
+      tone({ f: 420, to: 1250, type: 'triangle', t: 0.02, d: 0.12, g: 0.06, lp: 4000 });
+      glass({ f: hz(7, 79), t: 0.12, g: 0.05, d: 0.4 });
+    },
+    toggleOn: () => {
+      tone({ f: 660, type: 'triangle', d: 0.07, g: 0.08, lp: 4200 });
+      tone({ f: 990, type: 'triangle', t: 0.06, d: 0.11, g: 0.08, lp: 4200 });
+      glass({ f: hz(5, 83), t: 0.06, g: 0.04, d: 0.3 });
+    },
+    toggleOff: () => {
+      tone({ f: 880, type: 'triangle', d: 0.07, g: 0.07, lp: 3600 });
+      tone({ f: 520, type: 'triangle', t: 0.06, d: 0.1, g: 0.065, lp: 3600 });
+    },
+
+    /* ---- music player ---- */
+    play: () => {
+      [0, 2, 4].forEach((n, k) => tone({ f: hz(n, 67), type: 'triangle', t: k * 0.07, d: k === 2 ? 0.2 : 0.1, g: 0.09, lp: 3800, send: 0.3 }));
+      noise({ type: 'bandpass', f: 900, to: 5000, q: 1.1, a: 0.1, d: 0.2, g: 0.04 });
+      glass({ f: hz(7, 79), t: 0.14, g: 0.05, d: 0.5 });
+    },
+    pause: () => {
+      [4, 2, 0].forEach((n, k) => tone({ f: hz(n, 67), type: 'triangle', t: k * 0.07, d: k === 2 ? 0.2 : 0.1, g: 0.08, lp: 3200, send: 0.3 }));
+      noise({ type: 'bandpass', f: 4500, to: 900, q: 1.1, a: 0.04, d: 0.22, g: 0.035 });
+    },
+    prev: () => {
+      noise({ type: 'bandpass', f: 4000, to: 1200, q: 1.4, d: 0.14, g: 0.07, pan: 0.4, panTo: -0.5 });
+      tone({ f: 900, to: 600, d: 0.07, g: 0.06, pan: 0.2 });
+      tone({ f: 700, to: 460, t: 0.06, d: 0.08, g: 0.05, pan: -0.3 });
+    },
+    next: () => {
+      noise({ type: 'bandpass', f: 1200, to: 4000, q: 1.4, d: 0.14, g: 0.07, pan: -0.4, panTo: 0.5 });
+      tone({ f: 600, to: 900, d: 0.07, g: 0.06, pan: -0.2 });
+      tone({ f: 760, to: 1100, t: 0.06, d: 0.08, g: 0.05, pan: 0.3 });
+    },
+    scrub: (p) => tone({ f: 420 + p * 1500, d: 0.035, g: 0.035, send: 0.12 }), // pitch follows the playhead
+
+    /* ---- menu (capsule slides open left to right) ---- */
+    menuOpen: () => {
+      tone({ f: 300, to: 760, d: 0.09, g: 0.07, send: 0.15 });
+      noise({ type: 'bandpass', f: 500, to: 5200, q: 1.1, a: 0.18, d: 0.32, g: 0.11, pan: -0.7, panTo: 0.7, send: 0.3 });
+      // the four icons pop in at 150 ms + 50 ms each (same stagger as the CSS), panned left to right
+      [5, 7, 8, 10].forEach((n, k) => glass({ f: hz(n, 76), t: 0.15 + k * 0.05, g: 0.05, d: 0.3, pan: -0.55 + k * 0.37, send: 0.4 }));
+    },
+    menuClose: () => {
+      noise({ type: 'bandpass', f: 4200, to: 450, q: 1.1, a: 0.06, d: 0.24, g: 0.09, pan: 0.65, panTo: -0.65, send: 0.25 });
+      tone({ f: 620, to: 250, d: 0.11, g: 0.06 });
+      glass({ f: hz(5, 76), t: 0.2, g: 0.045, d: 0.25, pan: -0.4 });
+      noise({ type: 'highpass', f: 5000, t: 0.28, d: 0.02, g: 0.05, send: 0 });
+    },
+
+    /* ---- info (and mobile widgets): panel unfolds from the top-right corner ---- */
+    panelOpen: (v) => {
+      const b = v ? 69 : 72;
+      noise({ type: 'bandpass', f: 700, to: 6500, q: 1.4, a: 0.22, d: 0.38, g: 0.1, pan: 0.6, panTo: 0, send: 0.35 });
+      [0, 2, 4, 7].slice(0, v ? 3 : 4).forEach((n, k) => glass({ f: hz(n, b), t: 0.04 + k * 0.09, g: 0.06, d: 0.5, pan: 0.5 - k * 0.15, send: 0.5 }));
+      tone({ f: hz(0, b - 12), a: 0.18, d: 0.4, g: 0.03, send: 0.4 });
+    },
+    panelClose: (v) => {
+      const b = v ? 69 : 72;
+      noise({ type: 'bandpass', f: 5200, to: 500, q: 1.3, a: 0.05, d: 0.3, g: 0.09, pan: 0, panTo: 0.6, send: 0.3 });
+      glass({ f: hz(4, b), g: 0.05, d: 0.35, pan: 0.2 });
+      glass({ f: hz(0, b), t: 0.09, g: 0.045, d: 0.4, pan: 0.4 });
+    },
+
+    /* ---- popups that fall from the top (Behance, CV, GitHub, Gallery) ----
+       the CSS curve passes the resting spot at about 0.34 s, overshoots near 0.5 s and settles at 0.85 s */
+    dropOpen: (v) => {
+      const k = [0, 2, 3, 4][((v % 4) + 4) % 4] ?? 0; // every popup has its own colour, so it gets its own root note
+      noise({ type: 'bandpass', f: 6000, to: 380, q: 0.9, a: 0.05, d: 0.29, g: 0.15, send: 0.25 });
+      tone({ f: 900, to: 160, d: 0.32, g: 0.045, send: 0.2 });
+      tone({ f: 170, to: 48, t: 0.34, d: 0.22, g: 0.28, send: 0.1 });
+      noise({ type: 'lowpass', f: 900, to: 200, q: 0.7, t: 0.34, d: 0.12, g: 0.2, send: 0.1 });
+      noise({ type: 'highpass', f: 3500, t: 0.34, d: 0.09, g: 0.1, send: 0.3 });
+      glass({ f: hz(k, 60), t: 0.35, g: 0.12, d: 1.1, send: 0.6 });
+      glass({ f: hz(k + 5, 60), t: 0.41, g: 0.06, d: 0.8, send: 0.6 });
+      tone({ f: 120, to: 60, t: 0.56, d: 0.12, g: 0.07, send: 0.1 });
+      glass({ f: hz(k + 2, 72), t: 0.6, g: 0.035, d: 0.5 });
+      glass({ f: hz(k + 4, 72), t: 0.84, g: 0.02, d: 0.4 });
+    },
+    dropClose: (v) => {
+      const k = [0, 2, 3, 4][((v % 4) + 4) % 4] ?? 0;
+      tone({ f: 200, to: 140, d: 0.07, g: 0.05 });
+      noise({ type: 'bandpass', f: 350, to: 6000, q: 0.9, a: 0.3, d: 0.25, g: 0.13, t: 0.04, send: 0.2 });
+      tone({ f: 200, to: 1100, a: 0.2, d: 0.35, g: 0.04, t: 0.05, send: 0.2 });
+      glass({ f: hz(k + 5, 72), t: 0.5, g: 0.035, d: 0.3 });
+    },
+
+    /* ---- Jom Connect card ---- */
+    noticeOpen: () => {
+      noise({ type: 'highpass', f: 5000, d: 0.015, g: 0.05, send: 0 });
+      tone({ f: 70, to: 140, a: 0.15, d: 0.4, g: 0.12, send: 0.1 });
+      noise({ type: 'bandpass', f: 400, to: 7000, q: 1, a: 0.25, d: 0.4, g: 0.12, send: 0.5 });
+      [0, 2, 4, 7].forEach((n, k) => glass({ f: hz(n, 72), t: 0.22 + k * 0.045, g: 0.07, d: 1.2, send: 0.6, pan: -0.3 + k * 0.2 }));
+    },
+    noticeClose: () => {
+      tone({ f: 440, to: 180, d: 0.18, g: 0.06 });
+      noise({ type: 'bandpass', f: 4500, to: 400, q: 1, a: 0.05, d: 0.28, g: 0.09, send: 0.3 });
+      glass({ f: hz(7, 72), g: 0.05, d: 0.4 });
+      glass({ f: hz(2, 72), t: 0.1, g: 0.045, d: 0.5 });
+    },
+
+    /* ---- lightbox ---- */
+    lightboxOpen: () => {
+      noise({ type: 'bandpass', f: 900, to: 7000, q: 1.2, a: 0.08, d: 0.16, g: 0.09, send: 0.35 });
+      tone({ f: 180, to: 420, a: 0.05, d: 0.14, g: 0.07 });
+      glass({ f: hz(7, 72), t: 0.1, g: 0.08, d: 0.8, send: 0.5 });
+      glass({ f: hz(9, 72), t: 0.17, g: 0.05, d: 0.7, send: 0.5 });
+    },
+    lightboxClose: () => {
+      noise({ type: 'bandpass', f: 6000, to: 700, q: 1.2, a: 0.03, d: 0.16, g: 0.08, send: 0.3 });
+      tone({ f: 400, to: 170, d: 0.12, g: 0.06 });
+      glass({ f: hz(4, 72), t: 0.08, g: 0.05, d: 0.4 });
+    },
+
+    /* ---- status ---- */
+    ready: () => {
+      glass({ f: hz(7, 79), g: 0.05, d: 0.5 });
+      glass({ f: hz(9, 79), t: 0.09, g: 0.05, d: 0.7 });
+    },
+    error: () => {
+      tone({ f: 220, type: 'square', d: 0.09, g: 0.05, lp: 900 });
+      tone({ f: 175, type: 'square', t: 0.11, d: 0.14, g: 0.05, lp: 800 });
+    },
+
+    /* ---- the robot ---- */
+    robotHappy: () => {
+      const k = Math.floor(Math.random() * 5);
+      [k, k + 2, k + (Math.random() > 0.5 ? 4 : 1)].forEach((n, j) => tone({ f: hz(n, 79), type: 'triangle', t: j * 0.075, d: 0.09, g: 0.08, lp: 4500, vib: [24, 18], send: 0.3 }));
+    },
+    robotWow: () => {
+      tone({ f: 500, to: 1500, d: 0.2, g: 0.08, vib: [18, 25], send: 0.3 });
+      glass({ f: hz(8, 79), t: 0.18, g: 0.04, d: 0.4 });
+    },
+    robotAngry: () => {
+      [0, 0.16].forEach((t, k) => {
+        tone({ f: 220 - k * 35, to: 150 - k * 25, type: 'sawtooth', t, d: 0.13, g: 0.07, lp: 800, vib: [30, 12], send: 0.1 });
+        noise({ type: 'bandpass', f: 300, q: 2, t, d: 0.1, g: 0.05, send: 0.1 });
+      });
+    },
+    robotCollapse: () => {
+      tone({ f: 700, to: 45, type: 'sawtooth', a: 0.02, d: 1.0, g: 0.09, lp: 1500, vib: [14, 30], send: 0.2 });
+      noise({ type: 'bandpass', f: 4000, to: 200, q: 1, d: 1.0, g: 0.06, send: 0.2 });
+      for (let j = 0; j < 9; j += 1) {
+        noise({ type: 'highpass', f: 2500 + Math.random() * 3000, t: 0.1 + j * 0.09 + Math.random() * 0.04, d: 0.02, g: 0.05 + Math.random() * 0.05, send: 0.1, pan: Math.random() * 1.2 - 0.6 });
+      }
+      tone({ f: 90, to: 40, t: 1.02, d: 0.2, g: 0.14, send: 0.1 });
+    },
+    robotReappear: () => {
+      noise({ type: 'bandpass', f: 600, to: 5000, q: 1.5, a: 0.05, d: 0.25, g: 0.07, send: 0.3 });
+      [0, 2, 4, 7].forEach((n, k) => tone({ f: hz(n, 72), type: 'triangle', t: k * 0.06, d: 0.12, g: 0.07, lp: 4500, send: 0.4 }));
+      glass({ f: hz(9, 79), t: 0.24, g: 0.05, d: 0.5 });
+      for (let j = 0; j < 5; j += 1) noise({ type: 'bandpass', f: 900 + Math.random() * 1800, q: 6, t: 0.05 + j * 0.03, d: 0.04, g: 0.05, send: 0.2, pan: Math.random() * 1.2 - 0.6 });
+    },
+  };
+
+  const play = (name: string, i = 0) => {
+    const now = performance.now();
+    if (name.startsWith('hover')) { // fast mouse sweeps must not machine-gun
+      if (now - lastHover < 32) return;
+      lastHover = now;
+    } else if (name === 'scrub') {
+      if (now - lastScrub < 48) return;
+      lastScrub = now;
+    }
+    if (!begin()) return;
+    S[name]?.(i);
+  };
+
+  const PANELS: Record<SfxPanel, [string, number]> = {
+    menu: ['menu', 0], info: ['panel', 0], widgets: ['panel', 1], drop: ['drop', -1], notice: ['notice', 0], lightbox: ['lightbox', 0],
+  };
+
+  return {
+    play,
+    bindUnlock,
+    open: (kind: SfxPanel, variant = 0) => { const [name, v] = PANELS[kind]; play(`${name}Open`, v < 0 ? variant : v); },
+    close: (kind: SfxPanel, variant = 0) => {
+      if (kind === 'menu' && performance.now() < quietMenuUntil) return;
+      const [name, v] = PANELS[kind];
+      play(`${name}Close`, v < 0 ? variant : v);
+    },
+    // called when a menu item (or the Jom Connect button) closes the menu itself, so its own sound isn't doubled
+    quietMenuClose: () => { quietMenuUntil = performance.now() + 250; },
+    isEnabled: () => enabled,
+    setEnabled: (value: boolean) => {
+      enabled = value;
+      try { window.localStorage.setItem(SFX_STORAGE_KEY, value ? 'on' : 'off'); } catch { /* storage blocked */ }
+      if (value) unlock();
+    },
+  };
+})();
+
+/* ---------- Sound wiring ----------
+   One delegated listener gives every button, link, card and widget its hover / click / focus sound, so nothing can be missed
+   (even things added later). Opening and closing of menus and popups is driven by their state, so Esc, outside click,
+   the close button and switching between popups all sound right without any extra code.
+   Per-element overrides: data-sfx="none" (silent, a state effect owns it) or data-sfx="play|pause|prev|next|toggleOn|toggleOff|retry|nav".
+   For toggles the value describes what the click does, e.g. shuffle off -> data-sfx="toggleOn". */
+const HOVER_SEL = 'button, a[href], input[type="range"], .metric-card, .gh-card';
+const CLICK_SEL = 'button, a[href], input[type="range"], .metric-card';
+
+function useUiSounds(rootRef: { readonly current: HTMLElement | null }) {
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const unbind = sfx.bindUnlock();
+    const isDisabled = (el: Element) => (el as HTMLButtonElement).disabled === true || el.getAttribute('aria-disabled') === 'true';
+    const nth = (selector: string, el: Element) => Array.prototype.indexOf.call(root.querySelectorAll(selector), el) as number;
+    let lastEl: Element | null = null;
+
+    const hoverFor = (el: Element) => {
+      if (isDisabled(el) || el.classList.contains('player-card')) return; // the player's own buttons make the sound, not its frame
+      if (el.matches('#nav-items button')) { sfx.play('hover', nth('#nav-items button', el) * 2); return; }
+      if (el.classList.contains('start-btn')) { sfx.play('hoverTech'); return; }
+      const card = ['gal-item', 'gh-card', 'case-card'].find((name) => el.classList.contains(name));
+      if (card) { sfx.play('hoverCard', nth(`.${card}`, el) % 10); return; } // moving across a grid plays a little melody
+      if (el.classList.contains('conn-social')) { sfx.play('hover', nth('.conn-social', el) * 2 + 1); return; }
+      if (el.classList.contains('metric-card')) { sfx.play('hoverWidget', nth('.metric-card', el)); return; } // each widget has its own note
+      sfx.play('hover', 3);
+    };
+
+    const onOver = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      const el = (event.target as Element | null)?.closest?.(HOVER_SEL) ?? null;
+      if (el === lastEl) return;
+      lastEl = el;
+      if (el) hoverFor(el);
+    };
+    const onLeave = () => { lastEl = null; };
+
+    const onFocus = (event: FocusEvent) => { // keyboard users get the same hover tick when they Tab onto something
+      const el = (event.target as Element | null)?.closest?.(HOVER_SEL);
+      if (!el) return;
+      let visible = false;
+      try { visible = el.matches(':focus-visible'); } catch { visible = false; }
+      if (visible) { lastEl = el; hoverFor(el); }
+    };
+
+    const onClick = (event: MouseEvent) => {
+      const el = (event.target as Element | null)?.closest?.(CLICK_SEL) as HTMLElement | null;
+      if (!el || isDisabled(el) || el.classList.contains('player-card')) return;
+      const tag = el.dataset.sfx;
+      if (tag === 'none') return;
+      if (el.matches('.case-close, .conn-close') && !el.hasAttribute('download')) return; // the popup's close sound covers these
+      if (tag) { sfx.play(tag, tag === 'nav' ? nth('#nav-items button', el) : 0); return; }
+      if (el.matches('input[type="range"]')) return; // the seek bar scrubs instead
+      if (el.classList.contains('metric-card')) { sfx.play('widgetTap', nth('.metric-card', el)); return; }
+      if (el.matches('a[href]')) {
+        const href = el.getAttribute('href') ?? '';
+        if (el.hasAttribute('download')) sfx.play('download');
+        else if (href.startsWith('mailto:')) sfx.play('mail');
+        else if (el.getAttribute('target') === '_blank') sfx.play('linkOut');
+        else sfx.play('click');
+        return;
+      }
+      sfx.play('click');
+    };
+
+    root.addEventListener('pointerover', onOver, { passive: true });
+    root.addEventListener('pointerleave', onLeave, { passive: true });
+    root.addEventListener('focusin', onFocus);
+    root.addEventListener('click', onClick, true);
+    return () => {
+      unbind();
+      root.removeEventListener('pointerover', onOver);
+      root.removeEventListener('pointerleave', onLeave);
+      root.removeEventListener('focusin', onFocus);
+      root.removeEventListener('click', onClick, true);
+    };
+  }, [rootRef]);
+}
+
+// plays the open / close sound whenever a menu, panel or popup changes state (never on first render)
+function useOpenSfx(open: boolean, kind: SfxPanel, variant = 0) {
+  const prev = useRef(open);
+  useEffect(() => {
+    if (prev.current === open) return;
+    prev.current = open;
+    if (open) sfx.open(kind, variant); else sfx.close(kind, variant);
+  }, [open, kind, variant]);
+}
+
+// a soft chime when content finishes loading, a low double buzz when it fails
+function useStatusSfx(state: 'idle' | 'loading' | 'ready' | 'error') {
+  const prev = useRef(state);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = state;
+    if (state === 'ready' && before === 'loading') sfx.play('ready');
+    if (state === 'error' && before !== 'error') sfx.play('error');
+  }, [state]);
+}
+
 type BehanceProject = {
   id: number;
   name: string;
@@ -818,6 +1376,7 @@ function MusicPlayer() {
   const seek = (value: number) => {
     const audio = audioRef.current;
     if (audio) { audio.currentTime = value; setTime(value); }
+    sfx.play('scrub', duration > 0 ? Math.min(1, value / duration) : 0);
   };
   const pct = duration > 0 ? Math.min(100, (time / duration) * 100) : 0;
 
@@ -843,8 +1402,8 @@ function MusicPlayer() {
           <p className="pl-title">{song ? song.title : 'No songs yet'}</p>
           <p className="pl-artist">{song ? (song.artist ?? '') : 'Add tracks in /public/songs.js'}</p>
         </div>
-        <button type="button" className={`pl-btn pl-round pl-play ${playing ? '' : 'is-active'}`} aria-label="Play" onClick={play} disabled={!song}><Play size={15} strokeWidth={2.2} fill="currentColor" /></button>
-        <button type="button" className={`pl-btn pl-round pl-pause ${playing ? 'is-active' : ''}`} aria-label="Pause" onClick={pause} disabled={!song}><Pause size={15} strokeWidth={2.2} fill="currentColor" /></button>
+        <button type="button" className={`pl-btn pl-round pl-play ${playing ? '' : 'is-active'}`} aria-label="Play" data-sfx="play" onClick={play} disabled={!song}><Play size={15} strokeWidth={2.2} fill="currentColor" /></button>
+        <button type="button" className={`pl-btn pl-round pl-pause ${playing ? 'is-active' : ''}`} aria-label="Pause" data-sfx="pause" onClick={pause} disabled={!song}><Pause size={15} strokeWidth={2.2} fill="currentColor" /></button>
       </div>
       <div className="pl-seek">
         <span className="pl-time">{fmtTime(time)}</span>
@@ -852,10 +1411,10 @@ function MusicPlayer() {
         <span className="pl-time">{fmtTime(duration)}</span>
       </div>
       <div className="pl-ctrl">
-        <button type="button" className={`pl-btn pl-mini ${shuffle ? 'is-on' : ''}`} aria-label="Shuffle" aria-pressed={shuffle} onClick={() => setShuffle((v) => !v)}><Shuffle size={14} strokeWidth={2} /></button>
-        <button type="button" className="pl-btn pl-mini" aria-label="Previous song" onClick={prev} disabled={!song}><SkipBack size={14} strokeWidth={2} fill="currentColor" /></button>
-        <button type="button" className="pl-btn pl-mini" aria-label="Next song" onClick={() => go(1)} disabled={!song}><SkipForward size={14} strokeWidth={2} fill="currentColor" /></button>
-        <button type="button" className={`pl-btn pl-mini ${repeat ? 'is-on' : ''}`} aria-label="Repeat this song" aria-pressed={repeat} onClick={() => setRepeat((v) => !v)}><Repeat size={14} strokeWidth={2} /></button>
+        <button type="button" className={`pl-btn pl-mini ${shuffle ? 'is-on' : ''}`} aria-label="Shuffle" aria-pressed={shuffle} data-sfx={shuffle ? 'toggleOff' : 'toggleOn'} onClick={() => setShuffle((v) => !v)}><Shuffle size={14} strokeWidth={2} /></button>
+        <button type="button" className="pl-btn pl-mini" aria-label="Previous song" data-sfx="prev" onClick={prev} disabled={!song}><SkipBack size={14} strokeWidth={2} fill="currentColor" /></button>
+        <button type="button" className="pl-btn pl-mini" aria-label="Next song" data-sfx="next" onClick={() => go(1)} disabled={!song}><SkipForward size={14} strokeWidth={2} fill="currentColor" /></button>
+        <button type="button" className={`pl-btn pl-mini ${repeat ? 'is-on' : ''}`} aria-label="Repeat this song" aria-pressed={repeat} data-sfx={repeat ? 'toggleOff' : 'toggleOn'} onClick={() => setRepeat((v) => !v)}><Repeat size={14} strokeWidth={2} /></button>
       </div>
     </div>
   );
@@ -1173,12 +1732,14 @@ function RobotCard() {
         collapseUntil = now + 1200;
         clickCount = 0;
         canvas.classList.add('robot-canvas-collapse');
+        sfx.play('robotCollapse');
         later(() => {
           canvas.classList.remove('robot-canvas-collapse');
           canvas.classList.remove('robot-canvas-reappear');
           void canvas.offsetWidth;
           canvas.classList.add('robot-canvas-reappear');
           emitBubbles(14, 'burst');
+          sfx.play('robotReappear');
           later(() => canvas.classList.remove('robot-canvas-reappear'), 600);
         }, 1200);
         emitBubbles(18, 'burst');
@@ -1194,12 +1755,14 @@ function RobotCard() {
         mouthUntil = now + 1500;
         emitBubbles(8, 'angry');
         emitPop(pick(angryTexts), 1500);
+        sfx.play('robotAngry');
       } else {
         laughUntil = now + 1200;
         mouthMode = Math.random() > 0.6 ? 'wow' : 'smile';
         mouthUntil = now + 1200;
         emitBubbles(4);
         emitPop(pick(funTexts), 1200);
+        sfx.play(mouthMode === 'wow' ? 'robotWow' : 'robotHappy');
       }
 
       canvas.classList.remove('robot-canvas-fun');
@@ -1304,6 +1867,20 @@ export default function App() {
   const signatureRef = useRef<HTMLDivElement>(null);
   const cursorTarget = useRef({ x: -999, y: -999 });
   const appRef = useRef<HTMLDivElement>(null);
+
+  // sound: hover / click / focus for everything, plus open / close for each menu, panel and popup
+  useUiSounds(appRef);
+  useOpenSfx(menuOpen, 'menu');
+  useOpenSfx(infoOpen, 'info');
+  useOpenSfx(widgetsOpen, 'widgets');
+  useOpenSfx(caseOpen, 'drop', 0);
+  useOpenSfx(cvOpen, 'drop', 1);
+  useOpenSfx(ghOpen, 'drop', 2);
+  useOpenSfx(galOpen, 'drop', 3);
+  useOpenSfx(notice !== null, 'notice');
+  useOpenSfx(lightbox !== null, 'lightbox');
+  useStatusSfx(projectsState);
+  useStatusSfx(cvState);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1643,6 +2220,7 @@ export default function App() {
   }, []);
 
   function navigate(label: string) {
+    sfx.quietMenuClose();
     setMenuOpen(false);
     if (label === 'Case Records') {
       setInfoOpen(false);
@@ -1682,6 +2260,7 @@ export default function App() {
   }
 
   function openNotice(value: 'reserve' | 'connect') {
+    sfx.quietMenuClose();
     setMenuOpen(false);
     setNotice(value);
   }
@@ -1835,6 +2414,8 @@ export default function App() {
         /* Metric glass widgets */
         .metric-card.glass { background: rgba(255, 255, 255, 0.05); color: #fff; }
         .metric-card { display: flex; }
+        /* the desktop widget column sits inside a pointer-events:none wrapper, which made the player and widgets unclickable; give the cards their pointer back */
+        @media (min-width: 1024px) { .metric-card { pointer-events: auto; } }
         .metric-pill { align-items: center; gap: 10px; padding: 8px 14px 8px 10px; }
         .metric-box { flex-direction: column; justify-content: space-between; padding: 11px 14px 10px; min-height: 100px; }
         .metric-label { font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.25; color: rgba(255, 255, 255, 0.82); }
@@ -2403,6 +2984,7 @@ export default function App() {
             aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
             aria-expanded={menuOpen}
             aria-controls="nav-items"
+            data-sfx="none"
             onClick={() => setMenuOpen((open) => !open)}
             className="absolute inset-y-0 left-0 z-10 flex w-14 items-center justify-center rounded-full"
           >
@@ -2417,6 +2999,7 @@ export default function App() {
                 aria-label={label}
                 aria-current={label === 'Module' ? 'page' : undefined}
                 tabIndex={menuOpen ? 0 : -1}
+                data-sfx="nav"
                 onClick={() => navigate(label)}
                 style={{ transitionDelay: menuOpen ? `${150 + index * 50}ms` : '0ms' }}
                 className={`relative flex h-11 w-11 min-w-0 shrink items-center justify-center rounded-full transition-all duration-300 hover:bg-white/15 ${label === 'Module' ? 'ring-btn' : ''} ${menuOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-50 opacity-0'}`}
@@ -2434,6 +3017,7 @@ export default function App() {
           aria-label={infoOpen ? 'Close info' : 'About this module'}
           aria-expanded={infoOpen}
           aria-controls="info-popup"
+          data-sfx="none"
           onClick={(event) => { event.stopPropagation(); setWidgetsOpen(false); setInfoOpen((open) => !open); }}
           className={`glass shine-btn info-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${infoOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
@@ -2449,6 +3033,7 @@ export default function App() {
           aria-label={widgetsOpen ? 'Hide widgets' : 'Show widgets'}
           aria-expanded={widgetsOpen}
           aria-controls="widgets-panel"
+          data-sfx="none"
           onClick={(event) => { event.stopPropagation(); setInfoOpen(false); setWidgetsOpen((open) => !open); }}
           className={`glass shine-btn info-btn widgets-btn pointer-events-auto flex h-11 w-11 cursor-pointer items-center justify-center text-white ${widgetsOpen ? 'is-open' : ''}`}
           style={{ '--r': '9999px', '--tr': '15%' } as CSSProperties}
@@ -2486,6 +3071,7 @@ export default function App() {
                 type="button"
                 className="info-sound"
                 aria-label={soundOn ? 'Mute video' : 'Unmute video'}
+                data-sfx={soundOn ? 'toggleOff' : 'toggleOn'}
                 onClick={(event) => { event.stopPropagation(); setSoundOn((on) => !on); }}
               >
                 {soundOn ? <Volume2 size={13} strokeWidth={2} /> : <VolumeX size={13} strokeWidth={2} />}
@@ -2513,7 +3099,7 @@ export default function App() {
         <div className="case-scroll">
           {projectsState === 'error' ? (
             <p className="case-state">
-              Couldn't load projects. <button type="button" onClick={loadProjects}>Retry</button> or{' '}
+              Couldn't load projects. <button type="button" data-sfx="retry" onClick={loadProjects}>Retry</button> or{' '}
               <a href={BEHANCE_PROFILE} target="_blank" rel="noopener noreferrer">open Behance</a>.
             </p>
           ) : projectsState === 'ready' && projects.length === 0 ? (
@@ -2551,7 +3137,7 @@ export default function App() {
         </div>
         <div className="case-scroll">
           {cvState === 'error' && (
-            <p className="case-state">Couldn't load the CV. <button type="button" onClick={() => { cvStarted.current = true; loadCv(); }}>Retry</button></p>
+            <p className="case-state">Couldn't load the CV. <button type="button" data-sfx="retry" onClick={() => { cvStarted.current = true; loadCv(); }}>Retry</button></p>
           )}
           {cvState === 'loading' && <div className="case-skel" style={{ aspectRatio: '595 / 842' }} aria-hidden="true" />}
           <div ref={cvPagesRef} className="cv-pages" style={{ display: cvState === 'error' ? 'none' : undefined }} />
@@ -2602,7 +3188,7 @@ export default function App() {
         <div className="case-scroll">
           <div className="gal-grid">
             {GALLERY.map((item, index) => (
-              <button key={item.src} type="button" className="gal-item" aria-label={`Open ${item.title}`} tabIndex={galOpen ? 0 : -1} onClick={() => setLightbox(index)}>
+              <button key={item.src} type="button" className="gal-item" data-sfx="none" aria-label={`Open ${item.title}`} tabIndex={galOpen ? 0 : -1} onClick={() => setLightbox(index)}>
                 <GalleryThumb item={item} />
               </button>
             ))}
@@ -2655,6 +3241,7 @@ export default function App() {
           <div className="hero-rise relative inline-block" style={{ animationDelay: '0.7s' }}>
             <button
               type="button"
+              data-sfx="none"
               onClick={() => openNotice('connect')}
               className="glass box start-btn"
               style={{ '--w': '0px', '--h': '40px', '--r': '9999px', '--tr': '15%' } as CSSProperties}
