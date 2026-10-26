@@ -1960,17 +1960,15 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
 }
 
 /* ---------- Curtain preloader ----------
-   Two frosted-glass panels cover the site while a speedometer counts 0 to 100 between them (CURTAIN_MS).
+   Two frosted-glass panels cover the site while GSAP animates asset preparation progress.
    At 100 the panels slide apart with a sound effect and the site, already loaded behind the glass, is revealed.
-   The counter, needle and arc are driven straight from requestAnimationFrame (no React re-renders), so it stays smooth. */
-const CURTAIN_MS = 15000; // how long the speedometer takes to reach 100
+   GSAP updates the counter, needle and arc directly; React updates only the stage labels. */
 const CURTAIN_HOLD_MS = 450; // short pause at 100 before the panels open
 const CURTAIN_REMOVE_MS = 1700; // the panels need 1.2 s to slide away; then the curtain is removed from the page
 const GAUGE_FROM = -135; // needle angle at 0 (degrees from straight up)
 const GAUGE_SWEEP = 270;
 const POWER_D = 'M 30.72 31.02 A 30 30 0 1 0 69.28 31.02 M 50 15 L 50 49'; // neon power symbol (open ring + bar)
 const GAUGE_ARC = 'M 43.43 156.57 A 80 80 0 1 1 156.57 156.57';
-const curtainCurve = (t: number) => 0.85 * t * t * (3 - 2 * t) + 0.15 * t; // revs up, cruises, eases into 100
 
 const GAUGE_TICKS = Array.from({ length: 51 }, (_, i) => {
   const a = ((135 + (270 * i) / 50) * Math.PI) / 180;
