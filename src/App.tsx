@@ -44,7 +44,7 @@ const ROBOT_SPEAK = true; // read text replies aloud with the browser's built-in
    All pitches come from one pentatonic scale, so overlapping sounds (and your music) never clash.
    Browsers keep audio locked until the first tap / key press; the engine unlocks itself on that first gesture. */
 const SFX_STORAGE_KEY = 'sfx-enabled';
-const SFX_VOLUME = 0.9; // master level: 0 = silent, 1 = full
+const SFX_VOLUME = 0.48; // master level: 0 = silent, 1 = full
 
 type SfxVoice = { t?: number; g?: number; send?: number; pan?: number };
 type ToneOpts = SfxVoice & { f: number; to?: number; type?: OscillatorType; a?: number; d?: number; lp?: number; vib?: [number, number] };
@@ -100,17 +100,22 @@ const sfx = (() => {
       comp.attack.value = 0.003;
       comp.release.value = 0.2;
       master.connect(comp);
-      comp.connect(c.destination);
+      const warmth = c.createBiquadFilter();
+      warmth.type = 'lowpass';
+      warmth.frequency.value = Math.min(14000, c.sampleRate * 0.42);
+      warmth.Q.value = 0.5;
+      comp.connect(warmth);
+      warmth.connect(c.destination);
       const bus = c.createGain();
       bus.connect(master);
       const send = c.createGain();
       const verb = c.createConvolver();
-      verb.buffer = impulse(c, 1.5, 3);
+      verb.buffer = impulse(c, 0.85, 4);
       const hp = c.createBiquadFilter();
       hp.type = 'highpass';
       hp.frequency.value = 320; // airy tail, never muddy
       const ret = c.createGain();
-      ret.gain.value = 0.6;
+      ret.gain.value = 0.28;
       send.connect(verb);
       verb.connect(hp);
       hp.connect(ret);
@@ -239,7 +244,7 @@ const sfx = (() => {
     const g = o.g ?? 0.1;
     GLASS_PARTIALS.forEach(([ratio, gain, decay]) => {
       const f = o.f * ratio;
-      if (f > 12000) return;
+      if (f > Math.min(10000, (get()?.c.sampleRate ?? 44100) * 0.42)) return;
       tone({ f, g: g * gain, a: 0.002, d: d * decay, t: o.t, send: o.send ?? 0.4, pan: o.pan });
     });
     noise({ type: 'highpass', f: 6000, d: 0.012, g: g * 0.45, t: o.t, send: 0, pan: o.pan });
@@ -1981,6 +1986,8 @@ const GAUGE_LABELS = [0, 20, 40, 60, 80, 100].map((v) => {
 
 function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
   const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState('Your next dimension awaits');
+  const skipRef = useRef<() => void>(() => {});
   const [started, setStarted] = useState(false); // ENTER was pressed: the loading run is on
   const startRef = useRef<() => void>(() => {});
   const needleRef = useRef<SVGGElement>(null);
@@ -2001,9 +2008,18 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
     const timers: number[] = [];
     let raf = 0;
     let lastStep = 0;
+    let disposed = false;
+    let finished = false;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motion = gsap.context(() => {
+      if (!reduced) gsap.fromTo('.curtain__stack', { opacity: 0, y: 24 }, { opacity: 1, y: 0, stagger: 0.12, duration: 0.9, ease: 'power3.out' });
+    });
+    let progressTween: gsap.core.Tween | undefined;
 
     const paint = (p: number) => {
       const n = Math.floor(p * 100);
+      const nextStage = p < 0.3 ? 'Preparing the canvas' : p < 0.7 ? 'Bringing the details into focus' : p < 1 ? 'Almost in your dimension' : 'Welcome to the other side';
+      setStage((current) => current === nextStage ? current : nextStage);
       const digits = String(n);
       needleRef.current?.setAttribute('transform', `rotate(${GAUGE_FROM + GAUGE_SWEEP * p} 100 100)`);
       const arc = arcRef.current;
@@ -2025,32 +2041,48 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
     };
 
     const finish = () => {
+      if (disposed || finished) return;
+      finished = true;
+      progressTween?.kill();
+      cancelAnimationFrame(raf);
       paint(1);
       sfx.play('curtainReady');
       timers.push(window.setTimeout(openCurtain, CURTAIN_HOLD_MS));
     };
 
-    const frame = (now: number, from: number) => {
-      const t = Math.min(1, Math.max(0, (now - from) / CURTAIN_MS));
-      const p = curtainCurve(t);
-      paint(p);
-      const step = Math.floor(p * 20); // a tick every 5 %
-      if (step > lastStep && step < 20) { lastStep = step; sfx.play('curtainTick', step * 5); }
-      if (t < 1) raf = requestAnimationFrame((next) => frame(next, from)); else finish();
-    };
-
-    // ENTER starts the run. The tap itself unlocks browser audio, so every sound from here on plays.
+    // Progress follows critical asset settlement; the timeout keeps a failed CDN from trapping entry.
+    const assets = [BG_IMAGE_1, BG_IMAGE_2, SIGNATURE].map((src) => new Promise<void>((resolve) => {
+      const image = new Image();
+      image.onload = image.onerror = () => resolve();
+      image.src = src;
+    }));
+    const readiness = Promise.allSettled([...assets, document.fonts.ready]);
     let running = false;
+    skipRef.current = finish;
     startRef.current = () => {
-      if (running) return;
+      if (running || disposed) return;
       running = true;
-      timers.push(window.setTimeout(() => sfx.play('curtainStart'), 40)); // lets the audio engine finish unlocking
-      const from = performance.now();
-      raf = requestAnimationFrame((now) => frame(now, from));
+      sfx.play('curtainStart');
+      const progress = { value: 0 };
+      const update = () => {
+        paint(progress.value);
+        const step = Math.floor(progress.value * 10);
+        if (step > lastStep && step < 10) { lastStep = step; sfx.play('curtainTick', step * 10); }
+      };
+      progressTween = gsap.to(progress, { value: 0.86, duration: reduced ? 0.1 : 1.6, ease: 'power2.out', onUpdate: update });
+      const timeout = new Promise<void>((resolve) => timers.push(window.setTimeout(resolve, 4500)));
+      void Promise.race([readiness, timeout]).then(() => {
+        if (disposed || finished) return;
+        progressTween?.kill();
+        progressTween = gsap.to(progress, { value: 1, duration: reduced ? 0.01 : 0.65, ease: 'power2.inOut', onUpdate: update, onComplete: finish });
+      });
     };
     paint(0);
 
     return () => {
+      disposed = true;
+      progressTween?.kill();
+      motion.revert();
       cancelAnimationFrame(raf);
       timers.forEach((id) => window.clearTimeout(id));
       release();
@@ -2066,10 +2098,12 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
         <p className="curtain__word">Beyond Limits.</p>
       </div>
 
+      <div className="loader-heading"><span>SK / DIGITAL EXPERIENCE</span><p>{stage}</p></div>
+      {started && !open && <button className="loader-skip" type="button" onClick={() => skipRef.current()}>Skip introduction ↗</button>}
       <p className="curtain__stack curtain__stack--top" aria-hidden="true">Code</p>
       <p className="curtain__stack curtain__stack--bottom" aria-hidden="true">Beyond Limits.</p>
 
-      <div ref={meterRef} className="curtain__center" role="progressbar" aria-label="Loading" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
+      <div ref={meterRef} className="curtain__center" role="progressbar" aria-label="Preparing experience" aria-valuetext={stage} aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
         <span className="gauge-disc" aria-hidden="true" />
         <svg className="gauge-svg" viewBox="0 0 200 200" aria-hidden="true">
           <defs>
@@ -2097,7 +2131,7 @@ function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => voi
           <span className="gauge-num"><span ref={leadRef} className="gauge-lead">00</span><span ref={valRef}>0</span></span>
           <span className="gauge-unit">%</span>
         </div>
-        <p className="gauge-caption" aria-hidden="true">Loading</p>
+        <p className="gauge-caption" aria-hidden="true">{started ? 'INITIALIZING' : 'PRESS TO ENTER'}</p>
       </div>
 
       <button
@@ -2285,12 +2319,23 @@ function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => 
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [effectsOn, setEffectsOn] = useState(() => sfx.isEnabled());
   // curtain preloader: siteReady flips when the panels start to open (site animations begin), curtainOn when they are gone
   const [siteReady, setSiteReady] = useState(false);
   const [curtainOn, setCurtainOn] = useState(true);
   const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
   const wide = useMediaQuery('(min-width: 1024px)');
+
+  useEffect(() => {
+    const root = appRef.current;
+    if (!root || !siteReady) return;
+    const media = gsap.matchMedia();
+    media.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.fromTo('.experience-dock > *', { y: 22, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.09, duration: 0.75, ease: 'power3.out', clearProps: 'transform,opacity' });
+    }, root);
+    return () => media.revert();
+  }, [siteReady]);
 
   // track the real visible height (mobile browser bars change it, which left a white strip under the page)
   // and block pinch / gesture zoom (double-tap zoom is off through touch-action: manipulation)
@@ -2671,6 +2716,16 @@ export default function App() {
     setMenuOpen(false);
     setNotice(value);
   }
+
+  useEffect(() => {
+    const root = appRef.current;
+    if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const context = gsap.context(() => {
+      const cards = root.querySelectorAll('.case-pop.is-open .case-card, .case-pop.is-open .gh-card, .case-pop.is-open .gal-item, .info-pop.is-open .info-body > *');
+      gsap.fromTo(cards, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: { each: 0.055, amount: 0.4 }, ease: 'power3.out', clearProps: 'transform,opacity', delay: 0.18 });
+    }, root);
+    return () => context.revert();
+  }, [caseOpen, ghOpen, galOpen, infoOpen, projectsState]);
 
   return (
     <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" data-site={siteReady ? 'ready' : 'loading'} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -3623,6 +3678,41 @@ export default function App() {
           .case-pop, .case-pop.is-open { transition-duration: 0.01s; }
           .case-skel { animation: none; }
         }
+
+        /* Optical depth: a crisp rim, tinted body, diffuse reflection and grounded shadow. */
+        .glass {
+          background: linear-gradient(135deg, rgba(255,255,255,.19), rgba(255,255,255,.035) 48%, rgba(18,12,24,.16));
+          -webkit-backdrop-filter: blur(18px) saturate(145%);
+          backdrop-filter: blur(18px) saturate(145%);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 1px 0 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.14), 0 12px 32px rgba(12,4,12,.23);
+        }
+        .fx-layer { filter: contrast(1.35); }
+        .case-pop, .info-pop, .lb-panel {
+          background: linear-gradient(145deg, rgba(43,29,41,.86), rgba(17,15,25,.91));
+          -webkit-backdrop-filter: blur(28px) saturate(135%); backdrop-filter: blur(28px) saturate(135%);
+          border: 1px solid rgba(255,255,255,.22);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 30px 90px rgba(0,0,0,.38);
+        }
+        .case-head { border-bottom: 1px solid rgba(255,255,255,.12); }
+        .case-card, .gh-card { border: 1px solid rgba(255,255,255,.13); border-radius: 18px; overflow: hidden; }
+        .case-card:focus-visible, .dock-link:focus-visible, .dock-contact:focus-visible, .loader-skip:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 4px; }
+        .experience-dock { position: absolute; z-index: 61; left: 48px; top: 112px; width: 260px; padding: 20px; border: 1px solid rgba(255,255,255,.25); border-radius: 24px; color: white; background: linear-gradient(135deg,rgba(255,255,255,.12),rgba(25,10,23,.28)); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: inset 0 1px 0 #ffffff40, 0 18px 48px #16071030; }
+        .dock-caption { display: block; font-size: 9px; letter-spacing: .16em; color: #ffffffa6; margin-bottom: 14px; }
+        .dock-link { width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 0; background: transparent; color: inherit; border: 0; border-bottom: 1px solid #ffffff20; cursor: pointer; text-align: left; }
+        .dock-link span:first-child { font-size: 10px; opacity: .55; }
+        .dock-link strong { flex: 1; font-size: 13px; font-weight: 400; }
+        .dock-link span:last-child { transition: transform .25s; }
+        .dock-link:hover span:last-child { transform: translate(3px,-3px); }
+        .dock-contact { border: 0; background: transparent; color: #ffdebd; font: inherit; font-size: 10px; padding: 18px 0 0; cursor: pointer; }
+        .sound-preference { position: fixed; z-index: 71; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 8px 12px; color: white; font: inherit; font-size: 9px; cursor: pointer; }
+        .sound-preference:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 3px; }
+        .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
+        .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
+        .loader-heading p { font-size: clamp(11px,2vw,14px); font-weight: 300; margin-top: 12px; }
+        .loader-skip { position: absolute; z-index: 8; bottom: 32px; right: 32px; padding: 12px 18px; border: 1px solid #ffffff35; border-radius: 30px; color: white; background: #ffffff0d; font: inherit; font-size: 11px; cursor: pointer; }
+        @supports not (backdrop-filter: blur(1px)) { .glass, .experience-dock { background-color: rgba(35,20,32,.85); } }
+        @media (max-width: 1100px), (max-height: 700px) { .experience-dock { display: none; } }
+        @media (prefers-reduced-motion: reduce) { .dock-link span:last-child { transition: none; } .ken-burns { animation: none !important; } }
       `}</style>
       <div className="page-frame" aria-hidden="true"><span className="pf-bloom" /></div>
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
@@ -3881,6 +3971,19 @@ export default function App() {
         <canvas ref={canvasRef} hidden aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
+        <nav className="experience-dock" aria-label="Explore Suresh's work">
+          <span className="dock-caption">EXPLORE THE DIMENSION</span>
+          {([
+            ['01', 'Selected work', 'Case Records'],
+            ['02', 'Engineering', 'GitHub'],
+            ['03', 'Visual journal', 'Gallery'],
+          ] as const).map(([number, title, destination]) => (
+            <button key={number} type="button" className="dock-link" onClick={() => navigate(destination)} data-sfx="nav">
+              <span>{number}</span><strong>{title}</strong><span aria-hidden="true">↗</span>
+            </button>
+          ))}
+          <button type="button" className="dock-contact" onClick={() => openNotice('connect')}>Have something in mind? Let’s talk ↗</button>
+        </nav>
         <Statistics />
         <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
         {phone && <GlassFrame className="glass-frame--mobile hero-rise" style={{ animationDelay: '1.1s' }} />}
@@ -3917,6 +4020,9 @@ export default function App() {
         </section>
       </main>
 
+      <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
+        {effectsOn ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>Interface sound</span>
+      </button>
       <ChatPopup open={chatOpen} onClose={() => setChatOpen(false)} onAction={chatAction} />
 
       {curtainOn && <Curtain onReveal={() => setSiteReady(true)} onDone={() => setCurtainOn(false)} />}
