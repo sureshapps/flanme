@@ -780,37 +780,38 @@ const CONTACTS: { name: string; href: string; Icon: typeof InstagramIcon; extern
   { name: 'Email', href: 'mailto:hello@suresh.app', Icon: EmailIcon, external: false },
 ];
 
-/* Every repo uses the same placeholder image for now.
-   To change one, replace `image: GITHUB_IMAGE` on that repo with its own URL, e.g. image: 'https://.../shadcn.png'.
-   To change all of them at once, edit GITHUB_IMAGE. */
+/* Each repo has its own `image` line below. Right now they all use the same placeholder (GITHUB.png).
+   When you have the 24 pictures, replace the URL on each repo's `image:` with its own, e.g.
+   image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/github/shadcn.png'
+   If a custom image fails to load, the card shows the placeholder, then GitHub's preview. */
 const GITHUB_IMAGE = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png';
 type Repo = { slug: string; title: string; description: string; tech: string[]; live: string; image: string };
 const GITHUB_PREVIEW = (slug: string) => `https://opengraph.githubassets.com/1/${slug}`;
 const REPOS: Repo[] = [
-  { slug: 'shadcn-ui/ui', title: 'shadcn/ui', description: 'Beautifully designed React components that you can copy and customize.', tech: ['React', 'TypeScript', 'Tailwind'], live: 'https://ui.shadcn.com', image: GITHUB_IMAGE },
-  { slug: 'vercel/next.js', title: 'Next.js', description: 'The React framework for production applications with routing and rendering built in.', tech: ['React', 'TypeScript', 'Node.js'], live: 'https://nextjs.org', image: GITHUB_IMAGE },
-  { slug: 'vitejs/vite', title: 'Vite', description: 'A fast frontend tooling experience for modern web projects.', tech: ['JavaScript', 'Rollup', 'ESM'], live: 'https://vite.dev', image: GITHUB_IMAGE },
-  { slug: 'withastro/astro', title: 'Astro', description: 'A content-focused web framework for building fast, flexible websites.', tech: ['JavaScript', 'Islands', 'SSR'], live: 'https://astro.build', image: GITHUB_IMAGE },
-  { slug: 'mrdoob/three.js', title: 'Three.js', description: 'A JavaScript 3D library that makes it easier to create animated scenes.', tech: ['WebGL', 'JavaScript', '3D'], live: 'https://threejs.org', image: GITHUB_IMAGE },
-  { slug: 'honojs/hono', title: 'Hono', description: 'A small, simple, and ultrafast web framework for the edge.', tech: ['TypeScript', 'Edge', 'Web APIs'], live: 'https://hono.dev', image: GITHUB_IMAGE },
-  { slug: 'drizzle-team/drizzle-orm', title: 'Drizzle ORM', description: 'A lightweight TypeScript ORM with a SQL-like developer experience.', tech: ['TypeScript', 'SQL', 'ORM'], live: 'https://orm.drizzle.team', image: GITHUB_IMAGE },
-  { slug: 'trpc/trpc', title: 'tRPC', description: 'End-to-end typesafe APIs made easy for TypeScript applications.', tech: ['TypeScript', 'RPC', 'React'], live: 'https://trpc.io', image: GITHUB_IMAGE },
-  { slug: 'colinhacks/zod', title: 'Zod', description: 'TypeScript-first schema validation with static type inference.', tech: ['TypeScript', 'Validation', 'Schemas'], live: 'https://zod.dev', image: GITHUB_IMAGE },
-  { slug: 'tailwindlabs/tailwindcss', title: 'Tailwind CSS', description: 'A utility-first CSS framework for rapidly building custom interfaces.', tech: ['CSS', 'PostCSS', 'Design'], live: 'https://tailwindcss.com', image: GITHUB_IMAGE },
-  { slug: 'supabase/supabase', title: 'Supabase', description: 'An open source Firebase alternative built around PostgreSQL.', tech: ['PostgreSQL', 'Auth', 'Realtime'], live: 'https://supabase.com', image: GITHUB_IMAGE },
-  { slug: 'react-hook-form/react-hook-form', title: 'React Hook Form', description: 'Performant and flexible forms library for React applications.', tech: ['React', 'Forms', 'TypeScript'], live: 'https://react-hook-form.com', image: GITHUB_IMAGE },
-  { slug: 'TanStack/query', title: 'TanStack Query', description: 'Powerful asynchronous state management for web applications.', tech: ['React', 'Caching', 'State'], live: 'https://tanstack.com/query', image: GITHUB_IMAGE },
-  { slug: 'lucide-icons/lucide', title: 'Lucide', description: 'Beautiful and consistent open source icons for modern products.', tech: ['SVG', 'Icons', 'React'], live: 'https://lucide.dev', image: GITHUB_IMAGE },
-  { slug: 'motiondivision/motion', title: 'Motion', description: 'A production-ready animation library for React and the web.', tech: ['React', 'Animation', 'UI'], live: 'https://motion.dev', image: GITHUB_IMAGE },
-  { slug: 'pmndrs/zustand', title: 'Zustand', description: 'A small, fast, and scalable state management solution for React.', tech: ['React', 'State', 'Hooks'], live: 'https://zustand.docs.pmnd.rs', image: GITHUB_IMAGE },
-  { slug: 'saadeghi/daisyui', title: 'daisyUI', description: 'Tailwind CSS component classes for building interfaces faster.', tech: ['Tailwind', 'CSS', 'Components'], live: 'https://daisyui.com', image: GITHUB_IMAGE },
-  { slug: 'microsoft/playwright', title: 'Playwright', description: 'Reliable end-to-end testing for modern web applications.', tech: ['Testing', 'Browser', 'Automation'], live: 'https://playwright.dev', image: GITHUB_IMAGE },
-  { slug: 'storybookjs/storybook', title: 'Storybook', description: 'Build, test, and document UI components in isolation.', tech: ['React', 'Testing', 'Components'], live: 'https://storybook.js.org', image: GITHUB_IMAGE },
-  { slug: 'eslint/eslint', title: 'ESLint', description: 'Find and fix problems in JavaScript and TypeScript code.', tech: ['JavaScript', 'Linting', 'Tooling'], live: 'https://eslint.org', image: GITHUB_IMAGE },
-  { slug: 'prettier/prettier', title: 'Prettier', description: 'An opinionated code formatter that keeps projects consistent.', tech: ['Formatting', 'JavaScript', 'DX'], live: 'https://prettier.io', image: GITHUB_IMAGE },
-  { slug: 'fastapi/fastapi', title: 'FastAPI', description: 'A modern, fast web framework for building APIs with Python.', tech: ['Python', 'API', 'Async'], live: 'https://fastapi.tiangolo.com', image: GITHUB_IMAGE },
-  { slug: 'pandas-dev/pandas', title: 'Pandas', description: 'Powerful data structures and analysis tools for Python.', tech: ['Python', 'Data', 'Analytics'], live: 'https://pandas.pydata.org', image: GITHUB_IMAGE },
-  { slug: 'opencv/opencv', title: 'OpenCV', description: 'Open source computer vision and machine learning software library.', tech: ['C++', 'Python', 'Computer Vision'], live: 'https://opencv.org', image: GITHUB_IMAGE },
+  { slug: 'shadcn-ui/ui', title: 'shadcn/ui', description: 'Beautifully designed React components that you can copy and customize.', tech: ['React', 'TypeScript', 'Tailwind'], live: 'https://ui.shadcn.com', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'vercel/next.js', title: 'Next.js', description: 'The React framework for production applications with routing and rendering built in.', tech: ['React', 'TypeScript', 'Node.js'], live: 'https://nextjs.org', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'vitejs/vite', title: 'Vite', description: 'A fast frontend tooling experience for modern web projects.', tech: ['JavaScript', 'Rollup', 'ESM'], live: 'https://vite.dev', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'withastro/astro', title: 'Astro', description: 'A content-focused web framework for building fast, flexible websites.', tech: ['JavaScript', 'Islands', 'SSR'], live: 'https://astro.build', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'mrdoob/three.js', title: 'Three.js', description: 'A JavaScript 3D library that makes it easier to create animated scenes.', tech: ['WebGL', 'JavaScript', '3D'], live: 'https://threejs.org', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'honojs/hono', title: 'Hono', description: 'A small, simple, and ultrafast web framework for the edge.', tech: ['TypeScript', 'Edge', 'Web APIs'], live: 'https://hono.dev', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'drizzle-team/drizzle-orm', title: 'Drizzle ORM', description: 'A lightweight TypeScript ORM with a SQL-like developer experience.', tech: ['TypeScript', 'SQL', 'ORM'], live: 'https://orm.drizzle.team', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'trpc/trpc', title: 'tRPC', description: 'End-to-end typesafe APIs made easy for TypeScript applications.', tech: ['TypeScript', 'RPC', 'React'], live: 'https://trpc.io', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'colinhacks/zod', title: 'Zod', description: 'TypeScript-first schema validation with static type inference.', tech: ['TypeScript', 'Validation', 'Schemas'], live: 'https://zod.dev', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'tailwindlabs/tailwindcss', title: 'Tailwind CSS', description: 'A utility-first CSS framework for rapidly building custom interfaces.', tech: ['CSS', 'PostCSS', 'Design'], live: 'https://tailwindcss.com', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'supabase/supabase', title: 'Supabase', description: 'An open source Firebase alternative built around PostgreSQL.', tech: ['PostgreSQL', 'Auth', 'Realtime'], live: 'https://supabase.com', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'react-hook-form/react-hook-form', title: 'React Hook Form', description: 'Performant and flexible forms library for React applications.', tech: ['React', 'Forms', 'TypeScript'], live: 'https://react-hook-form.com', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'TanStack/query', title: 'TanStack Query', description: 'Powerful asynchronous state management for web applications.', tech: ['React', 'Caching', 'State'], live: 'https://tanstack.com/query', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'lucide-icons/lucide', title: 'Lucide', description: 'Beautiful and consistent open source icons for modern products.', tech: ['SVG', 'Icons', 'React'], live: 'https://lucide.dev', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'motiondivision/motion', title: 'Motion', description: 'A production-ready animation library for React and the web.', tech: ['React', 'Animation', 'UI'], live: 'https://motion.dev', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'pmndrs/zustand', title: 'Zustand', description: 'A small, fast, and scalable state management solution for React.', tech: ['React', 'State', 'Hooks'], live: 'https://zustand.docs.pmnd.rs', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'saadeghi/daisyui', title: 'daisyUI', description: 'Tailwind CSS component classes for building interfaces faster.', tech: ['Tailwind', 'CSS', 'Components'], live: 'https://daisyui.com', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'microsoft/playwright', title: 'Playwright', description: 'Reliable end-to-end testing for modern web applications.', tech: ['Testing', 'Browser', 'Automation'], live: 'https://playwright.dev', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'storybookjs/storybook', title: 'Storybook', description: 'Build, test, and document UI components in isolation.', tech: ['React', 'Testing', 'Components'], live: 'https://storybook.js.org', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'eslint/eslint', title: 'ESLint', description: 'Find and fix problems in JavaScript and TypeScript code.', tech: ['JavaScript', 'Linting', 'Tooling'], live: 'https://eslint.org', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'prettier/prettier', title: 'Prettier', description: 'An opinionated code formatter that keeps projects consistent.', tech: ['Formatting', 'JavaScript', 'DX'], live: 'https://prettier.io', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'fastapi/fastapi', title: 'FastAPI', description: 'A modern, fast web framework for building APIs with Python.', tech: ['Python', 'API', 'Async'], live: 'https://fastapi.tiangolo.com', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'pandas-dev/pandas', title: 'Pandas', description: 'Powerful data structures and analysis tools for Python.', tech: ['Python', 'Data', 'Analytics'], live: 'https://pandas.pydata.org', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
+  { slug: 'opencv/opencv', title: 'OpenCV', description: 'Open source computer vision and machine learning software library.', tech: ['C++', 'Python', 'Computer Vision'], live: 'https://opencv.org', image: 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/GITHUB.png' },
 ];
 
 const NAV_ITEMS: { label: string; Icon: LucideIcon }[] = [
@@ -3917,9 +3918,11 @@ export default function App() {
                       draggable={false}
                       onError={(event) => {
                         const img = event.currentTarget;
-                        if (img.dataset.fallback) { img.style.display = 'none'; return; }
-                        img.dataset.fallback = '1';
-                        img.src = GITHUB_PREVIEW(repo.slug);
+                        const step = Number(img.dataset.fallback ?? 0);
+                        img.dataset.fallback = String(step + 1);
+                        if (step === 0 && repo.image !== GITHUB_IMAGE) img.src = GITHUB_IMAGE;
+                        else if (step <= 1) img.src = GITHUB_PREVIEW(repo.slug);
+                        else img.style.display = 'none';
                       }}
                     />
                   </div>
