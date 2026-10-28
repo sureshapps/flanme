@@ -2133,15 +2133,32 @@ export default function App() {
     const code = root.querySelector<HTMLElement>('.title-code');
     const sub = root.querySelector<HTMLElement>('.title-sub');
     if (!code || !sub) return;
+    // wait for the CDN font so the title is split and measured with the real Talaga Lakes glyphs (2.5s safety timeout)
+    const fontReady = Promise.race([
+      document.fonts.load('400 1em "Talaga Lakes"', 'Code').catch(() => undefined),
+      new Promise((resolve) => window.setTimeout(resolve, 2500)),
+    ]);
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
-      const split = SplitText.create(code, { type: 'chars', mask: 'chars', charsClass: 'title-char' });
-      gsap.set(sub, { opacity: 0 });
-      const tl = gsap.timeline({ delay: 0.2 });
-      tl.from(split.chars, { yPercent: 120, rotation: 8, duration: 0.9, ease: 'power4.out', stagger: { each: 0.07, from: 'start' } })
-        .to(sub, { opacity: 1, duration: 0.2 }, 0.55)
-        .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0.55);
-      return () => split.revert();
+      let dead = false;
+      let split: SplitText | undefined;
+      let tl: gsap.core.Timeline | undefined;
+      gsap.set([code, sub], { opacity: 0 });
+      void fontReady.then(() => {
+        if (dead) return;
+        gsap.set(code, { opacity: 1 });
+        split = SplitText.create(code, { type: 'chars', mask: 'chars', charsClass: 'title-char' });
+        tl = gsap.timeline({ delay: 0.1 });
+        tl.from(split.chars, { yPercent: 120, rotation: 8, duration: 0.9, ease: 'power4.out', stagger: { each: 0.07, from: 'start' } })
+          .to(sub, { opacity: 1, duration: 0.2 }, 0.55)
+          .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0.55);
+      });
+      return () => {
+        dead = true;
+        tl?.kill();
+        split?.revert();
+        gsap.set([code, sub], { clearProps: 'opacity' });
+      };
     }, root);
     return () => media.revert();
   }, [siteReady]);
@@ -2549,7 +2566,7 @@ export default function App() {
   return (
     <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" data-site={siteReady ? 'ready' : 'loading'} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
-   @import url('https://fonts.cdnfonts.com/css/talaga-lakes');             
+        @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
         @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
         @import url('https://fonts.cdnfonts.com/css/ngopie');
@@ -2561,7 +2578,8 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
         @font-face { font-family: 'SuperGuardianBackup'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://fonts.cdnfonts.com/s/106144/SuperGuardian-MV1Ap.woff') format('woff'); }
         .title-code {
-        font-family: 'Talaga Lakes', sans-serif;                            
+          font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
+          font-synthesis: none;
           font-weight: 400;
           font-size: clamp(5rem, 10vw, 10rem);
           line-height: 1;
