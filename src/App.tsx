@@ -2549,7 +2549,7 @@ export default function App() {
   return (
     <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" data-site={siteReady ? 'ready' : 'loading'} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
-        @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
+   @import url('https://fonts.cdnfonts.com/css/talaga-lakes');             
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
         @import url('https://fonts.cdnfonts.com/css/galiver-sans-obliques');
         @import url('https://fonts.cdnfonts.com/css/ngopie');
