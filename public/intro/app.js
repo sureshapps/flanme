@@ -6,6 +6,8 @@ await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));
 const image=new Image();image.src='assets/suresh.png';await image.decode();
 const audio=new ChromeScore('assets/chrome-score.wav'),sound=$('#sound');
 let soundEnabled=false,firstSound=true;
+// Same key as the main page, so Sound ON/OFF chosen here carries over (and the main page's choice is respected)
+const SFX_KEY='sfx-enabled';const remember=on=>{try{localStorage.setItem(SFX_KEY,on?'on':'off')}catch(e){}};
 function soundUI(){sound.setAttribute('aria-pressed',String(soundEnabled));sound.setAttribute('aria-label',soundEnabled?'Mute music':'Enable music'+(firstSound?' and replay animation':''));$('#sound-label').textContent=soundEnabled?'SOUND ON':'SOUND OFF';}
 function syncAudio(){
     audio.sync(tl.time(),soundEnabled&&!tl.paused()&&tl.progress()<1);
@@ -43,13 +45,14 @@ $('#seek').oninput=e=>{tl.pause().progress(Number(e.target.value)/1000);syncButt
 function syncButton(){$('#play').textContent=tl.paused()?'▶':'Ⅱ';$('#play').setAttribute('aria-label',tl.paused()?'Play animation':'Pause animation');syncAudio()}
 sound.disabled=false;
 sound.onclick=async()=>{
-    if(soundEnabled){soundEnabled=false;audio.mute();soundUI();return;}
+    if(soundEnabled){soundEnabled=false;audio.mute();remember(false);soundUI();return;}
     sound.disabled=true;sound.setAttribute('aria-busy','true');$('#sound-label').textContent='LOADING';
-    try{await audio.enable();soundEnabled=true;if(firstSound||tl.progress()===1){firstSound=false;tl.restart();syncButton()}soundUI();syncAudio()}
+    try{await audio.enable();soundEnabled=true;remember(true);if(firstSound||tl.progress()===1){firstSound=false;tl.restart();syncButton()}soundUI();syncAudio()}
     catch(error){console.error(error);soundEnabled=false;audio.mute();soundUI();$('#sound-label').textContent='RETRY SOUND'}
     finally{sound.disabled=false;sound.removeAttribute('aria-busy')}
 };
 document.addEventListener('visibilitychange',()=>{if(document.hidden){tl.pause();syncButton()}});
+addEventListener('pagehide',()=>audio.stop());
 document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('#play').click()}});
 if(matchMedia('(prefers-reduced-motion: reduce)').matches){tl.progress(1).pause();syncButton()}else tl.play();update();
 }
