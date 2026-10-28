@@ -1934,25 +1934,25 @@ const RIPPLE_FS = [
   ' float click=0.;',
   ' for(int i=0;i<6;i++){click=max(click,uR[i].w);}',
   ' float beat=exp(-fract(uTime*2.1)*5.5);',
-  ' float pulse=max(click,beat*.6)*(1.-.9*uCalm);',
+  ' float pulse=max(click*.6,beat*.25)*(1.-.9*uCalm);',
   ' vec2 p=v;',
-  ' float pk=click*.25*(1.-uCalm);',
+  ' float pk=click*.08*(1.-uCalm);',
   ' if(pk>.02){float g=mix(1200.,70.,pk);vec2 cell=vec2(g,g*uRes.y/uRes.x);p=(floor(p*cell)+.5)/cell;}',
   ' float t=floor(uTime*14.);',
-  ' float on=(step(.8,h(vec2(t,7.)))*.8+pulse*.9)*1.2*(1.-.9*uCalm);',
+  ' float on=(step(.94,h(vec2(t,7.)))*.5+pulse*.5)*(1.-.9*uCalm);',
   ' float band=floor(p.y*mix(10.,40.,h(vec2(t,2.))));',
-  ' p.x+=(h(vec2(band,t+3.))-.5)*.16*on*step(.55,h(vec2(band,t)));',
-  ' p.y+=step(.93,h(vec2(t,11.)))*(h(vec2(t,5.))-.5)*.05*(1.-uCalm);',
+  ' p.x+=(h(vec2(band,t+3.))-.5)*.05*on*step(.55,h(vec2(band,t)));',
+  ' p.y+=step(.93,h(vec2(t,11.)))*(h(vec2(t,5.))-.5)*.012*(1.-uCalm);',
   ' float s=max(uRes.x/uImg.x,uRes.y/uImg.y);vec2 size=uImg*s;',
   ' vec2 uv=(p-.5)*uRes/size/uZoom+.5+uOff;',
-  ' float amt=1.2*(.0025+.010*pulse+.012*on)+uLight*.0012;',
+  ' float amt=.0012+.004*pulse+.005*on+uLight*.0006;',
   ' vec2 off=(p-.5)*amt*6.+vec2(amt,0.);',
   ' vec3 c=vec3(texture2D(uTex,uv+off).r,texture2D(uTex,uv).g,texture2D(uTex,uv-off).b);',
-  ' c*=1.-.14*(.5+.5*sin(v.y*uRes.y*1.6));',
-  ' c+=(h(v*uRes+uTime)-.5)*.06;',
+  ' c*=1.-.07*(.5+.5*sin(v.y*uRes.y*1.6));',
+  ' c+=(h(v*uRes+uTime)-.5)*.03;',
   ' float dl=length((v-uMouse)*asp);float g2=exp(-dl*dl*7.)*uLight;',
   ' c+=c*g2*.25+vec3(1.,.72,.38)*g2*.04;',
-  ' c+=pulse*.05;',
+  ' c+=pulse*.02;',
   ' c=(c-.5)*1.08+.5;',
   ' c*=1.-.35*smoothstep(.55,1.15,length((v-.5)*asp));',
   ' gl_FragColor=vec4(c*uFade,1.);}',
@@ -3766,6 +3766,7 @@ export default function App() {
           <rect width="100%" height="100%" fill="url(#hero-grid)" />
         </svg>
         <RippleBackground src={phone ? BG_IMAGE_MOBILE_1 : BG_IMAGE_1} />
+        <div className="pointer-events-none absolute inset-0 z-20 bg-black/45" aria-hidden="true" />
         <div ref={revealRef} className="hidden" aria-hidden="true" />
         <canvas ref={canvasRef} hidden aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
