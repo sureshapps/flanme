@@ -3,9 +3,7 @@ import gsap from 'gsap';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 import BG_IMAGE_1 from './assets/background-1-desktop.webp';
-import BG_IMAGE_2 from './assets/background-2-desktop.webp';
 import BG_IMAGE_MOBILE_1 from './assets/background-1-mobile.webp';
-import BG_IMAGE_MOBILE_2 from './assets/background-2-mobile.webp';
 import NAV_ICON from './assets/nav-logo.webp';
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
@@ -2130,6 +2128,194 @@ function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => 
   );
 }
 
+/* Hero background: WebGL image with click/hold water ripples, a soft cursor light and gentle parallax.
+   Swap the image by changing the imports at the top of the file. */
+const RIPPLE_VS = 'attribute vec2 a;varying vec2 v;void main(){v=a*.5+.5;gl_Position=vec4(a,0.,1.);}';
+const RIPPLE_FS = [
+  '#ifdef GL_FRAGMENT_PRECISION_HIGH', 'precision highp float;', '#else', 'precision mediump float;', '#endif',
+  'varying vec2 v;uniform sampler2D uTex;uniform vec2 uRes,uImg,uOff,uMouse;uniform float uZoom,uTime,uLight,uFade;uniform vec4 uR[6];',
+  'void main(){',
+  ' vec2 asp=vec2(uRes.x/uRes.y,1.);vec2 p=v;vec2 disp=vec2(0.);float hi=0.;',
+  ' for(int i=0;i<6;i++){vec4 r=uR[i];if(r.w>0.){',
+  '  vec2 d=(p-r.xy)*asp;float dist=length(d);float rad=r.z*.62;',
+  '  float w=exp(-pow((dist-rad)/.11,2.))*r.w;',
+  '  float ph=(dist-rad)*34.;',
+  '  disp+=normalize(d+1e-5)/asp*sin(ph)*w*.011;hi+=cos(ph)*w;}}',
+  ' float s=max(uRes.x/uImg.x,uRes.y/uImg.y);vec2 size=uImg*s;',
+  ' vec2 uv=(p-.5)*uRes/size/uZoom+.5+uOff;',
+  ' vec3 c=vec3(texture2D(uTex,uv+disp*1.25).r,texture2D(uTex,uv+disp).g,texture2D(uTex,uv+disp*.75).b);',
+  ' c+=c*hi*.22+vec3(1.,.85,.6)*max(hi,0.)*.05;',
+  ' float dl=length((p-uMouse)*asp);float g=exp(-dl*dl*7.)*uLight;float core=exp(-dl*dl*60.)*uLight;',
+  ' c+=c*g*.6+vec3(1.,.72,.38)*(g*.14+core*.12);',
+  ' c*=1.-.28*smoothstep(.55,1.15,length((p-.5)*asp));',
+  ' c*=.97+.03*sin(uTime*.6);',
+  ' gl_FragColor=vec4(c*uFade,1.);}',
+].join('\n');
+
+function RippleBackground({ src }: { src: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const gl = (canvas.getContext('webgl', { antialias: false, alpha: false }) ?? canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    if (!gl) { canvas.style.display = 'none'; return; }
+
+    const compile = (type: number, source: string) => {
+      const shader = gl.createShader(type)!;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    };
+    const program = gl.createProgram()!;
+    gl.attachShader(program, compile(gl.VERTEX_SHADER, RIPPLE_VS));
+    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, RIPPLE_FS));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { canvas.style.display = 'none'; return; }
+    gl.useProgram(program);
+
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const attr = gl.getAttribLocation(program, 'a');
+    gl.enableVertexAttribArray(attr);
+    gl.vertexAttribPointer(attr, 2, gl.FLOAT, false, 0, 0);
+    const U: Record<string, WebGLUniformLocation | null> = {};
+    ['uTex', 'uRes', 'uImg', 'uOff', 'uMouse', 'uZoom', 'uTime', 'uLight', 'uFade', 'uR'].forEach((n) => { U[n] = gl.getUniformLocation(program, n); });
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const st = { offX: 0, offY: 0, parX: 0, parY: 0, mx: 0.3, my: 0.55, light: 0.45, zoom: 1.16, fade: 0 };
+    const goal = { mx: 0.3, my: 0.55, px: 0, py: 0 };
+    const ripples = Array.from({ length: 6 }, () => ({ x: 0, y: 0, t: -99 }));
+    const LIFE = 3.6;
+    const rbuf = new Float32Array(24);
+    let ri = 0;
+    let ready = false;
+    let imgW = 1;
+    let imgH = 1;
+    let frame = 0;
+    let holding: number | null = null;
+    let px = 0.5;
+    let py = 0.5;
+    const tex = gl.createTexture();
+
+    const resize = () => {
+      const d = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(window.innerWidth * d);
+      canvas.height = Math.round(window.innerHeight * d);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const spawn = (x: number, y: number) => {
+      const r = ripples[ri];
+      ri = (ri + 1) % 6;
+      r.x = x; r.y = y; r.t = performance.now() / 1000;
+    };
+
+    const tweens: gsap.core.Tween[] = [];
+    const to = (vars: gsap.TweenVars) => { const t = gsap.to(st, vars); tweens.push(t); return t; };
+
+    const render = () => {
+      frame = requestAnimationFrame(render);
+      if (!ready) return;
+      st.mx += (goal.mx - st.mx) * 0.12;
+      st.my += (goal.my - st.my) * 0.12;
+      st.parX += (goal.px - st.parX) * 0.06;
+      st.parY += (goal.py - st.parY) * 0.06;
+      const now = performance.now() / 1000;
+      for (let i = 0; i < 6; i += 1) {
+        const r = ripples[i];
+        const age = now - r.t;
+        const k = age < LIFE ? (1 - age / LIFE) ** 2 : 0;
+        rbuf[i * 4] = r.x; rbuf[i * 4 + 1] = r.y; rbuf[i * 4 + 2] = Math.max(age, 0); rbuf[i * 4 + 3] = k;
+      }
+      gl.uniform2f(U.uRes, canvas.width, canvas.height);
+      gl.uniform2f(U.uImg, imgW, imgH);
+      gl.uniform2f(U.uOff, st.offX + st.parX, st.offY + st.parY);
+      gl.uniform2f(U.uMouse, st.mx, st.my);
+      gl.uniform1f(U.uZoom, st.zoom);
+      gl.uniform1f(U.uTime, now);
+      gl.uniform1f(U.uLight, st.light);
+      gl.uniform1f(U.uFade, st.fade);
+      gl.uniform4fv(U.uR, rbuf);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    frame = requestAnimationFrame(render);
+
+    const img = new Image();
+    img.onload = () => {
+      imgW = img.naturalWidth; imgH = img.naturalHeight;
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.uniform1i(U.uTex, 0);
+      ready = true;
+      to({ fade: 1, duration: reduce ? 0.01 : 1.4, ease: 'power2.out' });
+      to({ zoom: 1.07, duration: reduce ? 0.01 : 2.8, ease: 'expo.out' });
+      if (!reduce) {
+        to({ offX: 0.011, duration: 9, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+        to({ offY: -0.008, duration: 12, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+        to({ zoom: 1.085, duration: 15, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 3 });
+      }
+    };
+    img.src = src;
+
+    const track = (e: PointerEvent) => {
+      px = e.clientX / window.innerWidth;
+      py = 1 - e.clientY / window.innerHeight;
+      goal.mx = px; goal.my = py;
+      if (!reduce) { goal.px = (px - 0.5) * -0.016; goal.py = (py - 0.5) * -0.016; }
+    };
+    const onMove = (e: PointerEvent) => { track(e); gsap.to(st, { light: 1, duration: 0.6, overwrite: 'auto' }); };
+    const release = () => {
+      if (holding !== null) window.clearInterval(holding);
+      holding = null;
+      gsap.to(st, { light: 1, duration: 0.9, ease: 'power2.out', overwrite: 'auto' });
+    };
+    const onDown = (e: PointerEvent) => {
+      track(e); st.mx = px; st.my = py;
+      gsap.to(st, { light: 1.5, duration: 0.35, overwrite: 'auto' });
+      spawn(px, py);
+      if (holding !== null) window.clearInterval(holding);
+      holding = window.setInterval(() => spawn(px, py), 420);
+    };
+    const onLeave = () => { release(); gsap.to(st, { light: 0.45, duration: 1.2 }); };
+    const onVis = () => { if (document.hidden) release(); };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    document.addEventListener('pointerleave', onLeave);
+    document.addEventListener('visibilitychange', onVis);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      if (holding !== null) window.clearInterval(holding);
+      tweens.forEach((t) => t.kill());
+      gsap.killTweensOf(st);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+      document.removeEventListener('pointerleave', onLeave);
+      document.removeEventListener('visibilitychange', onVis);
+      gl.deleteTexture(tex);
+      gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+    };
+  }, [src]);
+
+  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-10 h-full w-full" aria-hidden="true" />;
+}
+
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [effectsOn, setEffectsOn] = useState(() => sfx.isEnabled());
@@ -3798,8 +3984,8 @@ export default function App() {
           </defs>
           <rect width="100%" height="100%" fill="url(#hero-grid)" />
         </svg>
-        <div className="ken-burns absolute inset-0 z-10 bg-cover bg-center" style={{ backgroundImage: `url("${phone ? BG_IMAGE_MOBILE_1 : BG_IMAGE_1}")` }} aria-hidden="true" />
-        <div ref={revealRef} className="pointer-events-none absolute inset-0 z-30 bg-cover bg-center" style={{ backgroundImage: `url("${phone ? BG_IMAGE_MOBILE_2 : BG_IMAGE_2}")`, maskImage: 'linear-gradient(transparent, transparent)', WebkitMaskImage: 'linear-gradient(transparent, transparent)', maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} aria-hidden="true" />
+        <RippleBackground src={phone ? BG_IMAGE_MOBILE_1 : BG_IMAGE_1} />
+        <div ref={revealRef} className="hidden" aria-hidden="true" />
         <canvas ref={canvasRef} hidden aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
