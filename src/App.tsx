@@ -3494,7 +3494,7 @@ export default function App() {
         .dock-link span:last-child { transition: transform .25s; }
         .dock-link:hover span:last-child { transform: translate(3px,-3px); }
         .dock-contact { border: 0; background: transparent; color: #ffdebd; font: inherit; font-size: 10px; padding: 18px 0 0; cursor: pointer; }
-        .sound-preference { position: fixed; z-index: 71; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 6px 10px; color: white; font: inherit; font-size: 7px; cursor: pointer; }
+        .sound-preference { position: fixed; z-index: 71; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 4px 10px; color: white; font: inherit; font-size: 6px; cursor: pointer; }
         .sound-preference:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 3px; }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
         .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
