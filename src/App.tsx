@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
@@ -57,6 +57,7 @@ const sfx = (() => {
   let lastHover = 0;
   let lastScrub = 0;
   let quietMenuUntil = 0;
+  const listeners = new Set<() => void>(); // components that must follow the master sound switch (music, video, voice)
   try {
     if (typeof window !== 'undefined') enabled = window.localStorage.getItem(SFX_STORAGE_KEY) !== 'off';
   } catch { /* storage blocked: sound stays on */ }
@@ -521,10 +522,18 @@ const sfx = (() => {
     // called when a menu item (or the Jom Connect button) closes the menu itself, so its own sound isn't doubled
     quietMenuClose: () => { quietMenuUntil = performance.now() + 250; },
     isEnabled: () => enabled,
+    // one master switch: off silences the interface sounds, the music player, the intro video, the robot's voice and gallery media
+    subscribe: (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
     setEnabled: (value: boolean) => {
       enabled = value;
       try { window.localStorage.setItem(SFX_STORAGE_KEY, value ? 'on' : 'off'); } catch { /* storage blocked */ }
-      if (value) unlock();
+      if (value) {
+        unlock();
+      } else {
+        if (graph) graph.c.suspend().catch(() => {}); // cut any sound that is still ringing out
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch { /* no speech engine */ }
+      }
+      listeners.forEach((fn) => fn());
     },
   };
 })();
@@ -607,6 +616,11 @@ function useUiSounds(rootRef: { readonly current: HTMLElement | null }) {
       root.removeEventListener('click', onClick, true);
     };
   }, [rootRef]);
+}
+
+// true while sound is on; re-renders the component whenever the master Sound switch flips
+function useSoundEnabled() {
+  return useSyncExternalStore(sfx.subscribe, sfx.isEnabled, () => true);
 }
 
 // plays the open / close sound whenever a menu, panel or popup changes state (never on first render)
@@ -747,9 +761,16 @@ function GalleryThumb({ item }: { item: GalleryEntry }) {
 
 function LightboxMedia({ item }: { item: GalleryEntry }) {
   const [failed, setFailed] = useState(false);
+  const soundOn = useSoundEnabled();
+  const videoEl = useRef<HTMLVideoElement>(null);
+  const [mutedAtOpen] = useState(() => !sfx.isEnabled()); // embeds can't be muted from outside, so they start muted when Sound is off
+  useEffect(() => {
+    if (videoEl.current) videoEl.current.muted = !soundOn;
+  }, [soundOn, failed]);
   const { media } = item;
   if (media.kind === 'youtube' || media.kind === 'vimeo') {
-    return <iframe className="lb-frame" src={media.embed} title={item.title} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen />;
+    const embed = mutedAtOpen ? `${media.embed}&${media.kind === 'youtube' ? 'mute=1' : 'muted=1'}` : media.embed;
+    return <iframe className="lb-frame" src={embed} title={item.title} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen />;
   }
   if (media.kind === 'video') {
     return failed ? (
@@ -758,7 +779,7 @@ function LightboxMedia({ item }: { item: GalleryEntry }) {
         <a href={item.src} target="_blank" rel="noopener noreferrer">Open or download it</a>
       </div>
     ) : (
-      <video className="lb-media" src={item.src} controls autoPlay playsInline onError={() => setFailed(true)} />
+      <video ref={videoEl} className="lb-media" src={item.src} controls autoPlay playsInline muted={!soundOn} onError={() => setFailed(true)} />
     );
   }
   return <img className="lb-media" src={item.src} alt={item.title} draggable={false} />;
@@ -1184,6 +1205,13 @@ function MusicPlayer() {
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const song = songs[index];
+  const soundOn = useSoundEnabled();
+
+  // master Sound switch: off = the player is silent (it keeps its place, so turning sound on again continues the song)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) audio.muted = !soundOn;
+  }, [soundOn, song]);
 
   // autoplay whenever the track changes
   useEffect(() => {
@@ -1240,6 +1268,7 @@ function MusicPlayer() {
           ref={audioRef}
           src={song.src}
           preload="none"
+          muted={!soundOn}
           loop={repeat}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
@@ -1597,6 +1626,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     const speak = (reply: { text?: string; audio?: string; lang?: string }) => {
       const text = reply.text?.slice(0, 280);
       if (text) emitSpeech(text, Math.min(14000, Math.max(3000, text.length * 70)));
+      if (!sfx.isEnabled()) return; // sound is off: the reply is shown as text only
       if (reply.audio) {
         const audio = new Audio(reply.audio);
         voice = audio;
@@ -1734,6 +1764,14 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       if (Math.hypot(dx, dy) < r.width * 0.3) onClick();
     };
     window.addEventListener('click', onWindowClick);
+    // turning sound off while the robot is talking cuts the voice at once
+    const unsubSound = sfx.subscribe(() => {
+      if (sfx.isEnabled()) return;
+      voice?.pause();
+      voice = null;
+      speaking = false;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    });
     frame = requestAnimationFrame(draw);
 
     return () => {
@@ -1744,6 +1782,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       window.removeEventListener('blur', onLeave);
       window.removeEventListener('click', onWindowClick);
       timers.forEach((id) => window.clearTimeout(id));
+      unsubSound();
       webhookAbort?.abort();
       voice?.pause();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -2125,7 +2164,7 @@ function RippleBackground({ src }: { src: string }) {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [effectsOn, setEffectsOn] = useState(() => sfx.isEnabled());
+  const effectsOn = useSoundEnabled(); // master Sound switch (interface sounds, music, video, robot voice)
   const siteReady = true;
   const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
@@ -2368,8 +2407,8 @@ export default function App() {
   }, [infoOpen]);
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = !soundOn;
-  }, [soundOn]);
+    if (videoRef.current) videoRef.current.muted = !(soundOn && effectsOn); // the master switch overrides the video's own button
+  }, [soundOn, effectsOn]);
 
   function loadProjects() {
     setProjectsState('loading');
@@ -3604,11 +3643,14 @@ export default function App() {
               <button
                 type="button"
                 className="info-sound"
-                aria-label={soundOn ? 'Mute video' : 'Unmute video'}
+                aria-label={soundOn && effectsOn ? 'Mute video' : 'Unmute video'}
                 data-sfx={soundOn ? 'toggleOff' : 'toggleOn'}
+                disabled={!effectsOn}
+                title={effectsOn ? undefined : 'Turn Sound on first'}
+                style={effectsOn ? undefined : { opacity: 0.45 }}
                 onClick={(event) => { event.stopPropagation(); setSoundOn((on) => !on); }}
               >
-                {soundOn ? <Volume2 size={13} strokeWidth={2} /> : <VolumeX size={13} strokeWidth={2} />}
+                {soundOn && effectsOn ? <Volume2 size={13} strokeWidth={2} /> : <VolumeX size={13} strokeWidth={2} />}
               </button>
             </div>
           </div>
@@ -3812,7 +3854,7 @@ export default function App() {
               </span>
             </button>
               <div className="mt-5 flex justify-start sm:mt-6">
-                <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
+                <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => sfx.setEnabled(!effectsOn)}>
                   <span className="fx-layer" aria-hidden="true" />{effectsOn ? <Volume2 size={10} /> : <VolumeX size={10} />}<span>Sound</span>
                 </button>
               </div>
