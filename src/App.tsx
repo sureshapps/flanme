@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
+import { SplitText } from 'gsap/SplitText';
+import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 import BG_IMAGE_1 from './assets/background-1-desktop.webp';
 import BG_IMAGE_MOBILE_1 from './assets/background-1-mobile.webp';
 import NAV_ICON from './assets/nav-logo.webp';
+gsap.registerPlugin(SplitText, ScrambleTextPlugin);
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
 const DEVOPS_ICON = '/devops.svg';
@@ -2123,6 +2126,26 @@ export default function App() {
   }, []);
 
 
+  // hero title: "Code" splits into characters (SplitText), "Beyond Limits." decodes itself (ScrambleText)
+  useLayoutEffect(() => {
+    const root = appRef.current;
+    if (!root || !siteReady) return;
+    const code = root.querySelector<HTMLElement>('.title-code');
+    const sub = root.querySelector<HTMLElement>('.title-sub');
+    if (!code || !sub) return;
+    const media = gsap.matchMedia();
+    media.add('(prefers-reduced-motion: no-preference)', () => {
+      const split = SplitText.create(code, { type: 'chars', mask: 'chars', charsClass: 'title-char' });
+      gsap.set(sub, { opacity: 0 });
+      const tl = gsap.timeline({ delay: 0.2 });
+      tl.from(split.chars, { yPercent: 120, rotation: 8, duration: 0.9, ease: 'power4.out', stagger: { each: 0.07, from: 'start' } })
+        .to(sub, { opacity: 1, duration: 0.2 }, 0.55)
+        .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0.55);
+      return () => split.revert();
+    }, root);
+    return () => media.revert();
+  }, [siteReady]);
+
   useEffect(() => {
     const root = appRef.current;
     if (!root || !siteReady) return;
@@ -3494,7 +3517,7 @@ export default function App() {
         .dock-link span:last-child { transition: transform .25s; }
         .dock-link:hover span:last-child { transform: translate(3px,-3px); }
         .dock-contact { border: 0; background: transparent; color: #ffdebd; font: inherit; font-size: 10px; padding: 18px 0 0; cursor: pointer; }
-        .sound-preference { position: fixed; z-index: 71; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 4px 10px; color: white; font: inherit; font-size: 6px; cursor: pointer; }
+        .sound-preference { position: fixed; z-index: 71; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 8px 12px; color: white; font: inherit; font-size: 9px; cursor: pointer; }
         .sound-preference:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 3px; }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
         .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
@@ -3790,9 +3813,9 @@ export default function App() {
         <Statistics />
         <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
-          <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
+          <h1 id="hero-title" className="mb-6 sm:mb-8" style={{ visibility: siteReady ? 'visible' : 'hidden' }}>
             <span className="title-code block">Code</span>
-            <span className="title-sub -mt-1 block sm:-mt-2">Beyond Limits.</span>
+            <span className="title-sub -mt-1 block sm:-mt-2" aria-label="Beyond Limits.">Beyond Limits.</span>
           </h1>
           <div className="title hero-rise -mt-7 sm:-mt-10" style={{ animationDelay: '0.5s' }}>the digital signature of 	&nbsp; <span>Suresh</span></div>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
@@ -3822,7 +3845,7 @@ export default function App() {
       </main>
 
       <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
-        {effectsOn ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>Sound</span>
+        {effectsOn ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>Interface sound</span>
       </button>
       <ChatPopup open={chatOpen} onClose={() => setChatOpen(false)} onAction={chatAction} />
 
