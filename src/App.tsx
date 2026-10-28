@@ -3476,7 +3476,7 @@ export default function App() {
         .dock-link span:last-child { transition: transform .25s; }
         .dock-link:hover span:last-child { transform: translate(3px,-3px); }
         .dock-contact { border: 0; background: transparent; color: #ffdebd; font: inherit; font-size: 10px; padding: 18px 0 0; cursor: pointer; }
-        .sound-preference { position: fixed; z-index: 71; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 4px 9px; color: yellow; font: inherit; font-size: 6px; cursor: pointer; }
+        .sound-preference { position: relative; z-index: 71; display: flex; gap: 8px; align-items: center; border: 1px solid #ffffff30; padding: 4px 9px; color: yellow; font: inherit; font-size: 6px; cursor: pointer; }
         .sound-preference:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 3px; }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
         .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
@@ -3795,6 +3795,11 @@ export default function App() {
                 <Flame className="neon-fire" strokeWidth={1.8} />
               </span>
             </button>
+              <div className="mt-5 flex justify-center sm:mt-6">
+                <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
+                  {effectsOn ? <Volume2 size={10} /> : <VolumeX size={10} />}<span>Sound</span>
+                </button>
+              </div>
             <div className="pointer-events-none absolute left-full top-1/2 -mt-2 w-[100px] -translate-y-1/2 sm:w-[120px]">
               <RobotCard onTouch={() => setChatOpen(true)} />
             </div>
@@ -3802,9 +3807,6 @@ export default function App() {
         </section>
       </main>
 
-      <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
-        {effectsOn ? <Volume2 size={10} /> : <VolumeX size={10} />}<span>Sound</span>
-      </button>
       <ChatPopup open={chatOpen} onClose={() => setChatOpen(false)} onAction={chatAction} />
 
 
