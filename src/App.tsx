@@ -2,15 +2,15 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
-const BG_IMAGE_1 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img1.webp';
-const BG_IMAGE_2 = 'https://raw.githubusercontent.com/sureshapps/Skyra/refs/heads/main/public/Img2.webp';
-const NAV_ICON = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/nv.png';
+const BG_IMAGE_1 = '/hero/background-1-desktop.webp';
+const BG_IMAGE_2 = '/hero/background-2-desktop.webp';
+const NAV_ICON = '/nv.png';
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
 const DEVOPS_ICON = '/devops.svg';
 const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 // cover photo for the Jom Connect card; swap for your own portrait
-const CONNECT_COVER = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/me.webp';
+const CONNECT_COVER = '/me.webp';
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
 const NEON_URL = 'https://unpkg.com/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js';
@@ -24,7 +24,7 @@ const GLASS_ENV_HDR = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/roya
 // glass look (3D frame): tweak these two
 const GLASS_TINT = 0; // smoky body, 0 = fully clear, 0.3 = dark glass
 const GLASS_SHINE = 1.7; // reflection / shine strength, 0 = none, 3 = very glossy
-const GLASS_PHOTO = 'https://raw.githubusercontent.com/sureshapps/flanme/refs/heads/main/public/designer.webp';
+const GLASS_PHOTO = '/designer.webp';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
@@ -1445,7 +1445,7 @@ function MusicPlayer() {
         <audio
           ref={audioRef}
           src={song.src}
-          preload="auto"
+          preload="none"
           loop={repeat}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
@@ -1965,199 +1965,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
   );
 }
 
-/* ---------- Curtain preloader ----------
-   Two frosted-glass panels cover the site while GSAP animates asset preparation progress.
-   At 100 the panels slide apart with a sound effect and the site, already loaded behind the glass, is revealed.
-   GSAP updates the counter, needle and arc directly; React updates only the stage labels. */
-const CURTAIN_HOLD_MS = 450; // short pause at 100 before the panels open
-const CURTAIN_REMOVE_MS = 1700; // the panels need 1.2 s to slide away; then the curtain is removed from the page
-const GAUGE_FROM = -135; // needle angle at 0 (degrees from straight up)
-const GAUGE_SWEEP = 270;
-const POWER_D = 'M 30.72 31.02 A 30 30 0 1 0 69.28 31.02 M 50 15 L 50 49'; // neon power symbol (open ring + bar)
-const GAUGE_ARC = 'M 43.43 156.57 A 80 80 0 1 1 156.57 156.57';
-
-const GAUGE_TICKS = Array.from({ length: 51 }, (_, i) => {
-  const a = ((135 + (270 * i) / 50) * Math.PI) / 180;
-  const major = i % 5 === 0;
-  const r1 = major ? 66 : 70;
-  const r2 = 74;
-  return { i, major, x1: 100 + r1 * Math.cos(a), y1: 100 + r1 * Math.sin(a), x2: 100 + r2 * Math.cos(a), y2: 100 + r2 * Math.sin(a) };
-});
-const GAUGE_LABELS = [0, 20, 40, 60, 80, 100].map((v) => {
-  const a = ((135 + (270 * v) / 100) * Math.PI) / 180;
-  return { v, x: 100 + 58 * Math.cos(a), y: 100 + 58 * Math.sin(a) };
-});
-
-function Curtain({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [stage, setStage] = useState('Your next dimension awaits');
-  const skipRef = useRef<() => void>(() => {});
-  const [started, setStarted] = useState(false); // ENTER was pressed: the loading run is on
-  const startRef = useRef<() => void>(() => {});
-  const needleRef = useRef<SVGGElement>(null);
-  const arcRef = useRef<SVGPathElement>(null);
-  const leadRef = useRef<HTMLSpanElement>(null);
-  const valRef = useRef<HTMLSpanElement>(null);
-  const meterRef = useRef<HTMLDivElement>(null);
-  const cb = useRef({ onReveal, onDone });
-  cb.current = { onReveal, onDone };
-
-  useEffect(() => {
-    // the page behind the glass can't be clicked or tabbed into until the curtain opens
-    const root = document.querySelector('.app-root');
-    const behind = root ? Array.from(root.children).filter((el) => !el.classList.contains('curtain') && el.tagName !== 'STYLE') : [];
-    behind.forEach((el) => el.setAttribute('inert', ''));
-    const release = () => behind.forEach((el) => el.removeAttribute('inert'));
-
-    const timers: number[] = [];
-    let raf = 0;
-    let lastStep = 0;
-    let disposed = false;
-    let finished = false;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const motion = gsap.context(() => {
-      if (!reduced) gsap.fromTo('.curtain__stack', { opacity: 0, y: 24 }, { opacity: 1, y: 0, stagger: 0.12, duration: 0.9, ease: 'power3.out' });
-    });
-    let progressTween: gsap.core.Tween | undefined;
-
-    const paint = (p: number) => {
-      const n = Math.floor(p * 100);
-      const nextStage = p < 0.3 ? 'Preparing the canvas' : p < 0.7 ? 'Bringing the details into focus' : p < 1 ? 'Almost in your dimension' : 'Welcome to the other side';
-      setStage((current) => current === nextStage ? current : nextStage);
-      const digits = String(n);
-      needleRef.current?.setAttribute('transform', `rotate(${GAUGE_FROM + GAUGE_SWEEP * p} 100 100)`);
-      const arc = arcRef.current;
-      if (arc) {
-        arc.style.strokeDashoffset = String(100 - p * 100);
-        arc.style.opacity = p > 0.002 ? '1' : '0';
-      }
-      if (leadRef.current) leadRef.current.textContent = '0'.repeat(3 - digits.length);
-      if (valRef.current) valRef.current.textContent = digits;
-      meterRef.current?.setAttribute('aria-valuenow', digits);
-    };
-
-    const openCurtain = () => {
-      release();
-      setOpen(true); // panels slide apart
-      sfx.play('curtainOpen');
-      cb.current.onReveal(); // the site starts its entrance animations while the panels move
-      timers.push(window.setTimeout(() => cb.current.onDone(), CURTAIN_REMOVE_MS));
-    };
-
-    const finish = () => {
-      if (disposed || finished) return;
-      finished = true;
-      progressTween?.kill();
-      cancelAnimationFrame(raf);
-      paint(1);
-      sfx.play('curtainReady');
-      timers.push(window.setTimeout(openCurtain, CURTAIN_HOLD_MS));
-    };
-
-    // Progress follows critical asset settlement; the timeout keeps a failed CDN from trapping entry.
-    const assets = [BG_IMAGE_1, BG_IMAGE_2, SIGNATURE].map((src) => new Promise<void>((resolve) => {
-      const image = new Image();
-      image.onload = image.onerror = () => resolve();
-      image.src = src;
-    }));
-    const readiness = Promise.allSettled([...assets, document.fonts.ready]);
-    let running = false;
-    skipRef.current = finish;
-    startRef.current = () => {
-      if (running || disposed) return;
-      running = true;
-      sfx.play('curtainStart');
-      const progress = { value: 0 };
-      const update = () => {
-        paint(progress.value);
-        const step = Math.floor(progress.value * 10);
-        if (step > lastStep && step < 10) { lastStep = step; sfx.play('curtainTick', step * 10); }
-      };
-      progressTween = gsap.to(progress, { value: 0.86, duration: reduced ? 0.1 : 1.6, ease: 'power2.out', onUpdate: update });
-      const timeout = new Promise<void>((resolve) => timers.push(window.setTimeout(resolve, 4500)));
-      void Promise.race([readiness, timeout]).then(() => {
-        if (disposed || finished) return;
-        progressTween?.kill();
-        progressTween = gsap.to(progress, { value: 1, duration: reduced ? 0.01 : 0.65, ease: 'power2.inOut', onUpdate: update, onComplete: finish });
-      });
-    };
-    paint(0);
-
-    return () => {
-      disposed = true;
-      progressTween?.kill();
-      motion.revert();
-      cancelAnimationFrame(raf);
-      timers.forEach((id) => window.clearTimeout(id));
-      release();
-    };
-  }, []);
-
-  return (
-    <div className={`curtain${open ? ' is-open' : ''}`} aria-hidden={open}>
-      <div className="curtain__panel curtain__panel--left" aria-hidden="true">
-        <p className="curtain__word">Code</p>
-      </div>
-      <div className="curtain__panel curtain__panel--right" aria-hidden="true">
-        <p className="curtain__word">Beyond Limits.</p>
-      </div>
-
-      <div className="loader-heading"><span>SK / DIGITAL EXPERIENCE</span><p>{stage}</p></div>
-      {started && !open && <button className="loader-skip" type="button" onClick={() => skipRef.current()}>Skip introduction ↗</button>}
-      <p className="curtain__stack curtain__stack--top" aria-hidden="true">Code</p>
-      <p className="curtain__stack curtain__stack--bottom" aria-hidden="true">Beyond Limits.</p>
-
-      <div ref={meterRef} className="curtain__center" role="progressbar" aria-label="Preparing experience" aria-valuetext={stage} aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}>
-        <span className="gauge-disc" aria-hidden="true" />
-        <svg className="gauge-svg" viewBox="0 0 200 200" aria-hidden="true">
-          <defs>
-            <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#ffe14d" />
-              <stop offset="55%" stopColor="#ff8a1f" />
-              <stop offset="100%" stopColor="#ff2b6a" />
-            </linearGradient>
-          </defs>
-          <path className="gauge-track" d={GAUGE_ARC} />
-          <path ref={arcRef} className="gauge-arc" d={GAUGE_ARC} pathLength={100} strokeDasharray="100" strokeDashoffset="100" />
-          {GAUGE_TICKS.map((tick) => (
-            <line key={tick.i} className={tick.major ? 'gauge-tick gauge-tick--major' : 'gauge-tick'} x1={tick.x1} y1={tick.y1} x2={tick.x2} y2={tick.y2} />
-          ))}
-          {GAUGE_LABELS.map((label) => (
-            <text key={label.v} className="gauge-label" x={label.x} y={label.y}>{label.v}</text>
-          ))}
-          <g ref={needleRef} transform={`rotate(${GAUGE_FROM} 100 100)`}>
-            <polygon className="gauge-needle" points="100,50 103,100 100,109 97,100" />
-          </g>
-          <circle className="gauge-hub" cx="100" cy="100" r="7.5" />
-          <circle className="gauge-hub-dot" cx="100" cy="100" r="2.6" />
-        </svg>
-        <div className="gauge-readout" aria-hidden="true">
-          <span className="gauge-num"><span ref={leadRef} className="gauge-lead">00</span><span ref={valRef}>0</span></span>
-          <span className="gauge-unit">%</span>
-        </div>
-        <p className="gauge-caption" aria-hidden="true">{started ? 'INITIALIZING' : 'PRESS TO ENTER'}</p>
-      </div>
-
-      <button
-        type="button"
-        className={`curtain__enter${started ? ' is-started' : ''}`}
-        data-sfx="none"
-        disabled={started}
-        tabIndex={started ? -1 : 0}
-        autoFocus
-        aria-label="Power on: start loading"
-        onClick={() => { setStarted(true); startRef.current(); }}
-      >
-        <svg className="power-icon" viewBox="0 0 100 100" aria-hidden="true">
-          <path className="power-edge" d={POWER_D} />
-          <path className="power-tube" d={POWER_D} />
-          <path className="power-core" d={POWER_D} />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 /* ---------- Chat with the robot ----------
    Touching the robot opens a small chat next to it. Answers come from an AI proxy (CHAT_API_URL, see chat-worker.js) that knows
    everything on this page. With no URL set, or if the proxy can't be reached, the built-in answers below are used instead.
@@ -2324,12 +2131,18 @@ function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [effectsOn, setEffectsOn] = useState(() => sfx.isEnabled());
-  // curtain preloader: siteReady flips when the panels start to open (site animations begin), curtainOn when they are gone
-  const [siteReady, setSiteReady] = useState(false);
-  const [curtainOn, setCurtainOn] = useState(true);
+  const siteReady = true;
   const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
   const wide = useMediaQuery('(min-width: 1024px)');
+  const [effectsReady, setEffectsReady] = useState(false);
+  useEffect(() => {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) return;
+    const enable = () => setEffectsReady(true);
+    window.addEventListener('pointerdown', enable, { once: true });
+    return () => window.removeEventListener('pointerdown', enable);
+  }, []);
+
 
   useEffect(() => {
     const root = appRef.current;
@@ -2628,7 +2441,7 @@ export default function App() {
 
   useEffect(() => {
     const el = appRef.current;
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!el || !effectsReady || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     let cancelled = false;
     let cursor: { dispose?: () => void } | undefined;
     const existing = new Set(Array.from(el.querySelectorAll('canvas')));
@@ -2667,7 +2480,7 @@ export default function App() {
       cursor?.dispose?.();
       el.querySelectorAll('canvas').forEach((canvas) => { if (!existing.has(canvas)) canvas.remove(); });
     };
-  }, []);
+  }, [effectsReady]);
 
   function navigate(label: string) {
     sfx.quietMenuClose();
@@ -3811,7 +3624,7 @@ export default function App() {
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="none"
                 aria-label="Introduction video"
                 onLoadedData={() => {
                   setVideoState('ready');
@@ -3954,7 +3767,7 @@ export default function App() {
           <div className="gal-grid">
             {GALLERY.map((item, index) => (
               <button key={item.src} type="button" className="gal-item" data-sfx="none" aria-label={`Open ${item.title}`} tabIndex={galOpen ? 0 : -1} onClick={() => setLightbox(index)}>
-                <GalleryThumb item={item} />
+                {galOpen && <GalleryThumb item={item} />}
               </button>
             ))}
           </div>
@@ -3983,8 +3796,8 @@ export default function App() {
           </defs>
           <rect width="100%" height="100%" fill="url(#hero-grid)" />
         </svg>
-        <div className="ken-burns absolute inset-0 z-10 bg-cover bg-center" style={{ backgroundImage: `url("${BG_IMAGE_1}")` }} aria-hidden="true" />
-        <div ref={revealRef} className="pointer-events-none absolute inset-0 z-30 bg-cover bg-center" style={{ backgroundImage: `url("${BG_IMAGE_2}")`, maskImage: 'linear-gradient(transparent, transparent)', WebkitMaskImage: 'linear-gradient(transparent, transparent)', maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} aria-hidden="true" />
+        <div className="ken-burns absolute inset-0 z-10 bg-cover bg-center" style={{ backgroundImage: `url("${phone ? "/hero/background-1-mobile.webp" : BG_IMAGE_1}")` }} aria-hidden="true" />
+        <div ref={revealRef} className="pointer-events-none absolute inset-0 z-30 bg-cover bg-center" style={{ backgroundImage: `url("${phone ? "/hero/background-2-mobile.webp" : BG_IMAGE_2}")`, maskImage: 'linear-gradient(transparent, transparent)', WebkitMaskImage: 'linear-gradient(transparent, transparent)', maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} aria-hidden="true" />
         <canvas ref={canvasRef} hidden aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
@@ -4003,8 +3816,9 @@ export default function App() {
         </nav>
         <Statistics />
         <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
-        {phone && <GlassFrame className="glass-frame--mobile hero-rise" style={{ animationDelay: '1.1s' }} />}
-        {wide && <GlassFrame className="glass-frame--desktop hero-rise" style={{ animationDelay: '1.1s' }} />}
+        {phone && <div className="glass-frame glass-frame--mobile"><img src={GLASS_PHOTO} alt="" width="600" height="600" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>}
+        {wide && !effectsReady && <div className="glass-frame glass-frame--desktop"><img src={GLASS_PHOTO} alt="" width="600" height="600" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>}
+        {wide && effectsReady && <GlassFrame className="glass-frame--desktop hero-rise" style={{ animationDelay: '1.1s' }} />}
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
             <span className="title-code block">Code</span>
@@ -4042,7 +3856,6 @@ export default function App() {
       </button>
       <ChatPopup open={chatOpen} onClose={() => setChatOpen(false)} onAction={chatAction} />
 
-      {curtainOn && <Curtain onReveal={() => setSiteReady(true)} onDone={() => setCurtainOn(false)} />}
 
       <dialog ref={noticeRef} onCancel={(event) => event.preventDefault()} onClose={(event) => { if (notice) event.currentTarget.showModal(); }} className="connect-dialog" aria-labelledby="notice-title">
         <div className="conn-card">
