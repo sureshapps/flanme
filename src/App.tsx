@@ -2592,19 +2592,19 @@ export default function App() {
           border-radius: var(--pf-r);
           background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.10) 100%);
           box-shadow:
-            0 0 0 100vmax rgba(255, 255, 255, 0),            /* frosted bezel between the frame and the screen edge */
-            0 0 0 1px rgba(0, 0, 0, 0),                      /* crisp outer groove */
-            0 0 0 2px rgba(255, 255, 255, 0.10),                /* soft lip around the groove */
-            inset 2px 2px 2px -1px rgba(255, 255, 255, 0),   /* top-left light edge */
-            inset -2px -2px 2px -1px rgba(255, 255, 255, 0), /* bottom-right light edge */
-            inset 0 0 0 1px rgba(255, 255, 255, 0),          /* inner hairline */
-            inset 6px 6px 18px -8px rgba(255, 255, 255, 0),  /* smooth raised emboss glow */
-            inset -8px -8px 24px -10px rgba(0, 0, 0, 0),     /* smooth shadowed emboss */
+            0 0 0 0vmax rgba(255, 255, 255, 0),            /* frosted bezel between the frame and the screen edge */
+            0 0 0 0px rgba(0, 0, 0, 0),                      /* crisp outer groove */
+            0 0 0 0px rgba(255, 255, 255, 0.10),                /* soft lip around the groove */
+            inset 0px 0px 0px 0px rgba(255, 255, 255, 0),   /* top-left light edge */
+            inset 0px 0px 0px 0px rgba(255, 255, 255, 0), /* bottom-right light edge */
+            inset 0 0 0 0px rgba(255, 255, 255, 0),          /* inner hairline */
+            inset 0px 0px 0px 0px rgba(255, 255, 255, 0),  /* smooth raised emboss glow */
+            inset 0px 0px 0px 0px rgba(0, 0, 0, 0),     /* smooth shadowed emboss */
             inset 0 0 60px rgba(0, 0, 0, 0.16);                 /* gentle depth toward the centre */
         }
         /* edge shine like frosted glass: a thin white rim that flares along the bottom-left and top-right corners, breathing live */
-        @property --pf-s1 { syntax: '<length>'; inherits: true; initial-value: 260px; }
-        @property --pf-s2 { syntax: '<length>'; inherits: true; initial-value: 260px; }
+        @property --pf-s1 { syntax: '<length>'; inherits: true; initial-value: 0px; }
+        @property --pf-s2 { syntax: '<length>'; inherits: true; initial-value: 0px; }
         .page-frame { --pf-s1: 260px; --pf-s2: 260px; animation: pf-breathe-1 5s ease-in-out infinite alternate, pf-breathe-2 5s ease-in-out -2.6s infinite alternate; }
         .page-frame::before, .pf-bloom::before {
           content: ''; position: absolute; inset: 0; border-radius: var(--pf-r); padding: 2px;
