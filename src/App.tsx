@@ -2125,19 +2125,22 @@ export default function App() {
   }, []);
 
 
-  // hero title: "Beyond Limits." decodes itself (ScrambleText); "Code" is plain static text
+  // hero title: "Beyond Limits." decodes itself (ScrambleText); "Code" fades and rises in as a whole word
   useLayoutEffect(() => {
     const root = appRef.current;
     if (!root || !siteReady) return;
+    const code = root.querySelector<HTMLElement>('.title-code');
     const sub = root.querySelector<HTMLElement>('.title-sub');
-    if (!sub) return;
+    if (!code || !sub) return;
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
       gsap.set(sub, { opacity: 0 });
-      gsap.timeline({ delay: 0.3 })
+      // "Code": a plain whole-word transition (fade + rise + de-blur), no text splitting
+      gsap.fromTo(code, { opacity: 0, y: 46, scale: 0.96, filter: 'blur(14px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.1, delay: 0.15, ease: 'power3.out', clearProps: 'transform,filter,opacity' });
+      gsap.timeline({ delay: 0.55 })
         .to(sub, { opacity: 1, duration: 0.2 })
         .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0);
-      return () => { gsap.set(sub, { clearProps: 'opacity' }); };
+      return () => { gsap.set([code, sub], { clearProps: 'opacity,transform,filter' }); };
     }, root);
     return () => media.revert();
   }, [siteReady]);
