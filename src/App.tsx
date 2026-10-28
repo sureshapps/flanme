@@ -2584,38 +2584,6 @@ export default function App() {
         html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         body { position: fixed; inset: 0; -webkit-tap-highlight-color: transparent; }
         .app-root { position: fixed; inset: 0; width: 100%; height: var(--app-h, 100dvh); overflow: hidden; background: #820d16; }
-        /* Glassmorphic page frame: inside border with a soft emboss (non-interactive, sits under popups and the curtain) */
-        .page-frame {
-          --pf-inset: clamp(8px, 1.3vw, 18px);
-          --pf-r: clamp(20px, 2.4vw, 34px);
-          position: fixed; inset: var(--pf-inset); z-index: 48; pointer-events: none;
-          border-radius: var(--pf-r);
-          background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.10) 100%);
-          box-shadow:
-            0 0 0 100vmax rgba(255, 255, 255, 0.06),            /* frosted bezel between the frame and the screen edge */
-            inset 6px 6px 18px -8px rgba(255, 255, 255, 0.35),  /* smooth raised emboss glow */
-            inset -8px -8px 24px -10px rgba(0, 0, 0, 0.45),     /* smooth shadowed emboss */
-            inset 0 0 60px rgba(0, 0, 0, 0.16);                 /* gentle depth toward the centre */
-        }
-        /* no visible border: a shine line travels around the invisible frame edge, only the light is seen */
-        @property --pf-a { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
-        .page-frame { --pf-a: 0deg; animation: pf-shine 7s linear infinite; }
-        .page-frame::before, .pf-bloom::before {
-          content: ''; position: absolute; inset: 0; border-radius: var(--pf-r); padding: 2px;
-          background: conic-gradient(from var(--pf-a),
-            rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, 0) 250deg,
-            rgba(255, 255, 255, 0.35) 320deg, #fff 352deg, rgba(255, 255, 255, 0) 360deg);
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          mask-composite: exclude;
-        }
-        /* soft glow trailing the shine */
-        .pf-bloom { position: absolute; inset: 0; border-radius: var(--pf-r); filter: blur(6px); opacity: 0.85; }
-        .pf-bloom::before { padding: 5px; }
-        @keyframes pf-shine { to { --pf-a: 360deg; } }
-        @media (prefers-reduced-motion: reduce) { .page-frame { animation: none; } }
-        @media (max-width: 639px) { .page-frame { --pf-inset: 7px; --pf-r: 22px; } }
         /* Liquid-glass surface (shared by the button and the nav) */
         .glass {
           --r: 9999px; --tr: 15%;
@@ -3518,7 +3486,6 @@ export default function App() {
         @media (max-width: 1100px), (max-height: 700px) { .experience-dock { display: none; } }
         @media (prefers-reduced-motion: reduce) { .dock-link span:last-child { transition: none; } .ken-burns { animation: none !important; } }
       `}</style>
-      <div className="page-frame" aria-hidden="true"><span className="pf-bloom" /></div>
       <nav className="pointer-events-none fixed top-5 left-5 right-5 z-50 flex justify-start sm:top-6 sm:left-8 md:left-12" aria-label="Main navigation">
         <div
           ref={navRef}
