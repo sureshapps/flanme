@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
@@ -529,27 +529,6 @@ const sfx = (() => {
   };
 })();
 
-/* ---------- Master sound switch ----------
-   One switch for the whole site: UI sounds, the music player, the robot's voice and every video.
-   The choice is remembered between visits (it shares the sfx storage key). */
-const soundSwitch = (() => {
-  let muted = !sfx.isEnabled();
-  const subs = new Set<() => void>();
-  return {
-    isMuted: () => muted,
-    subscribe: (fn: () => void) => { subs.add(fn); return () => { subs.delete(fn); }; },
-    setMuted: (value: boolean) => {
-      muted = value;
-      sfx.setEnabled(!value);
-      if (value && typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-      subs.forEach((fn) => fn());
-    },
-  };
-})();
-function useMuted() {
-  return useSyncExternalStore(soundSwitch.subscribe, soundSwitch.isMuted, soundSwitch.isMuted);
-}
-
 /* ---------- Sound wiring ----------
    One delegated listener gives every button, link, card and widget its hover / click / focus sound, so nothing can be missed
    (even things added later). Opening and closing of menus and popups is driven by their state, so Esc, outside click,
@@ -768,7 +747,6 @@ function GalleryThumb({ item }: { item: GalleryEntry }) {
 
 function LightboxMedia({ item }: { item: GalleryEntry }) {
   const [failed, setFailed] = useState(false);
-  const muted = useMuted();
   const { media } = item;
   if (media.kind === 'youtube' || media.kind === 'vimeo') {
     return <iframe className="lb-frame" src={media.embed} title={item.title} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen />;
@@ -780,7 +758,7 @@ function LightboxMedia({ item }: { item: GalleryEntry }) {
         <a href={item.src} target="_blank" rel="noopener noreferrer">Open or download it</a>
       </div>
     ) : (
-      <video className="lb-media" src={item.src} controls autoPlay muted={muted} playsInline onError={() => setFailed(true)} />
+      <video className="lb-media" src={item.src} controls autoPlay playsInline onError={() => setFailed(true)} />
     );
   }
   return <img className="lb-media" src={item.src} alt={item.title} draggable={false} />;
@@ -1206,7 +1184,6 @@ function MusicPlayer() {
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const song = songs[index];
-  const muted = useMuted();
 
   // autoplay whenever the track changes
   useEffect(() => {
@@ -1264,7 +1241,6 @@ function MusicPlayer() {
           src={song.src}
           preload="none"
           loop={repeat}
-          muted={muted}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)}
@@ -1366,13 +1342,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     let speaking = false; // the robot is talking: its mouth moves
     let asking = false; // a webhook request is in flight
     let voice: HTMLAudioElement | null = null;
-    // the master sound switch silences the robot's voice at once (its speech bubble still shows)
-    const unsubMaster = soundSwitch.subscribe(() => {
-      if (!soundSwitch.isMuted()) return;
-      voice?.pause();
-      voice = null;
-      speaking = false;
-    });
     let webhookAbort: AbortController | null = null;
     let mouthUntil = 0;
     let frame = 0;
@@ -1628,7 +1597,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     const speak = (reply: { text?: string; audio?: string; lang?: string }) => {
       const text = reply.text?.slice(0, 280);
       if (text) emitSpeech(text, Math.min(14000, Math.max(3000, text.length * 70)));
-      if (soundSwitch.isMuted()) return;
       if (reply.audio) {
         const audio = new Audio(reply.audio);
         voice = audio;
@@ -1777,7 +1745,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       window.removeEventListener('click', onWindowClick);
       timers.forEach((id) => window.clearTimeout(id));
       webhookAbort?.abort();
-      unsubMaster();
       voice?.pause();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       fx.replaceChildren();
@@ -1973,7 +1940,7 @@ const RIPPLE_FS = [
   ' vec3 c=vec3(texture2D(uTex,uv+disp*1.25).r,texture2D(uTex,uv+disp).g,texture2D(uTex,uv+disp*.75).b);',
   ' c+=c*hi*.22+vec3(1.,.85,.6)*max(hi,0.)*.05;',
   ' float dl=length((p-uMouse)*asp);float g=exp(-dl*dl*7.)*uLight;float core=exp(-dl*dl*60.)*uLight;',
-  ' c+=c*g*.6+vec3(1.,.72,.38)*(g*.14+core*.12);',
+  ' c+=c*g*.28+vec3(1.,.72,.38)*(g*.06+core*.05);',
   ' c*=1.-.28*smoothstep(.55,1.15,length((p-.5)*asp));',
   ' c*=.97+.03*sin(uTime*.6);',
   ' gl_FragColor=vec4(c*uFade,1.);}',
@@ -2145,8 +2112,7 @@ function RippleBackground({ src }: { src: string }) {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const muted = useMuted();
-  const effectsOn = !muted; // the Sound button controls every sound on the site
+  const [effectsOn, setEffectsOn] = useState(() => sfx.isEnabled());
   const siteReady = true;
   const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
@@ -2389,8 +2355,8 @@ export default function App() {
   }, [infoOpen]);
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = !soundOn || muted;
-  }, [soundOn, muted]);
+    if (videoRef.current) videoRef.current.muted = !soundOn;
+  }, [soundOn]);
 
   function loadProjects() {
     setProjectsState('loading');
@@ -3627,7 +3593,7 @@ export default function App() {
                 data-sfx={soundOn ? 'toggleOff' : 'toggleOn'}
                 onClick={(event) => { event.stopPropagation(); setSoundOn((on) => !on); }}
               >
-                {soundOn && effectsOn ? <Volume2 size={13} strokeWidth={2} /> : <VolumeX size={13} strokeWidth={2} />}
+                {soundOn ? <Volume2 size={13} strokeWidth={2} /> : <VolumeX size={13} strokeWidth={2} />}
               </button>
             </div>
           </div>
@@ -3829,8 +3795,8 @@ export default function App() {
                 <Flame className="neon-fire" strokeWidth={1.8} />
               </span>
             </button>
-              <div className="mt-5 flex justify-start sm:mt-6">
-                <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute all sound' : 'Unmute all sound'} aria-pressed={effectsOn} data-sfx="none" onClick={() => soundSwitch.setMuted(effectsOn)}>
+              <div className="mt-5 flex justify-center sm:mt-6">
+                <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
                   {effectsOn ? <Volume2 size={10} /> : <VolumeX size={10} />}<span>Sound</span>
                 </button>
               </div>
