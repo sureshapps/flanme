@@ -19,18 +19,18 @@ window.MUSIC_PLAYLIST = [
     title: 'One Sun One Moon',
     artist: 'Anirudh',
     cover: 'https://www.masstamilan.dev/w/jailer-2-tamil-2026.webp',
-    src: '/music/onesunonemoon.mp3',
+    src: 'music/onesunonemoon.mp3',
   },
   {
     title: 'One Sun One Moon',
     artist: 'Anirudh',
     cover: 'https://www.masstamilan.dev/w/jailer-2-tamil-2026.webp',
-    src: '/music/onesunonemoon.mp3',
+    src: 'music/onesunonemoon.mp3',
   },
   {
    title: 'One Sun One Moon',
     artist: 'Anirudh',
     cover: 'https://www.masstamilan.dev/w/jailer-2-tamil-2026.webp',
-    src: '/music/onesunonemoon.mp3',
+    src: 'music/onesunonemoon.mp3',
   },
 ];
