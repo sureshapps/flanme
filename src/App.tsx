@@ -3818,9 +3818,8 @@ export default function App() {
         </nav>
         <Statistics />
         <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
-        {phone && <div className="glass-frame glass-frame--mobile"><img src={GLASS_PHOTO} alt="" width="600" height="600" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>}
-        {wide && !effectsReady && <div className="glass-frame glass-frame--desktop"><img src={GLASS_PHOTO} alt="" width="600" height="600" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>}
-        {wide && effectsReady && <GlassFrame className="glass-frame--desktop hero-rise" style={{ animationDelay: '1.1s' }} />}
+        {phone && <GlassFrame className="glass-frame--mobile" />}
+        {wide && <GlassFrame className="glass-frame--desktop hero-rise" style={{ animationDelay: '1.1s' }} />}
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="hero-rise mb-6 sm:mb-8" style={{ animationDelay: '0.2s' }}>
             <span className="title-code block">Code</span>
