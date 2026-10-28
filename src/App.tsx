@@ -2587,7 +2587,7 @@ export default function App() {
         /* Glassmorphic page frame: inside border with a soft emboss (non-interactive, sits under popups and the curtain) */
         .page-frame {
           --pf-inset: clamp(8px, 1.3vw, 18px);
-          --pf-r: clamp(20px, 2.4vw, 34px);
+          --pf-r: clamp(0px, 0vw, 0px);
           position: fixed; inset: var(--pf-inset); z-index: 48; pointer-events: none;
           border-radius: var(--pf-r);
           background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.10) 100%);
