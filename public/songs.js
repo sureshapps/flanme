@@ -15,29 +15,30 @@
    starts at that first interaction if the browser blocks it on load.)
 */
 window.MUSIC_PLAYLIST = [
+     {
+   title: 'THE TRUE LEADER',
+    artist: 'Anirudh',
+    cover: 'https://c.ndtvimg.com/2026-07/vqm6emf_jana-nayagan_625x300_17_July_26.jpg?im=FitAndFill,algorithm=dnn,width=400,height=225&q=70',
+    src: 'music/TheTrueLeader.mp3',
+  },
   {
-    title: 'One Sun One Moon',
+    title: 'JD MASTER',
     artist: 'Anirudh',
     cover: 'https://upload.wikimedia.org/wikipedia/en/c/c4/Master_album_cover.jpg',
     src: 'music/JDIntro.mp3',
   },
   {
-   title: 'One Sun One Moon',
+   title: 'THE MAN JD',
     artist: 'Anirudh',
     cover: 'https://i.scdn.co/image/ab6761610000e5ebd8f08b897814e1bf70efccfa',
     src: 'music/JDTheAlcoholic.mp3',
   },
     {
-   title: 'One Sun One Moon',
+   title: 'MASTER THE BLASTER',
     artist: 'Anirudh',
     cover: 'https://www.thestatesman.com/wp-content/uploads/2026/01/Jana-Nayagan-Thalapathy-Vijay-CFBC-Supreme-Court.webp',
     src: 'music/MasterTheBlaster.mp3',
   },
-    {
-   title: 'One Sun One Moon',
-    artist: 'Anirudh',
-    cover: 'https://c.ndtvimg.com/2026-07/vqm6emf_jana-nayagan_625x300_17_July_26.jpg?im=FitAndFill,algorithm=dnn,width=400,height=225&q=70',
-    src: 'music/TheTrueLeader.mp3',
-  },
+ 
 ];
 
