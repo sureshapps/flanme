@@ -2593,35 +2593,27 @@ export default function App() {
           background: linear-gradient(160deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.10) 100%);
           box-shadow:
             0 0 0 100vmax rgba(255, 255, 255, 0.06),            /* frosted bezel between the frame and the screen edge */
-            0 0 0 1px rgba(0, 0, 0, 0.28),                      /* crisp outer groove */
-            0 0 0 2px rgba(255, 255, 255, 0.10),                /* soft lip around the groove */
-            inset 2px 2px 2px -1px rgba(255, 255, 255, 0.65),   /* top-left light edge */
-            inset -2px -2px 2px -1px rgba(255, 255, 255, 0.40), /* bottom-right light edge */
-            inset 0 0 0 1px rgba(255, 255, 255, 0.14),          /* inner hairline */
             inset 6px 6px 18px -8px rgba(255, 255, 255, 0.35),  /* smooth raised emboss glow */
             inset -8px -8px 24px -10px rgba(0, 0, 0, 0.45),     /* smooth shadowed emboss */
             inset 0 0 60px rgba(0, 0, 0, 0.16);                 /* gentle depth toward the centre */
         }
-        /* edge shine like frosted glass: a thin white rim that flares along the bottom-left and top-right corners, breathing live */
-        @property --pf-s1 { syntax: '<length>'; inherits: true; initial-value: 260px; }
-        @property --pf-s2 { syntax: '<length>'; inherits: true; initial-value: 260px; }
-        .page-frame { --pf-s1: 260px; --pf-s2: 260px; animation: pf-breathe-1 5s ease-in-out infinite alternate, pf-breathe-2 5s ease-in-out -2.6s infinite alternate; }
+        /* no visible border: a shine line travels around the invisible frame edge, only the light is seen */
+        @property --pf-a { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+        .page-frame { --pf-a: 0deg; animation: pf-shine 7s linear infinite; }
         .page-frame::before, .pf-bloom::before {
           content: ''; position: absolute; inset: 0; border-radius: var(--pf-r); padding: 2px;
-          background:
-            radial-gradient(circle var(--pf-s1) at 0% 100%, #fff 0%, rgba(255, 255, 255, 0.65) 30%, rgba(255, 255, 255, 0) 100%),
-            radial-gradient(circle var(--pf-s2) at 100% 0%, #fff 0%, rgba(255, 255, 255, 0.65) 30%, rgba(255, 255, 255, 0) 100%),
-            linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12) 32%, rgba(255, 255, 255, 0.10) 68%, rgba(255, 255, 255, 0.34));
+          background: conic-gradient(from var(--pf-a),
+            rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, 0) 250deg,
+            rgba(255, 255, 255, 0.35) 320deg, #fff 352deg, rgba(255, 255, 255, 0) 360deg);
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask-composite: exclude;
         }
-        /* soft bloom behind the bright corner arcs */
-        .pf-bloom { position: absolute; inset: 0; border-radius: var(--pf-r); filter: blur(5px); opacity: 0.8; }
+        /* soft glow trailing the shine */
+        .pf-bloom { position: absolute; inset: 0; border-radius: var(--pf-r); filter: blur(6px); opacity: 0.85; }
         .pf-bloom::before { padding: 5px; }
-        @keyframes pf-breathe-1 { from { --pf-s1: 170px; } to { --pf-s1: 380px; } }
-        @keyframes pf-breathe-2 { from { --pf-s2: 170px; } to { --pf-s2: 380px; } }
+        @keyframes pf-shine { to { --pf-a: 360deg; } }
         @media (prefers-reduced-motion: reduce) { .page-frame { animation: none; } }
         @media (max-width: 639px) { .page-frame { --pf-inset: 7px; --pf-r: 22px; } }
         /* Liquid-glass surface (shared by the button and the nav) */
