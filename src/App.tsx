@@ -2561,7 +2561,7 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Playwrite+IS:wght@100..400&display=swap');
         @font-face { font-family: 'SuperGuardianBackup'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://fonts.cdnfonts.com/s/106144/SuperGuardian-MV1Ap.woff') format('woff'); }
         .title-code {
-          font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
+        font-family: 'Talaga Lakes', sans-serif;                            
           font-weight: 400;
           font-size: clamp(5rem, 10vw, 10rem);
           line-height: 1;
