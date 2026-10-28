@@ -3797,7 +3797,7 @@ export default function App() {
                 <Flame className="neon-fire" strokeWidth={1.8} />
               </span>
             </button>
-              <div className="mt-5 flex justify-center sm:mt-6">
+              <div className="mt-5 flex justify-start sm:mt-6">
                 <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => { const next = !effectsOn; sfx.setEnabled(next); setEffectsOn(next); }}>
                   <span className="fx-layer" aria-hidden="true" />{effectsOn ? <Volume2 size={10} /> : <VolumeX size={10} />}<span>Sound</span>
                 </button>
