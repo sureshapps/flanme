@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { SplitText } from 'gsap/SplitText';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 import BG_IMAGE_1 from './assets/background-1-desktop.webp';
 import BG_IMAGE_MOBILE_1 from './assets/background-1-mobile.webp';
 import NAV_ICON from './assets/nav-logo.webp';
-gsap.registerPlugin(SplitText, ScrambleTextPlugin);
+gsap.registerPlugin(ScrambleTextPlugin);
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
 const DEVOPS_ICON = '/devops.svg';
@@ -2126,39 +2125,19 @@ export default function App() {
   }, []);
 
 
-  // hero title: "Code" splits into characters (SplitText), "Beyond Limits." decodes itself (ScrambleText)
+  // hero title: "Beyond Limits." decodes itself (ScrambleText); "Code" is plain static text
   useLayoutEffect(() => {
     const root = appRef.current;
     if (!root || !siteReady) return;
-    const code = root.querySelector<HTMLElement>('.title-code');
     const sub = root.querySelector<HTMLElement>('.title-sub');
-    if (!code || !sub) return;
-    // wait for the CDN font so the title is split and measured with the real Talaga Lakes glyphs (2.5s safety timeout)
-    const fontReady = Promise.race([
-      document.fonts.load('400 1em "Talaga Lakes"', 'Code').catch(() => undefined),
-      new Promise((resolve) => window.setTimeout(resolve, 2500)),
-    ]);
+    if (!sub) return;
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
-      let dead = false;
-      let split: SplitText | undefined;
-      let tl: gsap.core.Timeline | undefined;
-      gsap.set([code, sub], { opacity: 0 });
-      void fontReady.then(() => {
-        if (dead) return;
-        gsap.set(code, { opacity: 1 });
-        split = SplitText.create(code, { type: 'chars', mask: 'chars', charsClass: 'title-char' });
-        tl = gsap.timeline({ delay: 0.1 });
-        tl.from(split.chars, { yPercent: 120, rotation: 8, duration: 0.9, ease: 'power4.out', stagger: { each: 0.07, from: 'start' } })
-          .to(sub, { opacity: 1, duration: 0.2 }, 0.55)
-          .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0.55);
-      });
-      return () => {
-        dead = true;
-        tl?.kill();
-        split?.revert();
-        gsap.set([code, sub], { clearProps: 'opacity' });
-      };
+      gsap.set(sub, { opacity: 0 });
+      gsap.timeline({ delay: 0.3 })
+        .to(sub, { opacity: 1, duration: 0.2 })
+        .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0);
+      return () => { gsap.set(sub, { clearProps: 'opacity' }); };
     }, root);
     return () => media.revert();
   }, [siteReady]);
@@ -2579,7 +2558,6 @@ export default function App() {
         @font-face { font-family: 'SuperGuardianBackup'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://fonts.cdnfonts.com/s/106144/SuperGuardian-MV1Ap.woff') format('woff'); }
         .title-code {
           font-family: 'Talaga Lakes', 'Arial Black', Impact, sans-serif;
-          font-synthesis: none;
           font-weight: 400;
           font-size: clamp(5rem, 10vw, 10rem);
           line-height: 1;
