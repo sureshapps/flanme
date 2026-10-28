@@ -9,13 +9,14 @@ class ChromeScore {
       this.context=new (window.AudioContext||window.webkitAudioContext)();
       this.gain=this.context.createGain();this.gain.gain.value=.75;this.gain.connect(this.context.destination);
     }
-    // Resume inside the click gesture, before waiting for the downloaded score.
+    // Resume inside the click gesture, before waiting for the downloaded score (mute() suspends the context).
     await this.context.resume();
     if(!this.buffer){const data=await this.data;if(!data)throw Error('Score unavailable');this.buffer=await this.context.decodeAudioData(data.slice(0));}
     this.enabled=true;
   }
   stop(){if(this.source){const old=this.source;this.source=null;old.onended=null;old.stop();old.disconnect();}}
-  mute(){this.enabled=false;this.stop();}
+  // Hard mute: stop the score and suspend the whole audio context so nothing can leak out.
+  mute(){this.enabled=false;this.stop();if(this.context&&this.context.state==='running')this.context.suspend().catch(()=>{});}
   sync(time,playing){
     if(!this.enabled||!playing||!this.buffer||time>=this.buffer.duration){this.stop();return;}
     if(this.source&&Math.abs(this.context.currentTime-this.origin-time)<.12)return;
