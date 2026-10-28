@@ -46,12 +46,60 @@
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
       }
+
+      /* hide the app until its CSS, fonts and first paint are ready, so unstyled content never shows */
+      #root { visibility: hidden; opacity: 0; }
+      html.app-ready #root { visibility: visible; opacity: 1; transition: opacity 0.35s ease; }
+
+      /* preloader: pure CSS, paints instantly, sits above everything */
+      #preloader {
+        position: fixed; inset: 0; z-index: 2147483647;
+        display: flex; align-items: center; justify-content: center;
+        background: #820d16;
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+      }
+      html.app-ready #preloader { opacity: 0; visibility: hidden; pointer-events: none; }
+      #preloader .pl-ring {
+        width: 38px; height: 38px; border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        border-top-color: #fff;
+        animation: pl-spin 0.8s linear infinite;
+      }
+      @keyframes pl-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #preloader .pl-ring { animation-duration: 2s; } }
     </style>
   </head>
   <body>
     <noscript>This site needs JavaScript to run.</noscript>
+    <div id="preloader" aria-hidden="true"><div class="pl-ring"></div></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // reveal the app only when the page, stylesheets and fonts are loaded and React has painted
+      (function () {
+        var done = false;
+        function reveal() {
+          if (done) return;
+          done = true;
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              document.documentElement.classList.add('app-ready');
+              setTimeout(function () {
+                var p = document.getElementById('preloader');
+                if (p && p.parentNode) p.parentNode.removeChild(p);
+              }, 600);
+            });
+          });
+        }
+        function ready() {
+          var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+          fonts.then(reveal, reveal);
+        }
+        if (document.readyState === 'complete') ready();
+        else window.addEventListener('load', ready);
+        setTimeout(reveal, 6000); // failsafe: never leave the user on a blank screen
+      })();
+    </script>
     <script>
       // register the service worker in production builds only (skipped on the Vite dev server)
       if ('serviceWorker' in navigator && !document.querySelector('script[src*="@vite/client"]')) {
