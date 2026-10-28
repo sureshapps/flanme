@@ -53,7 +53,7 @@
 
       /* preloader: pure CSS, paints instantly, sits above everything */
       #preloader {
-        position: fixed; inset: 0; z-index: 2147483647;
+        position: fixed; inset: 0; z-index: 2147483646;
         display: flex; align-items: center; justify-content: center;
         background: #820d16;
         transition: opacity 0.45s ease, visibility 0.45s ease;
@@ -67,11 +67,42 @@
       }
       @keyframes pl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { #preloader .pl-ring { animation-duration: 2s; } }
+
+      /* intro: the chrome SURESH animation (public/intro) plays while the app loads behind it, until ENTER */
+      #intro {
+        position: fixed; inset: 0; z-index: 2147483647;
+        background: #000;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+      }
+      #intro.leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+      #intro-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+      #enter {
+        position: absolute; left: 50%; bottom: calc(176px + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%);
+        padding: 14px 40px 14px 44px;
+        font: 500 12px/1 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+        letter-spacing: 0.42em; text-transform: uppercase;
+        color: #e0e8ff; background: rgba(0, 0, 0, 0.45);
+        border: 1px solid #b4c7ff; cursor: pointer;
+        box-shadow: 0 0 22px rgba(157, 181, 255, 0.28);
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity 0.8s ease, visibility 0.8s ease, background 0.2s, color 0.2s;
+      }
+      #enter.show { opacity: 1; visibility: visible; pointer-events: auto; }
+      #enter:hover:not(:disabled), #enter:focus-visible { background: #e0e8ff; color: #000; outline: none; }
+      #enter:disabled { cursor: wait; opacity: 0.55; }
     </style>
   </head>
   <body>
     <noscript>This site needs JavaScript to run.</noscript>
     <div id="preloader" aria-hidden="true"><div class="pl-ring"></div></div>
+
+    <!-- intro overlay: loads first, hides the app until ENTER is pressed -->
+    <div id="intro">
+      <iframe id="intro-frame" src="/intro/index.html" title="SURESH intro animation" allow="autoplay"></iframe>
+      <button id="enter" type="button" disabled>LOADING</button>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
@@ -98,6 +129,52 @@
         if (document.readyState === 'complete') ready();
         else window.addEventListener('load', ready);
         setTimeout(reveal, 6000); // failsafe: never leave the user on a blank screen
+      })();
+    </script>
+    <script>
+      // intro: ENTER appears when the animation ends (or is scrubbed to the end) and unlocks once the app is ready
+      (function () {
+        var intro = document.getElementById('intro');
+        var frame = document.getElementById('intro-frame');
+        var btn = document.getElementById('enter');
+        var animDone = false, entered = false, focused = false, t0 = Date.now();
+
+        function appReady() { return document.documentElement.classList.contains('app-ready'); }
+
+        function sync() {
+          var ok = appReady();
+          btn.classList.toggle('show', animDone);
+          btn.disabled = !ok;
+          btn.textContent = ok ? 'ENTER' : 'LOADING';
+          if (animDone && ok && !focused) { focused = true; btn.focus({ preventScroll: true }); }
+        }
+
+        function enter() {
+          if (entered || !appReady()) return;
+          entered = true;
+          try { // stop the intro music so it does not clash with the page
+            var d = frame.contentWindow.document, s = d.getElementById('sound');
+            frame.contentWindow.animation.pause();
+            if (s && s.getAttribute('aria-pressed') === 'true') s.click();
+          } catch (e) {}
+          intro.classList.add('leaving');
+          setTimeout(function () { if (intro.parentNode) intro.parentNode.removeChild(intro); }, 800);
+        }
+
+        btn.addEventListener('click', enter);
+
+        var iv = setInterval(function () {
+          if (entered) { clearInterval(iv); return; }
+          if (!animDone) {
+            var a = null;
+            try { a = frame.contentWindow.animation; } catch (e) {}
+            if (a && a.progress() >= 0.999) animDone = true;
+            else if (!a && Date.now() - t0 > 8000) animDone = true;   // intro failed to load: never trap the visitor
+            else if (Date.now() - t0 > 30000) animDone = true;        // failsafe
+          }
+          sync();
+        }, 200);
+        sync();
       })();
     </script>
     <script>
