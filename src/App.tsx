@@ -3,9 +3,9 @@ import gsap from 'gsap';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
-import BG_IMAGE_1 from './assets/background-1-desktop.webp';
-import BG_IMAGE_MOBILE_1 from './assets/background-1-mobile.webp';
+import BG_IMAGE_1 from './assets/ChatGPT_Image_Oct_29__2026__05_39_11_AM.png';
 import NAV_ICON from './assets/nav-logo.webp';
+const BG_IMAGE_MOBILE_1 = BG_IMAGE_1;
 gsap.registerPlugin(ScrambleTextPlugin);
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
@@ -1922,27 +1922,39 @@ function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => 
   );
 }
 
-/* Hero background: WebGL image with click/hold water ripples, a soft cursor light and gentle parallax.
-   Swap the image by changing the imports at the top of the file. */
+/* Hero background: WebGL glitch image (RGB split, slice shifts, pixel bursts, scanlines, grain) that pulses on a beat,
+   bursts on click/hold, with a soft cursor light and gentle parallax. Swap the image by changing the imports at the top of the file. */
 const RIPPLE_VS = 'attribute vec2 a;varying vec2 v;void main(){v=a*.5+.5;gl_Position=vec4(a,0.,1.);}';
 const RIPPLE_FS = [
   '#ifdef GL_FRAGMENT_PRECISION_HIGH', 'precision highp float;', '#else', 'precision mediump float;', '#endif',
-  'varying vec2 v;uniform sampler2D uTex;uniform vec2 uRes,uImg,uOff,uMouse;uniform float uZoom,uTime,uLight,uFade;uniform vec4 uR[6];',
+  'varying vec2 v;uniform sampler2D uTex;uniform vec2 uRes,uImg,uOff,uMouse;uniform float uZoom,uTime,uLight,uFade,uCalm;uniform vec4 uR[6];',
+  'float h(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}',
   'void main(){',
-  ' vec2 asp=vec2(uRes.x/uRes.y,1.);vec2 p=v;vec2 disp=vec2(0.);float hi=0.;',
-  ' for(int i=0;i<6;i++){vec4 r=uR[i];if(r.w>0.){',
-  '  vec2 d=(p-r.xy)*asp;float dist=length(d);float rad=r.z*.62;',
-  '  float w=exp(-pow((dist-rad)/.11,2.))*r.w;',
-  '  float ph=(dist-rad)*34.;',
-  '  disp+=normalize(d+1e-5)/asp*sin(ph)*w*.011;hi+=cos(ph)*w;}}',
+  ' vec2 asp=vec2(uRes.x/uRes.y,1.);',
+  ' float click=0.;',
+  ' for(int i=0;i<6;i++){click=max(click,uR[i].w);}',
+  ' float beat=exp(-fract(uTime*2.1)*5.5);',
+  ' float pulse=max(click,beat*.6)*(1.-.9*uCalm);',
+  ' vec2 p=v;',
+  ' float pk=click*.25*(1.-uCalm);',
+  ' if(pk>.02){float g=mix(1200.,70.,pk);vec2 cell=vec2(g,g*uRes.y/uRes.x);p=(floor(p*cell)+.5)/cell;}',
+  ' float t=floor(uTime*14.);',
+  ' float on=(step(.8,h(vec2(t,7.)))*.8+pulse*.9)*1.2*(1.-.9*uCalm);',
+  ' float band=floor(p.y*mix(10.,40.,h(vec2(t,2.))));',
+  ' p.x+=(h(vec2(band,t+3.))-.5)*.16*on*step(.55,h(vec2(band,t)));',
+  ' p.y+=step(.93,h(vec2(t,11.)))*(h(vec2(t,5.))-.5)*.05*(1.-uCalm);',
   ' float s=max(uRes.x/uImg.x,uRes.y/uImg.y);vec2 size=uImg*s;',
   ' vec2 uv=(p-.5)*uRes/size/uZoom+.5+uOff;',
-  ' vec3 c=vec3(texture2D(uTex,uv+disp*1.25).r,texture2D(uTex,uv+disp).g,texture2D(uTex,uv+disp*.75).b);',
-  ' c+=c*hi*.22+vec3(1.,.85,.6)*max(hi,0.)*.05;',
-  ' float dl=length((p-uMouse)*asp);float g=exp(-dl*dl*7.)*uLight;float core=exp(-dl*dl*60.)*uLight;',
-  ' c+=c*g*.28+vec3(1.,.72,.38)*(g*.06+core*.05);',
-  ' c*=1.-.28*smoothstep(.55,1.15,length((p-.5)*asp));',
-  ' c*=.97+.03*sin(uTime*.6);',
+  ' float amt=1.2*(.0025+.010*pulse+.012*on)+uLight*.0012;',
+  ' vec2 off=(p-.5)*amt*6.+vec2(amt,0.);',
+  ' vec3 c=vec3(texture2D(uTex,uv+off).r,texture2D(uTex,uv).g,texture2D(uTex,uv-off).b);',
+  ' c*=1.-.14*(.5+.5*sin(v.y*uRes.y*1.6));',
+  ' c+=(h(v*uRes+uTime)-.5)*.06;',
+  ' float dl=length((v-uMouse)*asp);float g2=exp(-dl*dl*7.)*uLight;',
+  ' c+=c*g2*.25+vec3(1.,.72,.38)*g2*.04;',
+  ' c+=pulse*.05;',
+  ' c=(c-.5)*1.08+.5;',
+  ' c*=1.-.35*smoothstep(.55,1.15,length((v-.5)*asp));',
   ' gl_FragColor=vec4(c*uFade,1.);}',
 ].join('\n');
 
@@ -1975,7 +1987,7 @@ function RippleBackground({ src }: { src: string }) {
     gl.enableVertexAttribArray(attr);
     gl.vertexAttribPointer(attr, 2, gl.FLOAT, false, 0, 0);
     const U: Record<string, WebGLUniformLocation | null> = {};
-    ['uTex', 'uRes', 'uImg', 'uOff', 'uMouse', 'uZoom', 'uTime', 'uLight', 'uFade', 'uR'].forEach((n) => { U[n] = gl.getUniformLocation(program, n); });
+    ['uTex', 'uRes', 'uImg', 'uOff', 'uMouse', 'uZoom', 'uTime', 'uLight', 'uFade', 'uCalm', 'uR'].forEach((n) => { U[n] = gl.getUniformLocation(program, n); });
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const st = { offX: 0, offY: 0, parX: 0, parY: 0, mx: 0.3, my: 0.55, light: 0.45, zoom: 1.16, fade: 0 };
@@ -2033,6 +2045,7 @@ function RippleBackground({ src }: { src: string }) {
       gl.uniform1f(U.uTime, now);
       gl.uniform1f(U.uLight, st.light);
       gl.uniform1f(U.uFade, st.fade);
+      gl.uniform1f(U.uCalm, reduce ? 1 : 0);
       gl.uniform4fv(U.uR, rbuf);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
