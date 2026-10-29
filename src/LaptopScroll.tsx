@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
@@ -42,9 +42,9 @@ const LOOK_LABEL: Record<Look, string> = { citrus: 'Citrus', midnight: 'Midnight
 
 type Finish = { color: string; metalness?: number; roughness?: number };
 const MIDNIGHT_FINISH: Record<string, Finish> = {
-  'Anodized aluminum': { color: '#1a2030', metalness: 0.96, roughness: 0.38 },
-  'Touchpad glass': { color: '#2b3246' },
-  'Touchpad tint': { color: '#0f131d' },
+  'Anodized aluminum': { color: '#111111', metalness: 0.96, roughness: 0.38 },
+  'Touchpad glass': { color: '#202020' },
+  'Touchpad tint': { color: '#090909' },
   'Rubber feet': { color: '#0c0f17' },
 };
 
@@ -274,6 +274,11 @@ function Site({ look, ids }: { look: Look; ids: boolean }) {
 const STYLES = `
 .ls-root { position: fixed; inset: 0; z-index: 120; overflow: hidden; letter-spacing: normal; color: #111; font-family: 'Poppins', system-ui, sans-serif; outline: none; background: #f2f0c4; transition: background-color .6s ease; }
 .ls-root.look-midnight { background: #070a12; color: #e8ecf6; }
+.ls-root.ls-landing { background: #050505; color: #f5f5f5; }
+.ls-landing .ls-bg.midnight { background: radial-gradient(ellipse at 50% 35%, #242424, #0b0b0b 60%, #050505); }
+.ls-landing .ls-inner, .ls-landing .ls-inner > .app-root { height: var(--ls-vh, 100dvh); }
+.ls-landing .ls-inner { width: 100%; }
+.ls-landing .ls-static { overflow: hidden; }
 .ls-wrapper { position: absolute; inset: 0; scroll-behavior: auto; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: none; outline: none; }
 .ls-wrapper::-webkit-scrollbar { display: none; }
 .ls-track { position: relative; width: 100%; }
@@ -423,11 +428,11 @@ function MiniScreen({ look }: { look: Look }) {
 /* ---------------------------------------------------------------------------------------------
    Component
 --------------------------------------------------------------------------------------------- */
-export default function LaptopScroll({ onClose }: { onClose: () => void }) {
+export default function LaptopScroll({ onClose, landing = false, children }: { onClose?: () => void; landing?: boolean; children?: ReactNode }) {
   const [mode, setMode] = useState<'scene' | 'static'>(() =>
     typeof window !== 'undefined' && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !webglAvailable()) ? 'static' : 'scene');
-  const [look, setLook] = useState<Look>('citrus');
-  const lookRef = useRef<Look>('citrus');
+  const [look, setLook] = useState<Look>(landing ? 'midnight' : 'citrus');
+  const lookRef = useRef<Look>(landing ? 'midnight' : 'citrus');
   const applyLookRef = useRef<((next: Look, animate: boolean) => void) | null>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -449,7 +454,7 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
 
   // Escape closes; the page behind stays untouched
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') closeRef.current(); };
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') closeRef.current?.(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
@@ -464,6 +469,7 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
     const screen = screenRef.current;
     const inner = innerRef.current;
     if (!root || !wrapper || !track || !stage || !canvas || !screen || !inner) return;
+    if (landing) inner.inert = true;
 
     /* ----- renderer ----- */
     let renderer: THREE.WebGLRenderer;
@@ -683,6 +689,10 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
       canvas.style.visibility = next ? 'hidden' : 'visible';
       screen.style.pointerEvents = next ? 'auto' : 'none';
       stage.classList.toggle('is-live', next);
+      if (landing) {
+        inner.inert = !next;
+        inner.setAttribute('aria-hidden', String(!next));
+      }
     };
 
     const updateScreen = () => {
@@ -753,7 +763,7 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
     /* ----- Lenis + shared GSAP clock ----- */
     const lenis = new Lenis({ wrapper, content: track, autoRaf: false, smoothWheel: true, syncTouch: false, lerp: 0.1 });
     const onScroll = () => {
-      const y = Math.max(0, lenis.scroll - pinLen); // past the laptop scene the page keeps scrolling into the website
+      const y = landing ? 0 : Math.max(0, lenis.scroll - pinLen);
       inner.style.transform = y > 0 ? `translate3d(0,${-y}px,0)` : '';
       ScrollTrigger.update();
     };
@@ -782,6 +792,7 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
 
     /* ----- in-page links inside the site ----- */
     const onSiteClick = (event: MouseEvent) => {
+      if (landing) return;
       const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
       if (!link) return;
       event.preventDefault();
@@ -841,12 +852,12 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
       renderer.dispose();
       renderer.forceContextLoss();
     };
-  }, [mode]);
+  }, [mode, landing]);
 
-  const rootClass = `ls-root look-${look}`;
+  const rootClass = `ls-root look-${look}${landing ? ' ls-landing' : ''}`;
 
   return (
-    <div ref={rootRef} className={rootClass} role="dialog" aria-modal="true" aria-label="Laptop screen scroll" data-sfx="none">
+    <div ref={rootRef} className={rootClass} role={landing ? undefined : 'dialog'} aria-modal={landing ? undefined : true} aria-label={landing ? undefined : 'Laptop screen scroll'} data-sfx={landing ? undefined : 'none'}>
       <style>{STYLES}</style>
 
       {mode === 'scene' ? (
@@ -858,18 +869,19 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
               <canvas ref={canvasRef} className="ls-canvas" aria-hidden="true" />
               <div className="ls-intro">
                 <h2>Open it.<br />Scroll in.</h2>
-                <p>A real 3D laptop, a live website on its screen, one continuous scroll.</p>
+                <p>{landing ? 'Code Beyond Limits. Scroll to enter Suresh’s world.' : 'A real 3D laptop, a live website on its screen, one continuous scroll.'}</p>
               </div>
               <div className="ls-hint" aria-hidden="true"><i />Scroll</div>
               <div ref={loaderRef} className="ls-loader" aria-hidden="true">Loading<b ref={barRef} /></div>
               <div ref={screenRef} className="ls-screen">
-                <div ref={innerRef} className="ls-inner"><Site look={look} ids /></div>
+                <div ref={innerRef} className="ls-inner">{landing ? children : <Site look={look} ids />}</div>
               </div>
             </div>
           </div>
         </div>
       ) : (
         <div className="ls-static">
+          {landing ? children : <>
           <div className="ls-static-hero">
             <h2>Code Beyond Limits.</h2>
             <div className="ls-lap">
@@ -878,15 +890,16 @@ export default function LaptopScroll({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <Site look={look} ids />
+          </>}
         </div>
       )}
 
-      <button type="button" className="ls-ui ls-close" aria-label="Close laptop showcase" onClick={onClose}><X size={20} strokeWidth={2} /></button>
-      <div className="ls-ui ls-looks" role="group" aria-label="Look">
+      {!landing && <button type="button" className="ls-ui ls-close" aria-label="Close laptop showcase" onClick={onClose}><X size={20} strokeWidth={2} /></button>}
+      {!landing && <div className="ls-ui ls-looks" role="group" aria-label="Look">
         {(['citrus', 'midnight'] as Look[]).map((value) => (
           <button key={value} type="button" aria-pressed={look === value} onClick={() => setLook(value)}>{LOOK_LABEL[value]}</button>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

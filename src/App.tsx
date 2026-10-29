@@ -1,13 +1,13 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Laptop, Music, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Music, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 import BG_IMAGE_1 from './assets/ChatGPT_Image_Oct_29__2026__05_39_11_AM.png';
 import NAV_ICON from './assets/nav-logo.webp';
 const BG_IMAGE_MOBILE_1 = BG_IMAGE_1;
 gsap.registerPlugin(ScrambleTextPlugin);
-// Laptop Screen Scroll: three.js + Lenis load only when the showcase is opened
+// The landing scene reveals the same live portfolio inside the laptop screen.
 const LaptopScroll = lazy(() => import('./LaptopScroll'));
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
@@ -856,7 +856,6 @@ const NAV_ITEMS: { label: string; Icon: LucideIcon }[] = [
   { label: 'CV', Icon: FileText },
   { label: 'GitHub', Icon: Code2 },
   { label: 'Gallery', Icon: Images },
-  { label: 'Laptop', Icon: Laptop },
 ];
 const STATS = [
   { radius: 330, start: -92, end: 16, dot: -49 },
@@ -2210,6 +2209,14 @@ function RippleBackground({ src }: { src: string }) {
 }
 
 export default function App() {
+  return (
+    <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#050505', color: '#fff', display: 'grid', placeItems: 'center' }} role="status">Loading experience…</div>}>
+      <LaptopScroll landing><MainSite /></LaptopScroll>
+    </Suspense>
+  );
+}
+
+function MainSite() {
   const [menuOpen, setMenuOpen] = useState(false);
   const effectsOn = useSoundEnabled(); // Sound switch (interface click / hover sounds, video, robot voice); the music player has its own Music switch
   const musicOn = useMusicEnabled();
@@ -2298,7 +2305,6 @@ export default function App() {
   const [ghOpen, setGhOpen] = useState(false);
   const ghPopRef = useRef<HTMLDivElement>(null);
   const [galOpen, setGalOpen] = useState(false);
-  const [laptopOpen, setLaptopOpen] = useState(false);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const galPopRef = useRef<HTMLDivElement>(null);
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
@@ -2323,7 +2329,6 @@ export default function App() {
   useOpenSfx(cvOpen, 'drop', 1);
   useOpenSfx(ghOpen, 'drop', 2);
   useOpenSfx(galOpen, 'drop', 3);
-  useOpenSfx(laptopOpen, 'lightbox');
   useOpenSfx(notice !== null, 'notice');
   useOpenSfx(lightbox !== null, 'lightbox');
   useOpenSfx(chatOpen, 'lightbox');
@@ -2588,16 +2593,6 @@ export default function App() {
   function navigate(label: string) {
     sfx.quietMenuClose();
     setMenuOpen(false);
-    setLaptopOpen(label === 'Laptop');
-    if (label === 'Laptop') {
-      setInfoOpen(false);
-      setWidgetsOpen(false);
-      setCaseOpen(false);
-      setCvOpen(false);
-      setGhOpen(false);
-      setGalOpen(false);
-      return;
-    }
     if (label === 'Case Records') {
       setInfoOpen(false);
       setWidgetsOpen(false);
@@ -3953,11 +3948,6 @@ export default function App() {
         </section>
       </main>
 
-      {laptopOpen && (
-        <Suspense fallback={null}>
-          <LaptopScroll onClose={() => setLaptopOpen(false)} />
-        </Suspense>
-      )}
 
       <ChatPopup open={chatOpen} onClose={() => setChatOpen(false)} onAction={chatAction} />
 
