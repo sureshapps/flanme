@@ -1,17 +1,17 @@
 .spotlight-background {
   --spotlight-key: #ffd29a;
   --spotlight-gel: #7195ff;
-  --spotlight-haze: .85;
+  --spotlight-haze: .65;
   --spotlight-ground: #080c15;
-  --spotlight-intensity: 2;
-  --spotlight-photo-opacity: .8;
+  --spotlight-intensity: .85;
+  --spotlight-photo-opacity: .3;
   --spotlight-aim-x: 30%;
   --spotlight-aim-y: 72%;
   position: absolute; inset: 0; z-index: 10; overflow: hidden; pointer-events: none;
   background: var(--spotlight-ground); isolation: isolate;
 }
-.spotlight-background::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('./assets/bg1.webp') center center / cover no-repeat; opacity: var(--spotlight-photo-opacity); }
-.spotlight-background::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #03060c45, transparent 35%), linear-gradient(0deg, #03060c8c, transparent 35%); }
+.spotlight-background::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('./assets/bg1.png') center center / cover no-repeat; opacity: var(--spotlight-photo-opacity); }
+.spotlight-background::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #03060c45, transparent 65%), linear-gradient(0deg, #03060c8c, transparent 65%); }
 .spotlight-background > canvas, .spotlight-css { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; }
 .spotlight-background > canvas { display: none; mix-blend-mode: screen; }
 .spotlight-webgl > canvas { display: block; }
@@ -34,12 +34,13 @@
 }
 .lighting-control-slot { position: relative; z-index: 72; margin-top: 7px; width: max-content; }
 .spotlight-controls { position: relative; width: max-content; color: #f2f2f6; font-size: 10px; }
-.spotlight-controls summary { display: flex; align-items: center; gap: 5px; width: max-content; list-style: none; cursor: pointer; border: 1px solid #ffffff30; border-radius: 999px; background: #10131ab0; padding: 4px 9px; font-size: 6px; line-height: 10px; backdrop-filter: blur(12px); }
+.spotlight-controls summary { display: flex; align-items: center; gap: 5px; width: max-content; list-style: none; cursor: pointer; border: 1px solid #ffffff40; border-radius: 999px; background: linear-gradient(135deg, #ffffff18, #ffffff05); box-shadow: inset 0 1px 0 #ffffff22, 0 3px 12px #0002; padding: 4px 9px; font-size: 6px; line-height: 10px; backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); }
 .spotlight-controls summary::-webkit-details-marker { display: none; }
 .spotlight-controls summary:focus-visible, .spotlight-controls input:focus-visible, .spotlight-controls select:focus-visible { outline: 2px solid #ffe3ad; outline-offset: 4px; }
-.spotlight-settings { position: absolute; left: 0; bottom: calc(100% + 9px); width: min(235px, calc(100vw - 40px)); padding: 16px; border: 1px solid #ffffff25; border-radius: 16px; background: #10131af5; box-shadow: 0 16px 60px #0008; }
+.spotlight-settings { position: absolute; left: 0; bottom: calc(100% + 9px); width: min(235px, calc(100vw - 40px)); padding: 16px; border: 1px solid #ffffff40; border-radius: 16px; background: linear-gradient(135deg, #ffffff1f, #0b10203d); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); box-shadow: inset 0 1px 0 #ffffff30, 0 12px 35px #0005; }
 .spotlight-settings label { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 14px; }
-.spotlight-settings select { background: #242834; color: white; border-radius: 6px; padding: 3px 7px; }
+.spotlight-settings select { background: #ffffff12; color: white; border: 1px solid #ffffff30; border-radius: 6px; padding: 3px 7px; }
+.spotlight-settings option { background: #171c29; color: white; }
 .spotlight-settings input[type=range] { width: 100px; accent-color: #ffd29a; }
 .spotlight-settings input[type=checkbox] { accent-color: #ffd29a; }
 .spotlight-settings p { margin: 6px 0 0; color: #b8bfcd; font-size: 9px; line-height: 1.8; }
