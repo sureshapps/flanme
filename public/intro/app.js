@@ -17,7 +17,7 @@ const shape=$('#shape'),shadow=$('#shadow'),outline=$('#outline');
 const brush=$('#brush'),length=brush.getTotalLength();
 gsap.set(brush,{strokeDasharray:length,strokeDashoffset:length});gsap.set('#final,#comet',{opacity:0});
 const tl=gsap.timeline({paused:true,onUpdate:update,onComplete:()=>{audio.stop()}});
-window.animation=tl;
+window.animation=tl;tl.timeScale(1.3);
 tl.fromTo('#letter',{opacity:0,scale:.72,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:1.2,ease:'expo.out'},0);
 for(let i=1;i<6;i++){
 const t=1.5+(i-1)*1.65;
