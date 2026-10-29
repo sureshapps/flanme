@@ -8,3 +8,6 @@
 
 /* interactive dot grid behind the intro */
 #dotgrid{position:fixed;inset:0;width:100vw;height:100dvh;z-index:0;pointer-events:none;display:block}header,main,footer{position:relative;z-index:1}
+
+/* the full-name artwork, comet and stars stay hidden from the very first paint; the animation reveals them (stops the full name flashing before it starts) */
+#final,#comet,#stars{opacity:0}
