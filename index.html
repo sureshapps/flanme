@@ -76,21 +76,53 @@
       }
       #intro.leaving { opacity: 0; visibility: hidden; pointer-events: none; }
       #intro-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
-      #enter {
+      /* ENTER: glassmorphism button (blue neon bars light up on hover) */
+      #enter-wrap {
         position: absolute; left: 50%; bottom: calc(176px + env(safe-area-inset-bottom, 0px));
         transform: translateX(-50%);
-        padding: 10px 20px 10px 24px;
-        font: 500 12px/1 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
-        letter-spacing: 0.42em; text-transform: uppercase;
-        color: #e0e8ff; background: rgba(0, 0, 0, 0.45);
-        border: 1px solid #b4c7ff; cursor: pointer;
-        box-shadow: 0 0 22px rgba(157, 181, 255, 0.28);
+        width: min(250px, 70vw); height: 50px;
         opacity: 0; visibility: hidden; pointer-events: none;
-        transition: opacity 0.8s ease, visibility 0.8s ease, background 0.2s, color 0.2s;
+        transition: opacity 0.8s ease, visibility 0.8s ease;
       }
-      #enter.show { opacity: 1; visibility: visible; pointer-events: auto; }
-      #enter:hover:not(:disabled), #enter:focus-visible { background: #e0e8ff; color: #000; outline: none; }
-      #enter:disabled { cursor: wait; opacity: 0.55; }
+      #enter-wrap.show { opacity: 1; visibility: visible; pointer-events: auto; }
+      #enter {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; justify-content: center; align-items: center;
+        padding: 10px; margin: 0;
+        font: 500 13px/1 'Space Grotesk', 'Roboto', system-ui, sans-serif;
+        letter-spacing: 0.3em; text-indent: 0.3em; text-transform: uppercase;
+        color: #fff; cursor: pointer;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 15px 15px rgba(0, 0, 0, 0.3);
+        border: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 30px;
+        overflow: hidden; z-index: 1;
+        -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
+        transition: 0.5s;
+      }
+      #enter::before { /* light sweep */
+        content: ""; position: absolute; top: 0; left: 0; width: 50%; height: 100%;
+        background: linear-gradient(to left, rgba(255, 255, 255, 0.15), transparent);
+        transform: skewX(45deg) translate(0);
+        transition: 0.5s;
+      }
+      #enter-wrap::before, #enter-wrap::after { /* neon bars */
+        content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+        width: 30px; height: 10px; border-radius: 10px;
+        background: #2db2ff;
+        box-shadow: 0 0 5px #2db2ff, 0 0 15px #2db2ff, 0 0 30px #2db2ff, 0 0 60px #2db2ff;
+        transition: 0.5s;
+      }
+      #enter-wrap::before { bottom: -5px; }
+      #enter-wrap::after { top: -5px; }
+      #enter-wrap.ready:hover #enter { letter-spacing: 0.5em; text-indent: 0.5em; }
+      #enter-wrap.ready:hover #enter::before { transform: skewX(45deg) translate(200px); }
+      #enter-wrap.ready:hover::before { bottom: 0; height: 50%; width: 80%; border-radius: 30px; }
+      #enter-wrap.ready:hover::after { top: 0; height: 50%; width: 80%; border-radius: 30px; }
+      #enter:focus-visible { outline: 1px solid rgba(45, 178, 255, 0.9); outline-offset: 5px; }
+      #enter:disabled { cursor: wait; opacity: 0.6; }
     </style>
   </head>
   <body>
@@ -100,7 +132,7 @@
     <!-- intro overlay: loads first, hides the app until ENTER is pressed -->
     <div id="intro">
       <iframe id="intro-frame" src="/intro/index.html" title="SURESH intro animation" allow="autoplay"></iframe>
-      <button id="enter" type="button" disabled>LOADING</button>
+      <div id="enter-wrap"><button id="enter" type="button" disabled>LOADING</button></div>
     </div>
 
     <div id="root"></div>
@@ -137,13 +169,15 @@
         var intro = document.getElementById('intro');
         var frame = document.getElementById('intro-frame');
         var btn = document.getElementById('enter');
+        var wrap = document.getElementById('enter-wrap');
         var animDone = false, entered = false, focused = false, t0 = Date.now();
 
         function appReady() { return document.documentElement.classList.contains('app-ready'); }
 
         function sync() {
           var ok = appReady();
-          btn.classList.toggle('show', animDone);
+          wrap.classList.toggle('show', animDone);
+          wrap.classList.toggle('ready', ok);
           btn.disabled = !ok;
           btn.textContent = ok ? 'ENTER' : 'LOADING';
           if (animDone && ok && !focused) { focused = true; btn.focus({ preventScroll: true }); }
