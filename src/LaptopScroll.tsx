@@ -430,7 +430,7 @@ function MiniScreen({ look }: { look: Look }) {
 /* ---------------------------------------------------------------------------------------------
    Component
 --------------------------------------------------------------------------------------------- */
-export default function LaptopScroll({ onClose, landing = false, children }: { onClose?: () => void; landing?: boolean; children?: ReactNode }) {
+export default function LaptopScroll({ onClose, landing = false, children, onLiveChange }: { onClose?: () => void; landing?: boolean; children?: ReactNode; onLiveChange?: (live: boolean) => void }) {
   const [mode, setMode] = useState<'scene' | 'static'>(() =>
     typeof window !== 'undefined' && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !webglAvailable()) ? 'static' : 'scene');
   const [look, setLook] = useState<Look>(landing ? 'midnight' : 'citrus');
@@ -438,6 +438,12 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
   const applyLookRef = useRef<((next: Look, animate: boolean) => void) | null>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const liveChangeRef = useRef(onLiveChange);
+  liveChangeRef.current = onLiveChange;
+
+  useEffect(() => {
+    if (mode === 'static') liveChangeRef.current?.(true);
+  }, [mode]);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -697,6 +703,7 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
     const setLive = (next: boolean) => {
       if (next === live) return;
       live = next;
+      liveChangeRef.current?.(next);
       canvas.style.visibility = next ? 'hidden' : 'visible';
       screen.style.pointerEvents = next ? 'auto' : 'none';
       stage.classList.toggle('is-live', next);

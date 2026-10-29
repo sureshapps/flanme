@@ -1,12 +1,9 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import gsap from 'gsap';
-import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Music, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
-import BG_IMAGE_1 from './assets/ChatGPT_Image_Oct_29__2026__05_39_11_AM.png';
+import SpotlightBackground from './SpotlightBackground';
 import NAV_ICON from './assets/nav-logo.webp';
-const BG_IMAGE_MOBILE_1 = BG_IMAGE_1;
-gsap.registerPlugin(ScrambleTextPlugin);
 // The landing scene reveals the same live portfolio inside the laptop screen.
 const LaptopScroll = lazy(() => import('./LaptopScroll'));
 const SIGNATURE = '/signature.png';
@@ -17,7 +14,6 @@ const CV_SCRIPT = 'https://sureshapps.github.io/JomEdit/cv.js';
 const CONNECT_COVER = '/me.webp';
 const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build';
 const CV_URL = 'https://raw.githubusercontent.com/sureshapps/flanme/main/public/cv_devops.pdf';
-const NEON_URL = 'https://unpkg.com/threejs-toys@0.0.8/build/threejs-toys.module.cdn.min.js';
 const BEHANCE_USER = 'sureshksmy';
 const BEHANCE_KEY = 'yOEjVeOZZg7Wi9bkoW5t37K9GpaAdRnV';
 const BEHANCE_PROFILE = `https://www.behance.net/${BEHANCE_USER}`;
@@ -2007,250 +2003,36 @@ function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => 
   );
 }
 
-/* Hero background: WebGL glitch image (RGB split, slice shifts, pixel bursts, scanlines, grain) that pulses on a beat,
-   bursts on click/hold, with a soft cursor light and gentle parallax. Swap the image by changing the imports at the top of the file. */
-const RIPPLE_VS = 'attribute vec2 a;varying vec2 v;void main(){v=a*.5+.5;gl_Position=vec4(a,0.,1.);}';
-const RIPPLE_FS = [
-  '#ifdef GL_FRAGMENT_PRECISION_HIGH', 'precision highp float;', '#else', 'precision mediump float;', '#endif',
-  'varying vec2 v;uniform sampler2D uTex;uniform vec2 uRes,uImg,uOff,uMouse;uniform float uZoom,uTime,uLight,uFade,uCalm;uniform vec4 uR[6];',
-  'float h(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}',
-  'void main(){',
-  ' vec2 asp=vec2(uRes.x/uRes.y,1.);',
-  ' float click=0.;',
-  ' for(int i=0;i<6;i++){click=max(click,uR[i].w);}',
-  ' float beat=exp(-fract(uTime*2.1)*5.5);',
-  ' float pulse=max(click*.6,beat*.25)*(1.-.9*uCalm);',
-  ' vec2 p=v;',
-  ' float pk=click*.08*(1.-uCalm);',
-  ' if(pk>.02){float g=mix(1200.,70.,pk);vec2 cell=vec2(g,g*uRes.y/uRes.x);p=(floor(p*cell)+.5)/cell;}',
-  ' float t=floor(uTime*14.);',
-  ' float on=(step(.94,h(vec2(t,7.)))*.5+pulse*.5)*(1.-.9*uCalm);',
-  ' float band=floor(p.y*mix(10.,40.,h(vec2(t,2.))));',
-  ' p.x+=(h(vec2(band,t+3.))-.5)*.05*on*step(.55,h(vec2(band,t)));',
-  ' p.y+=step(.93,h(vec2(t,11.)))*(h(vec2(t,5.))-.5)*.012*(1.-uCalm);',
-  ' float s=max(uRes.x/uImg.x,uRes.y/uImg.y);vec2 size=uImg*s;',
-  ' vec2 uv=(p-.5)*uRes/size/uZoom+.5+uOff;',
-  ' float amt=.0012+.004*pulse+.005*on+uLight*.0006;',
-  ' vec2 off=(p-.5)*amt*6.+vec2(amt,0.);',
-  ' vec3 c=vec3(texture2D(uTex,uv+off).r,texture2D(uTex,uv).g,texture2D(uTex,uv-off).b);',
-  ' c*=1.-.07*(.5+.5*sin(v.y*uRes.y*1.6));',
-  ' c+=(h(v*uRes+uTime)-.5)*.03;',
-  ' float dl=length((v-uMouse)*asp);float g2=exp(-dl*dl*7.)*uLight;',
-  ' c+=c*g2*.25+vec3(1.,.72,.38)*g2*.04;',
-  ' c+=pulse*.02;',
-  ' c=(c-.5)*1.08+.5;',
-  ' c*=1.-.35*smoothstep(.55,1.15,length((v-.5)*asp));',
-  ' gl_FragColor=vec4(c*uFade,1.);}',
-].join('\n');
-
-function RippleBackground({ src }: { src: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const gl = (canvas.getContext('webgl', { antialias: false, alpha: false }) ?? canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
-    if (!gl) { canvas.style.display = 'none'; return; }
-
-    const compile = (type: number, source: string) => {
-      const shader = gl.createShader(type)!;
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      return shader;
-    };
-    const program = gl.createProgram()!;
-    gl.attachShader(program, compile(gl.VERTEX_SHADER, RIPPLE_VS));
-    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, RIPPLE_FS));
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { canvas.style.display = 'none'; return; }
-    gl.useProgram(program);
-
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    const attr = gl.getAttribLocation(program, 'a');
-    gl.enableVertexAttribArray(attr);
-    gl.vertexAttribPointer(attr, 2, gl.FLOAT, false, 0, 0);
-    const U: Record<string, WebGLUniformLocation | null> = {};
-    ['uTex', 'uRes', 'uImg', 'uOff', 'uMouse', 'uZoom', 'uTime', 'uLight', 'uFade', 'uCalm', 'uR'].forEach((n) => { U[n] = gl.getUniformLocation(program, n); });
-
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const st = { offX: 0, offY: 0, parX: 0, parY: 0, mx: 0.3, my: 0.55, light: 0.45, zoom: 1.16, fade: 0 };
-    const goal = { mx: 0.3, my: 0.55, px: 0, py: 0 };
-    const ripples = Array.from({ length: 6 }, () => ({ x: 0, y: 0, t: -99 }));
-    const LIFE = 3.6;
-    const rbuf = new Float32Array(24);
-    let ri = 0;
-    let ready = false;
-    let imgW = 1;
-    let imgH = 1;
-    let frame = 0;
-    let holding: number | null = null;
-    let px = 0.5;
-    let py = 0.5;
-    const tex = gl.createTexture();
-
-    const resize = () => {
-      const d = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(window.innerWidth * d);
-      canvas.height = Math.round(window.innerHeight * d);
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const spawn = (x: number, y: number) => {
-      const r = ripples[ri];
-      ri = (ri + 1) % 6;
-      r.x = x; r.y = y; r.t = performance.now() / 1000;
-    };
-
-    const tweens: gsap.core.Tween[] = [];
-    const to = (vars: gsap.TweenVars) => { const t = gsap.to(st, vars); tweens.push(t); return t; };
-
-    const render = () => {
-      frame = requestAnimationFrame(render);
-      if (!ready) return;
-      st.mx += (goal.mx - st.mx) * 0.12;
-      st.my += (goal.my - st.my) * 0.12;
-      st.parX += (goal.px - st.parX) * 0.06;
-      st.parY += (goal.py - st.parY) * 0.06;
-      const now = performance.now() / 1000;
-      for (let i = 0; i < 6; i += 1) {
-        const r = ripples[i];
-        const age = now - r.t;
-        const k = age < LIFE ? (1 - age / LIFE) ** 2 : 0;
-        rbuf[i * 4] = r.x; rbuf[i * 4 + 1] = r.y; rbuf[i * 4 + 2] = Math.max(age, 0); rbuf[i * 4 + 3] = k;
-      }
-      gl.uniform2f(U.uRes, canvas.width, canvas.height);
-      gl.uniform2f(U.uImg, imgW, imgH);
-      gl.uniform2f(U.uOff, st.offX + st.parX, st.offY + st.parY);
-      gl.uniform2f(U.uMouse, st.mx, st.my);
-      gl.uniform1f(U.uZoom, st.zoom);
-      gl.uniform1f(U.uTime, now);
-      gl.uniform1f(U.uLight, st.light);
-      gl.uniform1f(U.uFade, st.fade);
-      gl.uniform1f(U.uCalm, reduce ? 1 : 0);
-      gl.uniform4fv(U.uR, rbuf);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    };
-    frame = requestAnimationFrame(render);
-
-    const img = new Image();
-    img.onload = () => {
-      imgW = img.naturalWidth; imgH = img.naturalHeight;
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.uniform1i(U.uTex, 0);
-      ready = true;
-      to({ fade: 1, duration: reduce ? 0.01 : 1.4, ease: 'power2.out' });
-      to({ zoom: 1.07, duration: reduce ? 0.01 : 2.8, ease: 'expo.out' });
-      if (!reduce) {
-        to({ offX: 0.011, duration: 9, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-        to({ offY: -0.008, duration: 12, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-        to({ zoom: 1.085, duration: 15, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 3 });
-      }
-    };
-    img.src = src;
-
-    const track = (e: PointerEvent) => {
-      px = e.clientX / window.innerWidth;
-      py = 1 - e.clientY / window.innerHeight;
-      goal.mx = px; goal.my = py;
-      if (!reduce) { goal.px = (px - 0.5) * -0.016; goal.py = (py - 0.5) * -0.016; }
-    };
-    const onMove = (e: PointerEvent) => { track(e); gsap.to(st, { light: 1, duration: 0.6, overwrite: 'auto' }); };
-    const release = () => {
-      if (holding !== null) window.clearInterval(holding);
-      holding = null;
-      gsap.to(st, { light: 1, duration: 0.9, ease: 'power2.out', overwrite: 'auto' });
-    };
-    const onDown = (e: PointerEvent) => {
-      track(e); st.mx = px; st.my = py;
-      gsap.to(st, { light: 1.5, duration: 0.35, overwrite: 'auto' });
-      spawn(px, py);
-      if (holding !== null) window.clearInterval(holding);
-      holding = window.setInterval(() => spawn(px, py), 420);
-    };
-    const onLeave = () => { release(); gsap.to(st, { light: 0.45, duration: 1.2 }); };
-    const onVis = () => { if (document.hidden) release(); };
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerdown', onDown);
-    window.addEventListener('pointerup', release);
-    window.addEventListener('pointercancel', release);
-    document.addEventListener('pointerleave', onLeave);
-    document.addEventListener('visibilitychange', onVis);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      if (holding !== null) window.clearInterval(holding);
-      tweens.forEach((t) => t.kill());
-      gsap.killTweensOf(st);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerdown', onDown);
-      window.removeEventListener('pointerup', release);
-      window.removeEventListener('pointercancel', release);
-      document.removeEventListener('pointerleave', onLeave);
-      document.removeEventListener('visibilitychange', onVis);
-      gl.deleteTexture(tex);
-      gl.deleteBuffer(buffer);
-      gl.deleteProgram(program);
-    };
-  }, [src]);
-
-  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-10 h-full w-full" aria-hidden="true" />;
-}
-
 export default function App() {
+  const [portfolioActive, setPortfolioActive] = useState(false);
   return (
     <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#ededed' }} role="status" aria-label="Loading experience" />}>
-      <LaptopScroll landing><MainSite /></LaptopScroll>
+      <LaptopScroll landing onLiveChange={setPortfolioActive}><MainSite spotlightActive={portfolioActive} /></LaptopScroll>
     </Suspense>
   );
 }
 
-function MainSite() {
+function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const effectsOn = useSoundEnabled(); // Sound switch (interface click / hover sounds, video, robot voice); the music player has its own Music switch
   const musicOn = useMusicEnabled();
   const siteReady = true;
   const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
-  const [effectsReady, setEffectsReady] = useState(false);
-  useEffect(() => {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) return;
-    const enable = () => setEffectsReady(true);
-    window.addEventListener('pointerdown', enable, { once: true });
-    return () => window.removeEventListener('pointerdown', enable);
-  }, []);
-
-
-  // hero title: "Beyond Limits." decodes itself (ScrambleText); "Code" fades and rises in as a whole word
+  // A quiet headline entrance lets the stage lights provide the motion.
   useLayoutEffect(() => {
     const root = appRef.current;
-    if (!root || !siteReady) return;
+    if (!root || !siteReady || !spotlightActive) return;
     const code = root.querySelector<HTMLElement>('.title-code');
     const sub = root.querySelector<HTMLElement>('.title-sub');
     if (!code || !sub) return;
     const media = gsap.matchMedia();
     media.add('(prefers-reduced-motion: no-preference)', () => {
-      gsap.set(sub, { opacity: 0 });
-      // "Code": a plain whole-word transition (fade + rise + de-blur), no text splitting
-      gsap.fromTo(code, { opacity: 0, y: 46, scale: 0.96, filter: 'blur(14px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1.1, delay: 0.15, ease: 'power3.out', clearProps: 'transform,filter,opacity' });
-      gsap.timeline({ delay: 0.55 })
-        .to(sub, { opacity: 1, duration: 0.2 })
-        .to(sub, { duration: 1.8, ease: 'none', scrambleText: { text: 'Beyond Limits.', chars: 'upperAndLowerCase', revealDelay: 0.3, speed: 0.6 } }, 0);
+      gsap.fromTo([code, sub], { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: .8, stagger: .12, ease: 'power3.out', clearProps: 'transform,opacity' });
       return () => { gsap.set([code, sub], { clearProps: 'opacity,transform,filter' }); };
     }, root);
     return () => media.revert();
-  }, [siteReady]);
+  }, [siteReady, spotlightActive]);
 
   useEffect(() => {
     const root = appRef.current;
@@ -2311,13 +2093,9 @@ function MainSite() {
   const [soundOn, setSoundOn] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const infoOpenRef = useRef(false);
-  const revealRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const patternRef = useRef<SVGPatternElement>(null);
   const noticeRef = useRef<HTMLDialogElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const signatureRef = useRef<HTMLDivElement>(null);
-  const cursorTarget = useRef({ x: -999, y: -999 });
   const appRef = useRef<HTMLDivElement>(null);
 
   // sound: hover / click / focus for everything, plus open / close for each menu, panel and popup
@@ -2334,85 +2112,6 @@ function MainSite() {
   useOpenSfx(chatOpen, 'lightbox');
   useStatusSfx(projectsState);
   useStatusSfx(cvState);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const reveal = revealRef.current;
-    const pattern = patternRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !reveal || !pattern || !context) return;
-
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    let animationFrame = 0;
-    let cursor = { x: -999, y: -999 };
-    let parallax = { x: 0, y: 0 };
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let reducedMotion = motionQuery.matches;
-
-    const resize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-    };
-    const mouseMove = (event: MouseEvent) => {
-      cursorTarget.current = { x: event.clientX, y: event.clientY };
-    };
-    const mouseLeave = () => {
-      cursorTarget.current = { x: -999, y: -999 };
-    };
-    const motionChange = (event: MediaQueryListEvent) => {
-      reducedMotion = event.matches;
-    };
-    resize();
-
-    const animate = () => {
-      const target = cursorTarget.current;
-      const cursorLerp = reducedMotion ? 1 : 0.1;
-      cursor.x += (target.x - cursor.x) * cursorLerp;
-      cursor.y += (target.y - cursor.y) * cursorLerp;
-      const gridX = target.x < 0 || reducedMotion ? 0 : (target.x / width - 0.5) * 16;
-      const gridY = target.y < 0 || reducedMotion ? 0 : (target.y / height - 0.5) * 16;
-      parallax.x += (gridX - parallax.x) * 0.06;
-      parallax.y += (gridY - parallax.y) * 0.06;
-      pattern.setAttribute('x', String(parallax.x));
-      pattern.setAttribute('y', String(parallax.y));
-
-      context.clearRect(0, 0, width, height);
-      const gradient = context.createRadialGradient(cursor.x, cursor.y, 0, cursor.x, cursor.y, 260);
-      gradient.addColorStop(0, 'rgba(255,255,255,1)');
-      gradient.addColorStop(0.4, 'rgba(255,255,255,1)');
-      gradient.addColorStop(0.6, 'rgba(255,255,255,0.75)');
-      gradient.addColorStop(0.75, 'rgba(255,255,255,0.4)');
-      gradient.addColorStop(0.88, 'rgba(255,255,255,0.12)');
-      gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      context.fillStyle = gradient;
-      context.beginPath();
-      context.arc(cursor.x, cursor.y, 260, 0, Math.PI * 2);
-      context.fill();
-      const mask = `url("${canvas.toDataURL()}")`;
-      reveal.style.maskImage = mask;
-      reveal.style.webkitMaskImage = mask;
-      animationFrame = window.requestAnimationFrame(animate);
-    };
-
-    window.addEventListener('mousemove', mouseMove, { passive: true });
-    document.documentElement.addEventListener('mouseleave', mouseLeave);
-    window.addEventListener('blur', mouseLeave);
-    window.addEventListener('resize', resize, { passive: true });
-    motionQuery.addEventListener('change', motionChange);
-    animationFrame = window.requestAnimationFrame(animate);
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener('mousemove', mouseMove);
-      document.documentElement.removeEventListener('mouseleave', mouseLeave);
-      window.removeEventListener('blur', mouseLeave);
-      window.removeEventListener('resize', resize);
-      motionQuery.removeEventListener('change', motionChange);
-      cursorTarget.current = { x: -999, y: -999 };
-    };
-  }, []);
 
   useEffect(() => {
     const dialog = noticeRef.current;
@@ -2547,49 +2246,6 @@ function MainSite() {
     return () => ctx.revert();
   }, [siteReady]);
 
-  useEffect(() => {
-    const el = appRef.current;
-    if (!el || !effectsReady || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let cancelled = false;
-    let cursor: { dispose?: () => void } | undefined;
-    const existing = new Set(Array.from(el.querySelectorAll('canvas')));
-    // the trail only shows while the pointer is over the page (otherwise the library wanders on its own)
-    const show = () => el.classList.add('neon-on');
-    const hide = () => el.classList.remove('neon-on');
-    el.addEventListener('pointermove', show);
-    el.addEventListener('pointerleave', hide);
-    (async () => {
-      try {
-        // loaded from the CDN on demand, so no npm package is needed
-        const { neonCursor } = await import(/* @vite-ignore */ NEON_URL);
-        if (cancelled) return;
-        cursor = neonCursor({
-          el,
-          shaderPoints: 4,
-          curvePoints: 4,
-          curveLerp: 0.5,
-          radius1: 4,
-          radius2: 5,
-          velocityTreshold: 10,
-          sleepRadiusX: 100,
-          sleepRadiusY: 100,
-          sleepTimeCoefX: 0.0025,
-          sleepTimeCoefY: 0.0025,
-        });
-      } catch (error) {
-        console.error('Failed to load neon cursor:', error);
-      }
-    })();
-    return () => {
-      cancelled = true;
-      el.removeEventListener('pointermove', show);
-      el.removeEventListener('pointerleave', hide);
-      hide();
-      cursor?.dispose?.();
-      el.querySelectorAll('canvas').forEach((canvas) => { if (!existing.has(canvas)) canvas.remove(); });
-    };
-  }, [effectsReady]);
-
   function navigate(label: string) {
     sfx.quietMenuClose();
     setMenuOpen(false);
@@ -2653,7 +2309,7 @@ function MainSite() {
   }, [caseOpen, ghOpen, galOpen, infoOpen, projectsState]);
 
   return (
-    <div ref={appRef} className="neon-host app-root tracking-[-0.02em]" data-site={siteReady ? 'ready' : 'loading'} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+    <div ref={appRef} className="app-root tracking-[-0.02em]" data-site={siteReady ? 'ready' : 'loading'} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       <style>{`
         @import url('https://fonts.cdnfonts.com/css/talaga-lakes');
         @import url('https://fonts.cdnfonts.com/css/change-your-name');
@@ -2687,7 +2343,7 @@ function MainSite() {
           .title-sub { font-size: 9vw; }
         }
         /* page never scrolls or zooms; only the widget panel scrolls */
-        html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; background: #820d16; }
+        html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; background: #080c15; }
         html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         body { position: fixed; inset: 0; -webkit-tap-highlight-color: transparent; }
         .app-root { position: fixed; inset: 0; width: 100%; height: var(--app-h, 100dvh); overflow: hidden; background: #820d16; }
@@ -3460,14 +3116,6 @@ function MainSite() {
         .app-root[data-site="loading"] > :not(.curtain) *::before,
         .app-root[data-site="loading"] > :not(.curtain) *::after { animation-play-state: paused !important; }
         .app-root[data-site="loading"] .title span:before { --mask-progress: 0%; transition: none; }
-        /* neon cursor trail: the library paints an opaque black canvas with a faint purple haze, so
-           contrast() crushes the haze to black and screen-blend makes black transparent: only the trail remains */
-        .neon-host > canvas {
-          position: fixed; inset: 0; width: 100% !important; height: 100% !important; z-index: 90; pointer-events: none;
-          mix-blend-mode: screen; filter: contrast(2);
-          opacity: 0; transition: opacity 0.35s ease;
-        }
-        .neon-host.neon-on > canvas { opacity: 1; }
         /* Jom Connect card popup */
         .connect-dialog {
           width: min(30rem, calc(100vw - 2.5rem)); max-width: none; max-height: calc(100dvh - 2rem);
@@ -3879,39 +3527,13 @@ function MainSite() {
       )}
 
       <main id="module" className="relative h-full touch-none overflow-hidden">
-        <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full" style={{ opacity: 0.1 }} aria-hidden="true">
-          <defs>
-            <pattern ref={patternRef} id="hero-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-              <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#64748b" strokeWidth="0.6" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#hero-grid)" />
-        </svg>
-        <RippleBackground src={phone ? BG_IMAGE_MOBILE_1 : BG_IMAGE_1} />
-        <div className="pointer-events-none absolute inset-0 z-20 bg-black/45" aria-hidden="true" />
-        <div ref={revealRef} className="hidden" aria-hidden="true" />
-        <canvas ref={canvasRef} hidden aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-r from-black/30 via-transparent to-transparent" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 z-40 bg-gradient-to-t from-black/30 via-transparent to-transparent" aria-hidden="true" />
-        <nav className="experience-dock" aria-label="Explore Suresh's work">
-          <span className="dock-caption">EXPLORE THE DIMENSION</span>
-          {([
-            ['01', 'Selected work', 'Case Records'],
-            ['02', 'Engineering', 'GitHub'],
-            ['03', 'Visual journal', 'Gallery'],
-          ] as const).map(([number, title, destination]) => (
-            <button key={number} type="button" className="dock-link" onClick={() => navigate(destination)} data-sfx="nav">
-              <span>{number}</span><strong>{title}</strong><span aria-hidden="true">↗</span>
-            </button>
-          ))}
-          <button type="button" className="dock-contact" onClick={() => openNotice('connect')}>Have something in mind? Let’s talk ↗</button>
-        </nav>
+        <SpotlightBackground active={spotlightActive} />
         <Statistics />
         <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
           <h1 id="hero-title" className="mb-6 sm:mb-8" style={{ visibility: siteReady ? 'visible' : 'hidden' }}>
-            <span className="title-code block">Code</span>
-            <span className="title-sub -mt-1 block sm:-mt-2" aria-label="Beyond Limits.">Beyond Limits.</span>
+            <span className="title-code block" data-spotlight-text="Code">Code</span>
+            <span className="title-sub -mt-1 block sm:-mt-2" data-spotlight-text="Beyond Limits." aria-label="Beyond Limits.">Beyond Limits.</span>
           </h1>
           <div className="title hero-rise -mt-7 sm:-mt-10" style={{ animationDelay: '0.5s' }}>the digital signature of 	&nbsp; <span>Suresh</span></div>
           <div ref={signatureRef} className="mb-6 sm:mb-8">
