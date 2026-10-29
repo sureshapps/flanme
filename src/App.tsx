@@ -1405,8 +1405,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const isLaughing = now < laughUntil;
       canvas.classList.toggle('robot-canvas-angry', isAngry);
 
-      const glow = isAngry ? '#ff2d2d' : '#ff8a1f';
-      const glowSoft = isAngry ? 'rgba(255,45,45,' : 'rgba(255,138,31,';
+      const glow = isAngry ? '#ff2d2d' : '#aeb3bb';
+      const glowSoft = isAngry ? 'rgba(255,45,45,' : 'rgba(174,179,187,';
       const floatY = Math.sin(time) * 8;
       ctx.lineCap = 'round';
 
@@ -1424,8 +1424,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const bodyY = cy + floatY + 30;
       const bodyGrad = ctx.createRadialGradient(bodyX - 18, bodyY - 20, 6, bodyX, bodyY, 60);
       bodyGrad.addColorStop(0, '#ffffff');
-      bodyGrad.addColorStop(0.55, '#fbe9de');
-      bodyGrad.addColorStop(1, '#e8b79c');
+      bodyGrad.addColorStop(0.55, '#eceef1');
+      bodyGrad.addColorStop(1, '#b9bec6');
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
       ctx.ellipse(bodyX, bodyY, 50, 45, 0, 0, Math.PI * 2);
@@ -1458,7 +1458,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.beginPath();
       ctx.arc(logoX, logoY, 6, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#fff3d6';
+      ctx.fillStyle = '#f2f4f7';
       ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(logoX, logoY, 2.5, 0, Math.PI * 2);
@@ -1496,8 +1496,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       // head
       const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 15, headX, headY, 80);
       headGrad.addColorStop(0, '#ffffff');
-      headGrad.addColorStop(0.6, '#fbe9de');
-      headGrad.addColorStop(1, '#e8b79c');
+      headGrad.addColorStop(0.6, '#eceef1');
+      headGrad.addColorStop(1, '#b9bec6');
       ctx.fillStyle = headGrad;
       ctx.beginPath();
       ctx.roundRect(headX - 60, headY - 45, 120, 90, 40);
@@ -1508,8 +1508,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const faceY = headY + mouse.y * 8;
       const faceHeight = 60;
       const visorGrad = ctx.createLinearGradient(0, faceY - 30, 0, faceY + 30);
-      visorGrad.addColorStop(0, '#3a140c');
-      visorGrad.addColorStop(1, '#140605');
+      visorGrad.addColorStop(0, '#2a2d33');
+      visorGrad.addColorStop(1, '#0d0e10');
       ctx.fillStyle = visorGrad;
       ctx.beginPath();
       ctx.roundRect(faceX - 45, faceY - faceHeight / 2, 90, faceHeight, 22);
@@ -2719,7 +2719,7 @@ export default function App() {
         .robot-card { pointer-events: none; }
         .robot-card .robot-canvas {
           position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; pointer-events: none;
-          filter: drop-shadow(0 10px 20px rgba(255, 90, 20, 0.35));
+          filter: drop-shadow(0 10px 22px rgba(174, 179, 187, 0.5));
         }
         .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0.45)); }
         .robot-fx { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
@@ -2728,7 +2728,7 @@ export default function App() {
         .robot-canvas-reappear { animation: robot-reappear 0.6s ease; }
         .robot-bubble {
           position: absolute; width: 10px; height: 10px; border-radius: 999px;
-          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 138, 31, 0.3));
+          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(174, 179, 187, 0.35));
           opacity: 0; pointer-events: none; animation: robot-bubble 0.9s ease forwards;
         }
         .robot-bubble.robot-bubble-angry { background: radial-gradient(circle at 30% 30%, rgba(255, 210, 210, 0.9), rgba(255, 70, 70, 0.35)); }
@@ -2753,7 +2753,7 @@ export default function App() {
         @keyframes robot-say { 0% { opacity: 0; transform: translate(-30%, 8px) scale(0.96); } 6%, 92% { opacity: 1; transform: translate(-30%, 0) scale(1); } 100% { opacity: 0; transform: translate(-30%, -6px) scale(0.98); } }
         @keyframes robot-pop { 0% { opacity: 0; transform: translate(-50%, 6px); } 30% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
         /* Metric glass widgets */
-        .metric-card.glass { background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .metric-card.glass { color: #fff; }
         .metric-card { display: flex; }
         /* the desktop widget column sits inside a pointer-events:none wrapper, which made the player and widgets unclickable; give the cards their pointer back */
         @media (min-width: 1024px) { .metric-card { pointer-events: auto; } }
@@ -2791,16 +2791,6 @@ export default function App() {
         /* Music player (full-width row, same width / radius / padding as the clock) */
         .player-card.glass {
           flex-direction: column; gap: 0.85em; padding: 0.95em 1.2em; color: #fff;
-          box-shadow:
-            inset 3px 3px 0.5px -3px rgba(255, 255, 255, 0.9),
-            inset -3px -3px 0.5px -3px rgba(255, 255, 255, 0.85),
-            inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.6),
-            inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.6),
-            inset 0 0 3px -1px rgba(0, 0, 0, 0.8),
-            0 0 0 1px rgba(255, 110, 220, 0.4),
-            0 0 12px rgba(255, 60, 200, 0.35),
-            0 0 20px rgba(60, 220, 255, 0.22),
-            0 12px 30px rgba(0, 0, 0, 0.2);
         }
         .player-card .fx-layer::after { padding: 5px; filter: blur(4px); }
         .pl-top { display: flex; align-items: center; gap: 0.9em; min-width: 0; }
@@ -3504,12 +3494,26 @@ export default function App() {
         }
 
         /* Optical depth: a crisp rim, tinted body, diffuse reflection and grounded shadow. */
-        .glass {
-          background: linear-gradient(135deg, rgba(255,255,255,.19), rgba(255,255,255,.035) 48%, rgba(18,12,24,.16));
-          -webkit-backdrop-filter: blur(18px) saturate(145%);
-          backdrop-filter: blur(18px) saturate(145%);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 1px 0 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.14), 0 12px 32px rgba(12,4,12,.23);
+        :root {
+          --glass-bg: linear-gradient(135deg, rgba(255,255,255,.19), rgba(255,255,255,.035) 48%, rgba(18,12,24,.16));
+          --glass-bg-hover: linear-gradient(135deg, rgba(255,255,255,.3), rgba(255,255,255,.08) 48%, rgba(18,12,24,.16));
+          --glass-blur: blur(18px) saturate(145%);
+          --glass-shadow: inset 0 1px 0 rgba(255,255,255,.65), inset 1px 0 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.14), 0 12px 32px rgba(12,4,12,.23);
         }
+        .glass {
+          background: var(--glass-bg);
+          -webkit-backdrop-filter: var(--glass-blur);
+          backdrop-filter: var(--glass-blur);
+          box-shadow: var(--glass-shadow);
+        }
+        /* every small button wears the same glass as the info button */
+        .case-close, .panel-close-row .case-close, .conn-close, .conn-social, .lb-close, .info-sound, .loader-skip, .gal-play {
+          background: var(--glass-bg) !important;
+          -webkit-backdrop-filter: var(--glass-blur) !important; backdrop-filter: var(--glass-blur) !important;
+          box-shadow: var(--glass-shadow) !important;
+          border: 0 !important;
+        }
+        .case-close:hover, .panel-close-row .case-close:hover, .conn-close:hover, .conn-social:hover, .lb-close:hover, .loader-skip:hover, .gal-play:hover { background: var(--glass-bg-hover) !important; }
         .fx-layer { filter: contrast(1.35); }
         .case-pop, .info-pop, .lb-panel {
           background: linear-gradient(145deg, rgba(43,29,41,.86), rgba(17,15,25,.91));
