@@ -1339,8 +1339,8 @@ function Metrics({ open, onClose }: { open: boolean; onClose: () => void }) {
           <CalendarCard />
         </div>
         <div className="grid grid-cols-2 gap-2 lg:gap-3">
-          <RingPill id="skills" value={92} label="Skills Level" from="#fff27a" to="#ffd000" />
-          <RingPill id="creative" value={88} label="Creative Thinking" from="#ff8ae0" to="#ff1fa8" />
+          <RingPill id="skills" value={92} label="Skills Level" from="#86f7ff" to="#00cfff" />
+          <RingPill id="creative" value={88} label="Creative Thinking" from="#ffc078" to="#ff7a18" />
           <SpeedCard />
           <ExperienceCard />
         </div>
@@ -1368,7 +1368,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
 
     const W = 280;
     const H = 320;
-    const dpr = window.devicePixelRatio || 1;
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = W * dpr;
     canvas.height = H * dpr;
@@ -1407,7 +1406,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     const onMove = (event: PointerEvent) => updateTarget(event.clientX, event.clientY);
     const onLeave = () => { target.x = 0; target.y = 0; };
 
-    const draw = () => {
     const draw = (timestamp = performance.now()) => {
       frame = 0;
       if (document.hidden || !robotVisible) return;
@@ -1435,15 +1433,11 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const isLaughing = now < laughUntil;
       canvas.classList.toggle('robot-canvas-angry', isAngry);
 
-      const glow = isAngry ? '#ff2d2d' : '#aeb3bb';
-      const glowSoft = isAngry ? 'rgba(255,45,45,' : 'rgba(174,179,187,';
-      // silver chrome: bright / dark / bright bands along a line
       const glow = isAngry ? '#387cff' : '#00cfff';
       const glowSoft = isAngry ? 'rgba(56,124,255,' : 'rgba(0,207,255,';
       // Satin white edge highlights preserve the shell's sculpted depth.
       const chrome = (x0: number, y0: number, x1: number, y1: number) => {
         const g = ctx.createLinearGradient(x0, y0, x1, y1);
-        g.addColorStop(0, '#ffffff'); g.addColorStop(0.22, '#aab0b9'); g.addColorStop(0.45, '#f8fafc'); g.addColorStop(0.72, '#737984'); g.addColorStop(1, '#e6e9ed');
         g.addColorStop(0, '#ffffff'); g.addColorStop(0.22, '#e9edf3'); g.addColorStop(0.45, '#ffffff'); g.addColorStop(0.72, '#9ba6b8'); g.addColorStop(1, '#e6ebf3');
         return g;
       };
@@ -1478,8 +1472,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.shadowBlur = 0;
       const bodyGrad = ctx.createRadialGradient(bodyX - 18, bodyY - 20, 6, bodyX, bodyY, 60);
       bodyGrad.addColorStop(0, '#ffffff');
-      bodyGrad.addColorStop(0.5, '#f8f5f2');
-      bodyGrad.addColorStop(1, '#c9cdd5');
       bodyGrad.addColorStop(0.38, '#ffffff');
       bodyGrad.addColorStop(0.75, '#e2e8f1');
       bodyGrad.addColorStop(1, '#8995aa');
@@ -1491,8 +1483,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.fill();
       ctx.strokeStyle = chrome(bodyX - 50, bodyY - 45, bodyX + 50, bodyY + 45);
       ctx.lineWidth = 2.5;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = glow;
       ctx.shadowBlur = 0;
       ctx.stroke();
 
@@ -1500,7 +1490,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const logoX = bodyX + mouse.x * 6;
       const logoY = bodyY - 2 + mouse.y * 3;
       const pulse = 0.75 + 0.25 * Math.sin(time * 3);
-      ctx.strokeStyle = '#8b919b';
       ctx.strokeStyle = glow;
       ctx.lineWidth = 1.5;
       ctx.shadowBlur = 6;
@@ -1512,7 +1501,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.moveTo(logoX, logoY + 12); ctx.lineTo(logoX + 6, bodyY + 40);
       ctx.stroke();
       ctx.lineWidth = 2.5;
-      ctx.strokeStyle = chrome(logoX - 11, logoY - 11, logoX + 11, logoY + 11);
       ctx.strokeStyle = glow;
       ctx.beginPath();
       ctx.arc(logoX, logoY, 11, 0, Math.PI * 2);
@@ -1531,7 +1519,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       // head position
       const headX = cx + mouse.x * 25;
       const headY = cy + floatY - 50 + mouse.y * 15;
-      // White neck joint with a recessed pink status collar.
+      // White neck joint with a recessed neon-blue status collar.
       ctx.fillStyle = '#aeb9c9';
       ctx.beginPath(); ctx.roundRect(cx - 13, headY + 36, 26, 25, 8); ctx.fill();
       ctx.strokeStyle = glow; ctx.shadowColor = glow; ctx.shadowBlur = 7;
@@ -1575,8 +1563,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.shadowBlur = 0;
       const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 15, headX, headY, 80);
       headGrad.addColorStop(0, '#ffffff');
-      headGrad.addColorStop(0.55, '#f8f5f2');
-      headGrad.addColorStop(1, '#c9cdd5');
       headGrad.addColorStop(0.4, '#ffffff');
       headGrad.addColorStop(0.76, '#e6ecf4');
       headGrad.addColorStop(1, '#a4b0c3');
@@ -1595,8 +1581,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const faceY = headY + mouse.y * 8;
       const faceHeight = 60;
       const visorGrad = ctx.createLinearGradient(0, faceY - 30, 0, faceY + 30);
-      visorGrad.addColorStop(0, '#2a2d33');
-      visorGrad.addColorStop(1, '#0d0e10');
       visorGrad.addColorStop(0, '#10243a');
       visorGrad.addColorStop(0.45, '#08131f');
       visorGrad.addColorStop(1, '#07090f');
@@ -1604,8 +1588,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.beginPath();
       ctx.roundRect(faceX - 45, faceY - faceHeight / 2, 90, faceHeight, 22);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(214, 219, 226, 0.65)';
-      ctx.lineWidth = 1;
       ctx.strokeStyle = 'rgba(0,207,255,.8)';
       ctx.shadowColor = glow;
       ctx.shadowBlur = 8;
@@ -1617,7 +1599,6 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       if (blink > 0) blink -= 0.2;
 
       const eyeY = faceY + mouse.y * 5 - 2;
-      const eyeColor = isAngry ? glow : '#eef2f8';
       const eyeColor = glow;
       ctx.strokeStyle = eyeColor;
       ctx.fillStyle = eyeColor;
@@ -2495,10 +2476,8 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .robot-card { pointer-events: none; }
         .robot-card .robot-canvas {
           position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; pointer-events: none;
-          filter: drop-shadow(0 10px 22px rgba(174, 179, 187, 0.5));
           filter: drop-shadow(0 9px 12px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 5px rgba(0, 207, 255, 0.16));
         }
-        .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0.45)); }
         .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(56, 124, 255, 0.45)); }
         .robot-fx { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
         .robot-canvas-fun { animation: robot-bounce 0.6s ease; }
@@ -2506,16 +2485,13 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .robot-canvas-reappear { animation: robot-reappear 0.6s ease; }
         .robot-bubble {
           position: absolute; width: 10px; height: 10px; border-radius: 999px;
-          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(174, 179, 187, 0.35));
           background: radial-gradient(circle at 30% 30%, rgba(220, 246, 255, 0.9), rgba(0, 207, 255, 0.4));
           opacity: 0; pointer-events: none; animation: robot-bubble 0.9s ease forwards;
         }
-        .robot-bubble.robot-bubble-angry { background: radial-gradient(circle at 30% 30%, rgba(255, 210, 210, 0.9), rgba(255, 70, 70, 0.35)); }
         .robot-bubble.robot-bubble-angry { background: radial-gradient(circle at 30% 30%, rgba(210, 230, 255, 0.9), rgba(56, 124, 255, 0.35)); }
         .robot-pop {
           position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
           font-size: 12px; letter-spacing: 0.4px; padding: 4px 8px; border-radius: 999px; white-space: nowrap;
-          background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.32); color: #eafff6;
           background: rgba(8, 24, 40, 0.88); border: 1px solid rgba(0, 207, 255, 0.5); color: #d9f5ff;
           animation: robot-pop 0.9s ease forwards; pointer-events: none;
         }
@@ -2576,8 +2552,8 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         }
         .player-card .fx-layer::after { padding: 5px; filter: blur(4px); }
         .pl-top { display: flex; align-items: center; gap: 0.9em; min-width: 0; }
-        .pl-cover { width: 4.6em; height: 4.6em; flex: none; object-fit: cover; border-radius: 0.8em; display: block; box-shadow: 0 0 10px rgba(255, 60, 200, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.35); }
-        .pl-cover-empty { background: linear-gradient(135deg, #ff3df0, #3ad8ff); }
+        .pl-cover { width: 4.6em; height: 4.6em; flex: none; object-fit: cover; border-radius: 0.8em; display: block; box-shadow: 0 0 10px rgba(255, 138, 31, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.35); }
+        .pl-cover-empty { background: linear-gradient(135deg, #ff8a1f, #3ad8ff); }
         .pl-meta { flex: 1; min-width: 0; }
         .pl-title { font-size: 1.5em; font-weight: 800; letter-spacing: 0.04em; line-height: 1.15; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 8px rgba(255, 255, 255, 0.45); }
         .pl-artist { font-size: 1.05em; margin-top: 0.25em; color: #6ff3ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 6px rgba(60, 220, 255, 0.85); }
@@ -2586,15 +2562,15 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .pl-btn:disabled { opacity: 0.4; cursor: default; }
         .pl-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 2px; }
         .pl-round { flex: none; width: max(3.6em, 28px); height: max(3.6em, 28px); border-radius: 50%; border: 1.5px solid; background: rgba(255, 255, 255, 0.06); }
-        .pl-play { border-color: #ff5cd6; color: #ffd0f3; }
+        .pl-play { border-color: #ff8a1f; color: #ffe0bd; }
         .pl-pause { border-color: #4de6ff; color: #c9f8ff; }
-        .pl-play.is-active { background: rgba(255, 60, 200, 0.28); box-shadow: 0 0 5px #ff3dc8, 0 0 14px rgba(255, 60, 200, 0.8); }
+        .pl-play.is-active { background: rgba(255, 138, 31, 0.28); box-shadow: 0 0 5px #ff8a1f, 0 0 14px rgba(255, 138, 31, 0.8); }
         .pl-pause.is-active { background: rgba(60, 220, 255, 0.25); box-shadow: 0 0 5px #3ad8ff, 0 0 14px rgba(60, 220, 255, 0.8); }
         .pl-seek { display: flex; align-items: center; gap: 0.8em; }
         .pl-time { flex: none; min-width: 2.6em; font-size: 1em; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); }
         .pl-time:last-child { text-align: right; }
         .pl-range { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 4px; margin: 0; border-radius: 999px; outline: none; cursor: pointer;
-          background: linear-gradient(90deg, #ff3df0 0%, #7a5cff var(--p, 0%), rgba(255, 255, 255, 0.22) var(--p, 0%)); box-shadow: 0 0 8px rgba(255, 60, 200, 0.45); }
+          background: linear-gradient(90deg, #ff8a1f 0%, #00cfff var(--p, 0%), rgba(255, 255, 255, 0.22) var(--p, 0%)); box-shadow: 0 0 8px rgba(255, 138, 31, 0.45); }
         .pl-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 4px #fff, 0 0 10px #3ad8ff; }
         .pl-range::-moz-range-thumb { width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 4px #fff, 0 0 10px #3ad8ff; }
         .pl-range:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
@@ -3310,7 +3286,6 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .sound-preference .fx-layer::before { inset: 2px; filter: blur(3px); }
         .sound-preference .fx-layer::after { padding: 3px; filter: blur(3px); }
         .sound-preference:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
-        .music-preference { color: #ff2d2d; }
         .music-preference { color: #00cfff; text-shadow: 0 0 6px #00cfffaa; }
         .music-preference svg { filter: drop-shadow(0 0 3px #00cfffaa); }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
