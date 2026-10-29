@@ -35,7 +35,7 @@
       html, body, #root {
         margin: 0; padding: 0; width: 100%; height: 100%;
         overflow: hidden; overscroll-behavior: none;
-        background: #820d16;
+        background: #000000;
       }
       html {
         touch-action: manipulation;
@@ -55,7 +55,7 @@
       #preloader {
         position: fixed; inset: 0; z-index: 2147483646;
         display: flex; align-items: center; justify-content: center;
-        background: #820d16;
+        background: #000000;
         transition: opacity 0.45s ease, visibility 0.45s ease;
       }
       html.app-ready #preloader { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -67,147 +67,11 @@
       }
       @keyframes pl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { #preloader .pl-ring { animation-duration: 2s; } }
-
-      /* intro: the chrome SURESH animation (public/intro) plays while the app loads behind it, until ENTER */
-      #intro {
-        position: fixed; inset: 0; z-index: 2147483647;
-        background: #000;
-        transition: opacity 0.6s ease, visibility 0.6s ease;
-      }
-      #intro.leaving { opacity: 0; visibility: hidden; pointer-events: none; }
-      #intro-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
-      /* ENTER: liquid-glass button (scoped to #enter-wrap so nothing else is affected) */
-      @property --angle-1 { syntax: "<angle>"; inherits: false; initial-value: -75deg; }
-      @property --angle-2 { syntax: "<angle>"; inherits: false; initial-value: -45deg; }
-
-      #enter-wrap {
-        --anim--hover-time: 400ms;
-        --anim--hover-ease: cubic-bezier(0.25, 1, 0.5, 1);
-        position: absolute; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom, 0px));
-        transform: translateX(-50%);
-        width: min(180px, 60vw); height: 40px;
-        font-size: 14px; /* all em values below scale from this */
-        border-radius: 999vw;
-        opacity: 0; visibility: hidden; pointer-events: none;
-        transition: opacity 0.8s ease, visibility 0.8s ease, transform var(--anim--hover-time) var(--anim--hover-ease);
-      }
-      #enter-wrap.show { opacity: 1; visibility: visible; pointer-events: auto; }
-
-      #enter-wrap .button-shadow {
-        --shadow-cuttoff-fix: 2em;
-        position: absolute;
-        width: calc(100% + var(--shadow-cuttoff-fix)); height: calc(100% + var(--shadow-cuttoff-fix));
-        top: calc(0% - var(--shadow-cuttoff-fix) / 2); left: calc(0% - var(--shadow-cuttoff-fix) / 2);
-        filter: blur(clamp(2px, 0.125em, 12px)); -webkit-filter: blur(clamp(2px, 0.125em, 12px));
-        overflow: visible; pointer-events: none;
-      }
-      #enter-wrap .button-shadow::after {
-        content: ""; position: absolute; z-index: 0; inset: 0; border-radius: 999vw;
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));
-        width: calc(100% - var(--shadow-cuttoff-fix) - 0.25em); height: calc(100% - var(--shadow-cuttoff-fix) - 0.25em);
-        top: calc(var(--shadow-cuttoff-fix) - 0.5em); left: calc(var(--shadow-cuttoff-fix) - 0.875em);
-        padding: 0.125em; box-sizing: border-box;
-        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
-        transition: all var(--anim--hover-time) var(--anim--hover-ease);
-      }
-
-      #enter {
-        --border-width: clamp(1px, 0.0625em, 4px);
-        all: unset;
-        box-sizing: border-box; display: flex; align-items: center; justify-content: center;
-        width: 100%; height: 100%;
-        cursor: pointer; position: relative; z-index: 3;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-        background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
-        border-radius: 999vw;
-        box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
-          inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
-          0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2),
-          0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2),
-          0 0 0 0 rgba(255, 255, 255, 1);
-        backdrop-filter: blur(clamp(1px, 0.125em, 4px)); -webkit-backdrop-filter: blur(clamp(1px, 0.125em, 4px));
-        transition: all var(--anim--hover-time) var(--anim--hover-ease);
-      }
-      #enter:not(:disabled):hover {
-        transform: scale(0.975);
-        backdrop-filter: blur(0.01em); -webkit-backdrop-filter: blur(0.01em);
-        box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
-          inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
-          0 0.15em 0.05em -0.1em rgba(0, 0, 0, 0.25),
-          0 0 0.05em 0.1em inset rgba(255, 255, 255, 0.5),
-          0 0 0 0 rgba(255, 255, 255, 1);
-      }
-
-      #enter span {
-        position: relative; display: block; user-select: none; -webkit-user-select: none;
-        font-family: 'Inter', 'Space Grotesk', 'Roboto', system-ui, sans-serif;
-        font-weight: 500; font-size: 1em; line-height: 1; letter-spacing: 0.02em;
-        color: #fff; /* light text: the intro sits on black */
-        text-shadow: 0 0.25em 0.05em rgba(0, 0, 0, 0.25);
-        -webkit-font-smoothing: antialiased;
-        padding: 0 1.5em;
-        transition: all var(--anim--hover-time) var(--anim--hover-ease);
-      }
-      #enter span::after { /* moving highlight */
-        content: ""; display: block; position: absolute; z-index: 3;
-        width: calc(100% - var(--border-width)); height: calc(100% - var(--border-width));
-        top: calc(0% + var(--border-width) / 2); left: calc(0% + var(--border-width) / 2);
-        box-sizing: border-box; border-radius: 999vw; overflow: clip;
-        background: linear-gradient(var(--angle-2), rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 40% 50%, rgba(255, 255, 255, 0) 55%);
-        mix-blend-mode: screen; pointer-events: none;
-        background-size: 200% 200%; background-position: 0% 50%; background-repeat: no-repeat;
-        transition: background-position calc(var(--anim--hover-time) * 1.25) var(--anim--hover-ease),
-          --angle-2 calc(var(--anim--hover-time) * 1.25) var(--anim--hover-ease);
-      }
-      #enter:not(:disabled):hover span::after { background-position: 25% 50%; }
-      #enter:not(:disabled):active span::after { background-position: 50% 15%; --angle-2: -15deg; }
-
-      #enter::after { /* outline ring */
-        content: ""; position: absolute; z-index: 1; inset: 0; border-radius: 999vw;
-        width: calc(100% + var(--border-width)); height: calc(100% + var(--border-width));
-        top: calc(0% - var(--border-width) / 2); left: calc(0% - var(--border-width) / 2);
-        padding: var(--border-width); box-sizing: border-box;
-        background: conic-gradient(from var(--angle-1) at 50% 50%,
-            rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 5% 40%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 60% 95%, rgba(0, 0, 0, 0.5)),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
-        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
-        transition: all var(--anim--hover-time) var(--anim--hover-ease), --angle-1 500ms ease;
-        box-shadow: inset 0 0 0 calc(var(--border-width) / 2) rgba(255, 255, 255, 0.5);
-        pointer-events: none;
-      }
-      #enter:not(:disabled):hover::after { --angle-1: -125deg; }
-      #enter:not(:disabled):active::after { --angle-1: -75deg; }
-
-      #enter-wrap:has(#enter:not(:disabled):hover) .button-shadow { filter: blur(clamp(2px, 0.0625em, 6px)); -webkit-filter: blur(clamp(2px, 0.0625em, 6px)); }
-      #enter-wrap:has(#enter:not(:disabled):hover) .button-shadow::after { top: calc(var(--shadow-cuttoff-fix) - 0.875em); }
-      #enter-wrap:has(#enter:not(:disabled):active) { transform: translateX(-50%) rotate3d(1, 0, 0, 25deg); }
-      #enter-wrap:has(#enter:not(:disabled):active) #enter {
-        box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
-          inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
-          0 0.125em 0.125em -0.125em rgba(0, 0, 0, 0.2),
-          0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2),
-          0 0.225em 0.05em 0 rgba(0, 0, 0, 0.05),
-          0 0.25em 0 0 rgba(255, 255, 255, 0.75),
-          inset 0 0.25em 0.05em 0 rgba(0, 0, 0, 0.15);
-      }
-      #enter-wrap:has(#enter:not(:disabled):active) .button-shadow::after { top: calc(var(--shadow-cuttoff-fix) - 0.5em); opacity: 0.75; }
-
-      #enter:focus-visible { outline: 1px solid rgba(255, 255, 255, 0.9); outline-offset: 5px; }
-      #enter:disabled { cursor: wait; opacity: 0.6; }
     </style>
   </head>
   <body>
     <noscript>This site needs JavaScript to run.</noscript>
     <div id="preloader" aria-hidden="true"><div class="pl-ring"></div></div>
-
-    <!-- intro overlay: loads first, hides the app until ENTER is pressed -->
-    <div id="intro">
-      <iframe id="intro-frame" src="/intro/index.html" title="SURESH intro animation" allow="autoplay"></iframe>
-     <br>
-      <div id="enter-wrap"><button id="enter" type="button" disabled><span>LOADING</span></button><div class="button-shadow"></div></div>
-    </div>
 
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
@@ -235,54 +99,6 @@
         if (document.readyState === 'complete') ready();
         else window.addEventListener('load', ready);
         setTimeout(reveal, 6000); // failsafe: never leave the user on a blank screen
-      })();
-    </script>
-    <script>
-      // intro: ENTER appears when the animation ends (or is scrubbed to the end) and unlocks once the app is ready
-      (function () {
-        var intro = document.getElementById('intro');
-        var frame = document.getElementById('intro-frame');
-        var btn = document.getElementById('enter');
-        var wrap = document.getElementById('enter-wrap');
-        var animDone = false, entered = false, focused = false, t0 = Date.now();
-
-        function appReady() { return document.documentElement.classList.contains('app-ready'); }
-
-        function sync() {
-          var ok = appReady();
-          wrap.classList.toggle('show', animDone);
-          wrap.classList.toggle('ready', ok);
-          btn.disabled = !ok;
-          btn.firstElementChild.textContent = ok ? 'ENTER' : 'LOADING';
-          if (animDone && ok && !focused) { focused = true; btn.focus({ preventScroll: true }); }
-        }
-
-        function enter() {
-          if (entered || !appReady()) return;
-          entered = true;
-          try { // stop the intro music so it does not clash with the page
-            var d = frame.contentWindow.document, s = d.getElementById('sound');
-            frame.contentWindow.animation.pause();
-            if (s && s.getAttribute('aria-pressed') === 'true') s.click();
-          } catch (e) {}
-          intro.classList.add('leaving');
-          setTimeout(function () { if (intro.parentNode) intro.parentNode.removeChild(intro); }, 800);
-        }
-
-        btn.addEventListener('click', enter);
-
-        var iv = setInterval(function () {
-          if (entered) { clearInterval(iv); return; }
-          if (!animDone) {
-            var a = null;
-            try { a = frame.contentWindow.animation; } catch (e) {}
-            if (a && (a.progress() >= 0.999 || (a.totalDuration() - a.time()) / a.timeScale() <= 1)) animDone = true; // ENTER shows 1s before the end
-            else if (!a && Date.now() - t0 > 8000) animDone = true;   // intro failed to load: never trap the visitor
-            else if (Date.now() - t0 > 30000) animDone = true;        // failsafe
-          }
-          sync();
-        }, 200);
-        sync();
       })();
     </script>
     <script>
