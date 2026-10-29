@@ -1407,6 +1407,18 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
 
       const glow = isAngry ? '#ff2d2d' : '#aeb3bb';
       const glowSoft = isAngry ? 'rgba(255,45,45,' : 'rgba(174,179,187,';
+      // silver chrome: bright / dark / bright bands along a line
+      const chrome = (x0: number, y0: number, x1: number, y1: number) => {
+        const g = ctx.createLinearGradient(x0, y0, x1, y1);
+        g.addColorStop(0, '#ffffff'); g.addColorStop(0.22, '#aab0b9'); g.addColorStop(0.45, '#f8fafc'); g.addColorStop(0.72, '#737984'); g.addColorStop(1, '#e6e9ed');
+        return g;
+      };
+      // faint pearl iridescence laid over the white shell
+      const pearlSheen = (x: number, y: number, r: number) => {
+        const g = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
+        g.addColorStop(0, 'rgba(255,208,232,0.24)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(184,214,255,0.28)');
+        return g;
+      };
       const floatY = Math.sin(time) * 8;
       ctx.lineCap = 'round';
 
@@ -1424,14 +1436,16 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const bodyY = cy + floatY + 30;
       const bodyGrad = ctx.createRadialGradient(bodyX - 18, bodyY - 20, 6, bodyX, bodyY, 60);
       bodyGrad.addColorStop(0, '#ffffff');
-      bodyGrad.addColorStop(0.55, '#eceef1');
-      bodyGrad.addColorStop(1, '#b9bec6');
+      bodyGrad.addColorStop(0.5, '#f8f5f2');
+      bodyGrad.addColorStop(1, '#c9cdd5');
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
       ctx.ellipse(bodyX, bodyY, 50, 45, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = `${glowSoft}0.7)`;
-      ctx.lineWidth = 1.5;
+      ctx.fillStyle = pearlSheen(bodyX, bodyY, 50);
+      ctx.fill();
+      ctx.strokeStyle = chrome(bodyX - 50, bodyY - 45, bodyX + 50, bodyY + 45);
+      ctx.lineWidth = 2.5;
       ctx.shadowBlur = 8;
       ctx.shadowColor = glow;
       ctx.stroke();
@@ -1440,7 +1454,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const logoX = bodyX + mouse.x * 6;
       const logoY = bodyY - 2 + mouse.y * 3;
       const pulse = 0.75 + 0.25 * Math.sin(time * 3);
-      ctx.strokeStyle = glow;
+      ctx.strokeStyle = '#8b919b';
       ctx.lineWidth = 1.5;
       ctx.shadowBlur = 6;
       ctx.beginPath();
@@ -1449,7 +1463,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.moveTo(logoX + 12, logoY); ctx.lineTo(bodyX + 36, logoY - 6);
       ctx.moveTo(logoX, logoY + 12); ctx.lineTo(logoX + 6, bodyY + 40);
       ctx.stroke();
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = chrome(logoX - 11, logoY - 11, logoX + 11, logoY + 11);
       ctx.beginPath();
       ctx.arc(logoX, logoY, 11, 0, Math.PI * 2);
       ctx.stroke();
@@ -1470,8 +1485,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
 
       // antennae (behind head)
       const sway = mouse.x * 6;
-      ctx.strokeStyle = glow;
-      ctx.fillStyle = glow;
+      ctx.strokeStyle = chrome(headX - 55, headY - 70, headX + 55, headY - 38);
+      ctx.fillStyle = chrome(headX - 55, headY - 75, headX + 55, headY - 65);
       ctx.lineWidth = 3;
       ctx.shadowBlur = 8;
       ctx.shadowColor = glow;
@@ -1486,6 +1501,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       }
 
       // ear pads (behind head)
+      ctx.fillStyle = chrome(headX - 70, headY - 16, headX + 70, headY + 22);
       ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.roundRect(headX - 70, headY - 16, 16, 38, 8);
@@ -1496,12 +1512,17 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       // head
       const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 15, headX, headY, 80);
       headGrad.addColorStop(0, '#ffffff');
-      headGrad.addColorStop(0.6, '#eceef1');
-      headGrad.addColorStop(1, '#b9bec6');
+      headGrad.addColorStop(0.55, '#f8f5f2');
+      headGrad.addColorStop(1, '#c9cdd5');
       ctx.fillStyle = headGrad;
       ctx.beginPath();
       ctx.roundRect(headX - 60, headY - 45, 120, 90, 40);
       ctx.fill();
+      ctx.fillStyle = pearlSheen(headX, headY, 60);
+      ctx.fill();
+      ctx.strokeStyle = chrome(headX - 60, headY - 45, headX + 60, headY + 45);
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
 
       // visor
       const faceX = headX + mouse.x * 10;
@@ -1514,7 +1535,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.beginPath();
       ctx.roundRect(faceX - 45, faceY - faceHeight / 2, 90, faceHeight, 22);
       ctx.fill();
-      ctx.strokeStyle = `${glowSoft}0.35)`;
+      ctx.strokeStyle = 'rgba(214, 219, 226, 0.65)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -1523,7 +1544,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       if (blink > 0) blink -= 0.2;
 
       const eyeY = faceY + mouse.y * 5 - 2;
-      const eyeColor = glow;
+      const eyeColor = isAngry ? glow : '#eef2f8';
       ctx.strokeStyle = eyeColor;
       ctx.fillStyle = eyeColor;
       ctx.lineWidth = 4;
