@@ -3,5 +3,8 @@
 @media(max-width:600px){#stage{transform:none}}
 .sound-toggle{display:flex;align-items:center;gap:10px;font-size:9px;letter-spacing:2px;color:#929299}.sound-toggle>span{margin:0;font-size:9px}.sound-bars{display:flex;gap:3px;align-items:center;height:18px}.sound-bars i{width:2px;height:4px;background:#6a6d77;transition:height .3s,background .3s}.sound-bars i:nth-child(2){height:11px}.sound-bars i:nth-child(3){height:16px}.sound-bars i:nth-child(4){height:8px}.sound-toggle[aria-pressed=true]{color:#cedbff}.sound-toggle[aria-pressed=true] i{background:#b8caff}.sound-toggle:disabled{opacity:.35;cursor:wait}@media(max-width:600px){.sound-toggle,.sound-toggle>span{font-size:8px;letter-spacing:1px}}
 
+/* replay button sits where the phase text was, same type style as the caption */
+.caption button{font:inherit;font-size:9px;letter-spacing:2px;color:#a8a8b1;padding:0;line-height:inherit}.caption button:hover{color:#b5c9ff}footer .edition{margin-left:auto}
+
 /* interactive dot grid behind the intro */
 #dotgrid{position:fixed;inset:0;width:100vw;height:100dvh;z-index:0;pointer-events:none;display:block}header,main,footer{position:relative;z-index:1}
