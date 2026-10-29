@@ -2013,6 +2013,7 @@ export default function App() {
 }
 
 function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
+  const [lightingTarget, setLightingTarget] = useState<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const effectsOn = useSoundEnabled(); // Sound switch (interface click / hover sounds, video, robot voice); the music player has its own Music switch
   const musicOn = useMusicEnabled();
@@ -3527,7 +3528,7 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
       )}
 
       <main id="module" className="relative h-full touch-none overflow-hidden">
-        <SpotlightBackground active={spotlightActive} />
+        <SpotlightBackground active={spotlightActive} controlsTarget={lightingTarget} />
         <Statistics />
         <Metrics open={widgetsOpen} onClose={() => setWidgetsOpen(false)} />
         <section className="absolute bottom-12 left-5 z-50 max-w-[calc(100vw-2.5rem)] sm:bottom-16 sm:left-8 sm:max-w-xl md:bottom-20 md:left-12 md:max-w-2xl" aria-labelledby="hero-title">
@@ -3563,6 +3564,7 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
                   <span className="fx-layer" aria-hidden="true" />{musicOn ? <Music size={10} /> : <VolumeX size={10} />}<span>Music</span>
                 </button>
               </div>
+            <div ref={setLightingTarget} className="lighting-control-slot" />
             <div className="pointer-events-none absolute left-full top-1/2 -mt-2 w-[100px] -translate-y-1/2 sm:w-[120px]">
               <RobotCard onTouch={() => setChatOpen(true)} />
             </div>

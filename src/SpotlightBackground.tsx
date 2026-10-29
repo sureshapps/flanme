@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './SpotlightBackground.css';
 
 const VERTEX = `attribute vec2 position; varying vec2 uv;
@@ -47,7 +48,7 @@ type Point = { x: number; y: number; vx: number; vy: number };
 const clamp = (n: number, a = 0, b = 1) => Math.max(a, Math.min(b, n));
 const interactive = (target: EventTarget | null) => target instanceof Element && !!target.closest('button,a,input,select,textarea,summary,[role="dialog"],[contenteditable="true"]');
 
-export default function SpotlightBackground({ active }: { active: boolean }) {
+export default function SpotlightBackground({ active, controlsTarget }: { active: boolean; controlsTarget: HTMLElement | null }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settings = useRef({ beams: 2, intensity: 0.85, motion: true });
@@ -306,14 +307,14 @@ export default function SpotlightBackground({ active }: { active: boolean }) {
       <div className="spotlight-css"><i className="spotlight-cone key" /><i className="spotlight-cone gel" /><i className="spotlight-pool key" /><i className="spotlight-pool gel" /><i className="spotlight-lamp key" /><i className="spotlight-lamp gel" /></div>
       <canvas ref={canvasRef} />
     </div>
-    <details className="spotlight-controls" data-sfx="none">
-      <summary aria-label="Spotlight settings" title="Lighting: drag to aim; hold to focus; arrows and Space also work">Lighting</summary>
+    {controlsTarget && createPortal(<details className="spotlight-controls" data-sfx="none">
+      <summary aria-label="Spotlight settings" title="Lighting: drag to aim; hold to focus; arrows and Space also work"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></svg>Lighting</summary>
       <div className="spotlight-settings">
         <label>Beams<select aria-label="Spotlight beam count" value={beams} onChange={e => setBeams(Number(e.target.value))}><option value={1}>One</option><option value={2}>Two</option></select></label>
         <label>Intensity<input aria-label="Spotlight intensity" type="range" min="0" max="1.5" step="0.05" value={intensity} onChange={e => setIntensity(Number(e.target.value))} /></label>
         <label>Auto motion<input aria-label="Automatic spotlight motion" type="checkbox" checked={motion} onChange={e => setMotion(e.target.checked)} /></label>
         <p>Move or drag to aim. Hold to focus.<br />Arrow keys aim · Space / Enter focus.</p>
       </div>
-    </details>
+    </details>, controlsTarget)}
   </>;
 }
