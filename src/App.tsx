@@ -2798,7 +2798,8 @@ export default function App() {
         @keyframes robot-say { 0% { opacity: 0; transform: translate(-30%, 8px) scale(0.96); } 6%, 92% { opacity: 1; transform: translate(-30%, 0) scale(1); } 100% { opacity: 0; transform: translate(-30%, -6px) scale(0.98); } }
         @keyframes robot-pop { 0% { opacity: 0; transform: translate(-50%, 6px); } 30% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
         /* Metric glass widgets */
-        .metric-card.glass { color: #fff; -webkit-backdrop-filter: blur(10px) saturate(180%); backdrop-filter: blur(10px) saturate(180%); }
+        /* widgets use the same background + blur as the chat box / popups */
+        .metric-card.glass { color: #fff; background: var(--pop-bg); -webkit-backdrop-filter: var(--pop-blur); backdrop-filter: var(--pop-blur); }
         .metric-card { display: flex; }
         /* the desktop widget column sits inside a pointer-events:none wrapper, which made the player and widgets unclickable; give the cards their pointer back */
         @media (min-width: 1024px) { .metric-card { pointer-events: auto; } }
