@@ -22,7 +22,7 @@ gsap.registerPlugin(ScrollTrigger);
 --------------------------------------------------------------------------------------------- */
 
 const MODEL_URL = '/MacBook_Neo.glb';
-const PIN_SCREENS = 7; // length of the laptop scene, in viewport heights of scrolling
+const PIN_SCREENS = 3; // compact runway: opening and camera travel stay connected to the wheel
 const TIMELINE_END = 9.4; // timeline units (see the tweens below)
 const MAX_DPR = 2;
 
@@ -42,10 +42,12 @@ const LOOK_LABEL: Record<Look, string> = { citrus: 'Citrus', midnight: 'Midnight
 
 type Finish = { color: string; metalness?: number; roughness?: number };
 const MIDNIGHT_FINISH: Record<string, Finish> = {
-  'Anodized aluminum': { color: '#111111', metalness: 0.96, roughness: 0.38 },
-  'Touchpad glass': { color: '#202020' },
+  'Anodized aluminum': { color: '#171b22', metalness: 0.88, roughness: 0.42 },
+  'Touchpad glass': { color: '#2b303a', roughness: 0.48 },
   'Touchpad tint': { color: '#090909' },
   'Rubber feet': { color: '#0c0f17' },
+  'USBC port': { color: '#191d24' },
+  'Metal screw': { color: '#333842', metalness: 0.9, roughness: 0.3 },
 };
 
 const smooth = (a: number, b: number, x: number) => {
@@ -274,8 +276,8 @@ function Site({ look, ids }: { look: Look; ids: boolean }) {
 const STYLES = `
 .ls-root { position: fixed; inset: 0; z-index: 120; overflow: hidden; letter-spacing: normal; color: #111; font-family: 'Poppins', system-ui, sans-serif; outline: none; background: #f2f0c4; transition: background-color .6s ease; }
 .ls-root.look-midnight { background: #070a12; color: #e8ecf6; }
-.ls-root.ls-landing { background: #050505; color: #f5f5f5; }
-.ls-landing .ls-bg.midnight { background: radial-gradient(ellipse at 50% 35%, #242424, #0b0b0b 60%, #050505); }
+.ls-root.ls-landing { background: #ededed; color: #252830; }
+.ls-landing .ls-bg.midnight { background: #ededed; }
 .ls-landing .ls-inner, .ls-landing .ls-inner > .app-root { height: var(--ls-vh, 100dvh); }
 .ls-landing .ls-inner { width: 100%; }
 .ls-landing .ls-static { overflow: hidden; }
@@ -584,7 +586,9 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
         lid.quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI);
         scene.add(model);
         const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-        model.traverse((obj) => {
+        // The lid was reparented into pivot above, so traverse the complete scene.
+        // Traversing only model misses the lid finish, LCD and display glass.
+        scene.traverse((obj) => {
           const mesh = obj as THREE.Mesh;
           if (!mesh.isMesh) return;
           const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -598,6 +602,13 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
               mat.emissive = new THREE.Color(0xffffff);
               mat.emissiveMap = mat.map;
               mat.emissiveIntensity = 0.5;
+              // The projected HTML is the display in landing mode. Keep the
+              // underlying panel dark so wallpaper cannot leak behind the page.
+              if (landing) { mat.color.set('#050505'); mat.emissiveIntensity = 0; }
+            }
+            if (landing && mat.name === 'Display glass') {
+              // Live HTML supplies the screen surface; remove competing reflections.
+              mesh.visible = false;
             }
             if (mat.name && !mats.has(mat.name) && (mat.name in MIDNIGHT_FINISH)) {
               mats.set(mat.name, mat);
@@ -656,8 +667,8 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
       const tEnd = C.clone();
       upEnd.copy(E);
       const fitW = 0.34 / (2 * tanH * aspect); // keeps the whole laptop in frame on narrow screens
-      const p0 = new THREE.Vector3(0.62, 0.5, 1).normalize().multiplyScalar(Math.max(0.8, fitW * 1.1));
-      const p1 = new THREE.Vector3(0.12, 0.26, 1).normalize().multiplyScalar(Math.max(0.62, fitW));
+      const p0 = new THREE.Vector3(0.62, 0.5, 1).normalize().multiplyScalar(Math.max(0.54, fitW * 1.2));
+      const p1 = new THREE.Vector3(0.12, 0.26, 1).normalize().multiplyScalar(Math.max(0.5, fitW));
       posCurve = new THREE.CatmullRomCurve3([p0, p1, pEnd], false, 'centripetal');
       tgtCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.0, 0), new THREE.Vector3(0, 0.07, -0.02), tEnd], false, 'centripetal');
     }
@@ -761,7 +772,7 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
     measure();
 
     /* ----- Lenis + shared GSAP clock ----- */
-    const lenis = new Lenis({ wrapper, content: track, autoRaf: false, smoothWheel: true, syncTouch: false, lerp: 0.1 });
+    const lenis = new Lenis({ wrapper, content: track, autoRaf: false, smoothWheel: true, syncTouch: false, lerp: 0.085 });
     const onScroll = () => {
       const y = landing ? 0 : Math.max(0, lenis.scroll - pinLen);
       inner.style.transform = y > 0 ? `translate3d(0,${-y}px,0)` : '';
@@ -785,9 +796,11 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
       tl.to(S, { open: 1, duration: 4.2, ease: 'power2.inOut' }, 0)
         .to(S, { cam: 1, duration: 7.0, ease: 'power1.inOut' }, 0.4)
         .to(S, { fill: 1, duration: 1.6, ease: 'power2.inOut' }, 7.6)
-        .to('.ls-intro', { opacity: 0, y: -28, duration: 1.4 }, 0.1)
-        .to('.ls-hint', { opacity: 0, duration: 0.6 }, 0)
         .to({}, { duration: 0.4 }, TIMELINE_END - 0.4);
+      if (!landing) {
+        tl.to('.ls-intro', { opacity: 0, y: -28, duration: 1.4 }, 0.1)
+          .to('.ls-hint', { opacity: 0, duration: 0.6 }, 0);
+      }
     }, root);
 
     /* ----- in-page links inside the site ----- */
@@ -867,12 +880,12 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
               <div className="ls-bg citrus" aria-hidden="true" />
               <div className="ls-bg midnight" aria-hidden="true" />
               <canvas ref={canvasRef} className="ls-canvas" aria-hidden="true" />
-              <div className="ls-intro">
+              {!landing && <div className="ls-intro">
                 <h2>Open it.<br />Scroll in.</h2>
                 <p>{landing ? 'Code Beyond Limits. Scroll to enter Suresh’s world.' : 'A real 3D laptop, a live website on its screen, one continuous scroll.'}</p>
-              </div>
-              <div className="ls-hint" aria-hidden="true"><i />Scroll</div>
-              <div ref={loaderRef} className="ls-loader" aria-hidden="true">Loading<b ref={barRef} /></div>
+              </div>}
+              {!landing && <div className="ls-hint" aria-hidden="true"><i />Scroll</div>}
+              <div ref={loaderRef} className="ls-loader" aria-hidden="true">{!landing && 'Loading'}<b ref={barRef} /></div>
               <div ref={screenRef} className="ls-screen">
                 <div ref={innerRef} className="ls-inner">{landing ? children : <Site look={look} ids />}</div>
               </div>

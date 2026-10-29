@@ -2210,7 +2210,7 @@ function RippleBackground({ src }: { src: string }) {
 
 export default function App() {
   return (
-    <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#050505', color: '#fff', display: 'grid', placeItems: 'center' }} role="status">Loading experience…</div>}>
+    <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#ededed' }} role="status" aria-label="Loading experience" />}>
       <LaptopScroll landing><MainSite /></LaptopScroll>
     </Suspense>
   );
