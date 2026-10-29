@@ -1,17 +1,17 @@
 .spotlight-background {
   --spotlight-key: #ffd29a;
   --spotlight-gel: #7195ff;
-  --spotlight-haze: .65;
+  --spotlight-haze: .85;
   --spotlight-ground: #080c15;
-  --spotlight-intensity: .85;
-  --spotlight-photo-opacity: .3;
+  --spotlight-intensity: 2;
+  --spotlight-photo-opacity: .8;
   --spotlight-aim-x: 30%;
   --spotlight-aim-y: 72%;
   position: absolute; inset: 0; z-index: 10; overflow: hidden; pointer-events: none;
   background: var(--spotlight-ground); isolation: isolate;
 }
-.spotlight-background::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('./assets/bg1.png') center center / cover no-repeat; opacity: var(--spotlight-photo-opacity); }
-.spotlight-background::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #03060c45, transparent 65%), linear-gradient(0deg, #03060c8c, transparent 65%); }
+.spotlight-background::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('./assets/bg1.webp') center center / cover no-repeat; opacity: var(--spotlight-photo-opacity); }
+.spotlight-background::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #03060c45, transparent 35%), linear-gradient(0deg, #03060c8c, transparent 35%); }
 .spotlight-background > canvas, .spotlight-css { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; }
 .spotlight-background > canvas { display: none; mix-blend-mode: screen; }
 .spotlight-webgl > canvas { display: block; }
