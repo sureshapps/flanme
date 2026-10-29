@@ -33,7 +33,6 @@ tl.to(brush,{strokeDashoffset:0,duration:3.6,ease:'none'},end);
 tl.to('#comet',{motionPath:{path:'#flight',align:'#flight',alignOrigin:[.5,.5]},duration:3.6,ease:'none'},end);
 tl.to('#comet',{opacity:0,duration:.4},end+3.3);
 tl.fromTo('#final',{scale:.94,transformOrigin:'50% 50%'},{scale:1,duration:4.5,ease:'power2.out'},end);
-tl.to('.final-title',{opacity:1,duration:1},end+3.3);
 // A full-white mask guarantees that every corner of the original artwork is visible.
 tl.to(brush,{strokeWidth:1800,duration:.8,ease:'power2.out'},end+3.1);
 const stars=$('#stars');[[330,270],[1000,230],[1270,540],[700,630]].forEach(([x,y],i)=>{const star=document.createElementNS('http://www.w3.org/2000/svg','path');star.setAttribute('d',`M${x-20} ${y}Q${x} ${y} ${x} ${y-25}Q${x} ${y} ${x+20} ${y}Q${x} ${y} ${x} ${y+25}Q${x} ${y} ${x-20} ${y}`);stars.append(star);gsap.set(star,{opacity:0,transformOrigin:'50% 50%'});tl.to(star,{opacity:.9,scale:1.4,duration:.35,yoyo:true,repeat:1},end+3.2+i*.24)});
