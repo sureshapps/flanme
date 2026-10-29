@@ -44,3 +44,9 @@
 .spotlight-settings input[type=range] { width: 100px; accent-color: #ffd29a; }
 .spotlight-settings input[type=checkbox] { accent-color: #ffd29a; }
 .spotlight-settings p { margin: 6px 0 0; color: #b8bfcd; font-size: 9px; line-height: 1.8; }
+/* Keep the portrait colours vivid at mobile screen sizes. */
+@media (max-width: 767px) {
+  .spotlight-background::before {
+    filter: saturate(1.4) contrast(1.05);
+  }
+}
