@@ -1427,9 +1427,13 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const glow = isAngry ? '#ff2d2d' : '#aeb3bb';
       const glowSoft = isAngry ? 'rgba(255,45,45,' : 'rgba(174,179,187,';
       // silver chrome: bright / dark / bright bands along a line
+      const glow = isAngry ? '#ff2455' : '#ff3b91';
+      const glowSoft = isAngry ? 'rgba(255,36,85,' : 'rgba(255,59,145,';
+      // Satin white edge highlights preserve the shell's sculpted depth.
       const chrome = (x0: number, y0: number, x1: number, y1: number) => {
         const g = ctx.createLinearGradient(x0, y0, x1, y1);
         g.addColorStop(0, '#ffffff'); g.addColorStop(0.22, '#aab0b9'); g.addColorStop(0.45, '#f8fafc'); g.addColorStop(0.72, '#737984'); g.addColorStop(1, '#e6e9ed');
+        g.addColorStop(0, '#ffffff'); g.addColorStop(0.22, '#e9edf3'); g.addColorStop(0.45, '#ffffff'); g.addColorStop(0.72, '#9ba6b8'); g.addColorStop(1, '#e6ebf3');
         return g;
       };
       // faint pearl iridescence laid over the white shell
@@ -1453,10 +1457,21 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       // body
       const bodyX = cx + mouse.x * 5;
       const bodyY = cy + floatY + 30;
+      // Recessed sidewall and a soft contact shadow give the white shell volume.
+      ctx.fillStyle = '#6b768b';
+      ctx.shadowColor = 'rgba(0,0,0,.45)';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.ellipse(bodyX + 5, bodyY + 7, 49, 43, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
       const bodyGrad = ctx.createRadialGradient(bodyX - 18, bodyY - 20, 6, bodyX, bodyY, 60);
       bodyGrad.addColorStop(0, '#ffffff');
       bodyGrad.addColorStop(0.5, '#f8f5f2');
       bodyGrad.addColorStop(1, '#c9cdd5');
+      bodyGrad.addColorStop(0.38, '#ffffff');
+      bodyGrad.addColorStop(0.75, '#e2e8f1');
+      bodyGrad.addColorStop(1, '#8995aa');
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
       ctx.ellipse(bodyX, bodyY, 50, 45, 0, 0, Math.PI * 2);
@@ -1467,6 +1482,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.lineWidth = 2.5;
       ctx.shadowBlur = 8;
       ctx.shadowColor = glow;
+      ctx.shadowBlur = 0;
       ctx.stroke();
 
       // chest core + circuit lines
@@ -1474,8 +1490,10 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const logoY = bodyY - 2 + mouse.y * 3;
       const pulse = 0.75 + 0.25 * Math.sin(time * 3);
       ctx.strokeStyle = '#8b919b';
+      ctx.strokeStyle = glow;
       ctx.lineWidth = 1.5;
       ctx.shadowBlur = 6;
+      ctx.shadowColor = glow;
       ctx.beginPath();
       ctx.moveTo(logoX, logoY - 12); ctx.lineTo(logoX, bodyY - 38);
       ctx.moveTo(logoX - 12, logoY); ctx.lineTo(bodyX - 38, logoY + 4);
@@ -1484,6 +1502,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.stroke();
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = chrome(logoX - 11, logoY - 11, logoX + 11, logoY + 11);
+      ctx.strokeStyle = glow;
       ctx.beginPath();
       ctx.arc(logoX, logoY, 11, 0, Math.PI * 2);
       ctx.stroke();
@@ -1501,6 +1520,12 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       // head position
       const headX = cx + mouse.x * 25;
       const headY = cy + floatY - 50 + mouse.y * 15;
+      // White neck joint with a recessed pink status collar.
+      ctx.fillStyle = '#aeb9c9';
+      ctx.beginPath(); ctx.roundRect(cx - 13, headY + 36, 26, 25, 8); ctx.fill();
+      ctx.strokeStyle = glow; ctx.shadowColor = glow; ctx.shadowBlur = 7;
+      ctx.beginPath(); ctx.moveTo(cx - 10, headY + 54); ctx.lineTo(cx + 10, headY + 54); ctx.stroke();
+      ctx.shadowBlur = 0;
 
       // antennae (behind head)
       const sway = mouse.x * 6;
@@ -1516,6 +1541,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(headX + s * 55 + sway, headY - 70, 5, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
         ctx.fill();
       }
 
@@ -1529,10 +1555,20 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       ctx.shadowBlur = 0;
 
       // head
+      ctx.fillStyle = '#8b97ab';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(0,0,0,.45)';
+      ctx.beginPath();
+      ctx.roundRect(headX - 56, headY - 40, 120, 90, 40);
+      ctx.fill();
+      ctx.shadowBlur = 0;
       const headGrad = ctx.createRadialGradient(headX - 30, headY - 20, 15, headX, headY, 80);
       headGrad.addColorStop(0, '#ffffff');
       headGrad.addColorStop(0.55, '#f8f5f2');
       headGrad.addColorStop(1, '#c9cdd5');
+      headGrad.addColorStop(0.4, '#ffffff');
+      headGrad.addColorStop(0.76, '#e6ecf4');
+      headGrad.addColorStop(1, '#a4b0c3');
       ctx.fillStyle = headGrad;
       ctx.beginPath();
       ctx.roundRect(headX - 60, headY - 45, 120, 90, 40);
@@ -1550,12 +1586,19 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       const visorGrad = ctx.createLinearGradient(0, faceY - 30, 0, faceY + 30);
       visorGrad.addColorStop(0, '#2a2d33');
       visorGrad.addColorStop(1, '#0d0e10');
+      visorGrad.addColorStop(0, '#281322');
+      visorGrad.addColorStop(0.45, '#110b16');
+      visorGrad.addColorStop(1, '#07090f');
       ctx.fillStyle = visorGrad;
       ctx.beginPath();
       ctx.roundRect(faceX - 45, faceY - faceHeight / 2, 90, faceHeight, 22);
       ctx.fill();
       ctx.strokeStyle = 'rgba(214, 219, 226, 0.65)';
       ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,59,145,.8)';
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // eyes
@@ -1564,6 +1607,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
 
       const eyeY = faceY + mouse.y * 5 - 2;
       const eyeColor = isAngry ? glow : '#eef2f8';
+      const eyeColor = glow;
       ctx.strokeStyle = eyeColor;
       ctx.fillStyle = eyeColor;
       ctx.lineWidth = 4;
@@ -2425,6 +2469,7 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .robot-card .robot-canvas {
           position: absolute; inset: -15%; display: block; width: 130%; height: 130%; object-fit: contain; pointer-events: none;
           filter: drop-shadow(0 10px 22px rgba(174, 179, 187, 0.5));
+          filter: drop-shadow(0 9px 12px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 5px rgba(255, 59, 145, 0.16));
         }
         .robot-card .robot-canvas.robot-canvas-angry { filter: drop-shadow(0 10px 20px rgba(255, 30, 30, 0.45)); }
         .robot-fx { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
@@ -2434,6 +2479,7 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .robot-bubble {
           position: absolute; width: 10px; height: 10px; border-radius: 999px;
           background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(174, 179, 187, 0.35));
+          background: radial-gradient(circle at 30% 30%, rgba(255, 225, 239, 0.9), rgba(255, 59, 145, 0.4));
           opacity: 0; pointer-events: none; animation: robot-bubble 0.9s ease forwards;
         }
         .robot-bubble.robot-bubble-angry { background: radial-gradient(circle at 30% 30%, rgba(255, 210, 210, 0.9), rgba(255, 70, 70, 0.35)); }
@@ -2441,6 +2487,7 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
           position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
           font-size: 12px; letter-spacing: 0.4px; padding: 4px 8px; border-radius: 999px; white-space: nowrap;
           background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.32); color: #eafff6;
+          background: rgba(40, 8, 28, 0.88); border: 1px solid rgba(255, 59, 145, 0.5); color: #ffd9e9;
           animation: robot-pop 0.9s ease forwards; pointer-events: none;
         }
         @keyframes robot-bounce { 0% { transform: scale(1); } 35% { transform: scale(1.04); } 70% { transform: scale(0.98); } 100% { transform: scale(1); } }
