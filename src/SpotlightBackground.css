@@ -1,10 +1,10 @@
 .spotlight-background {
   --spotlight-key: #ffd29a;
   --spotlight-gel: #7195ff;
-  --spotlight-haze: .65;
+  --spotlight-haze: .85;
   --spotlight-ground: #080c15;
-  --spotlight-intensity: .85;
-  --spotlight-photo-opacity: .3;
+  --spotlight-intensity: .95;
+  --spotlight-photo-opacity: .1;
   --spotlight-aim-x: 30%;
   --spotlight-aim-y: 72%;
   position: absolute; inset: 0; z-index: 10; overflow: hidden; pointer-events: none;
