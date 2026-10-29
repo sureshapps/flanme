@@ -290,7 +290,7 @@ const STYLES = `
 .ls-bg.midnight { background: radial-gradient(120% 90% at 50% 20%, #17203a 0%, #0a0f1d 55%, #04060b 100%); }
 .ls-root.look-midnight .ls-bg.citrus, .ls-root:not(.look-midnight) .ls-bg.midnight { opacity: 0; }
 .ls-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-.ls-screen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; transform-origin: 0 0; pointer-events: none; visibility: hidden; backface-visibility: hidden; contain: layout paint; }
+.ls-screen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; transform-origin: 0 0; pointer-events: none; visibility: hidden; opacity: 0; clip-path: inset(50%); backface-visibility: hidden; contain: layout paint; }
 .ls-inner { will-change: transform; }
 .ls-intro { position: absolute; left: 0; right: 0; top: clamp(72px, 14vh, 150px); text-align: center; padding: 0 24px; pointer-events: none; }
 .ls-intro h2 { margin: 0; font-size: clamp(2rem, 6vw, 4.6rem); line-height: 1; font-weight: 600; letter-spacing: -0.03em; }
@@ -721,7 +721,14 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
       toCam.copy(camera.position).sub(C);
       const facing = N.dot(toCam.normalize());
       const on = smooth(0.82, 1, S.open) * smooth(0.02, 0.22, facing);
-      if (on < 0.003) { screen.style.visibility = 'hidden'; return; }
+      // A child can explicitly set visibility:visible (the portfolio heading does).
+      // Hide the whole composited surface so nothing leaks outside the closed lid.
+      if (on < 0.003) {
+        screen.style.visibility = 'hidden';
+        screen.style.opacity = '0';
+        screen.style.clipPath = 'inset(50%)';
+        return;
+      }
       const quad = corners.map((corner) => {
         tmpV.copy(corner).applyMatrix4(lid!.matrixWorld).project(camera);
         return [(tmpV.x * 0.5 + 0.5) * vw, (-tmpV.y * 0.5 + 0.5) * vh];
@@ -732,7 +739,12 @@ export default function LaptopScroll({ onClose, landing = false, children }: { o
       const rx = (vw - rw) / 2;
       const ry = (vh - rh) / 2;
       const h = homography([[rx, ry], [rx + rw, ry], [rx + rw, ry + rh], [rx, ry + rh]], quad);
-      if (!h) { screen.style.visibility = 'hidden'; return; }
+      if (!h) {
+        screen.style.visibility = 'hidden';
+        screen.style.opacity = '0';
+        screen.style.clipPath = 'inset(50%)';
+        return;
+      }
       screen.style.transform = `matrix3d(${h[0]},${h[3]},0,${h[6]},${h[1]},${h[4]},0,${h[7]},0,0,1,0,${h[2]},${h[5]},0,1)`;
       // as the camera lands the visible window widens from the 16:10 screen to the whole page
       const t = S.fill;
