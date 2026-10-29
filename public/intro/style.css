@@ -11,3 +11,6 @@
 
 /* the full-name artwork, comet and stars stay hidden from the very first paint; the animation reveals them (stops the full name flashing before it starts) */
 #final,#comet,#stars{opacity:0}
+
+/* tagline sits in the bottom-left corner (inside the footer bar) */
+footer .final-title{position:static;left:auto;right:auto;bottom:auto;text-align:left}
