@@ -16,7 +16,7 @@ const shape=$('#shape'),shadow=$('#shadow'),outline=$('#outline');
 [shape,shadow,outline].forEach(p=>p.setAttribute('d',paths[0]));
 const brush=$('#brush'),length=brush.getTotalLength();
 gsap.set(brush,{strokeDasharray:length,strokeDashoffset:length});gsap.set('#final,#comet',{opacity:0});
-const tl=gsap.timeline({paused:true,onUpdate:update,onComplete:()=>{audio.stop();$('#play').textContent='▶';$('#play').setAttribute('aria-label','Play animation')}});
+const tl=gsap.timeline({paused:true,onUpdate:update,onComplete:()=>{audio.stop()}});
 window.animation=tl;
 tl.fromTo('#letter',{opacity:0,scale:.72,transformOrigin:'50% 50%'},{opacity:1,scale:1,duration:1.2,ease:'expo.out'},0);
 for(let i=1;i<6;i++){
@@ -38,11 +38,9 @@ tl.to('.final-title',{opacity:1,duration:1},end+3.3);
 tl.to(brush,{strokeWidth:1800,duration:.8,ease:'power2.out'},end+3.1);
 const stars=$('#stars');[[330,270],[1000,230],[1270,540],[700,630]].forEach(([x,y],i)=>{const star=document.createElementNS('http://www.w3.org/2000/svg','path');star.setAttribute('d',`M${x-20} ${y}Q${x} ${y} ${x} ${y-25}Q${x} ${y} ${x+20} ${y}Q${x} ${y} ${x} ${y+25}Q${x} ${y} ${x-20} ${y}`);stars.append(star);gsap.set(star,{opacity:0,transformOrigin:'50% 50%'});tl.to(star,{opacity:.9,scale:1.4,duration:.35,yoyo:true,repeat:1},end+3.2+i*.24)});
 tl.to({}, {duration:1.2});
-function update(){const t=tl.time(),progress=tl.progress()*100;$('#seek').value=String(progress*10);$('#seek').style.setProperty('--progress',progress+'%');$('#time').textContent=t.toFixed(1).padStart(4,'0');$('#duration').textContent=tl.duration().toFixed(1);const index=Math.min(5,Math.max(0,Math.floor((t-1.5)/1.65)+1));letters.forEach((el,i)=>el.classList.toggle('active',i===index));$('#phase').textContent=t>=end?'..BUILDING SOFTWARE':'BREAKING SILOS..';syncAudio();}
-$('#play').onclick=()=>{if(tl.progress()===1)tl.restart();else tl.paused(!tl.paused());syncButton()};
+function update(){const t=tl.time();const index=Math.min(5,Math.max(0,Math.floor((t-1.5)/1.65)+1));letters.forEach((el,i)=>el.classList.toggle('active',i===index));syncAudio();}
 $('#replay').onclick=()=>{tl.restart();syncButton()};
-$('#seek').oninput=e=>{tl.pause().progress(Number(e.target.value)/1000);syncButton()};
-function syncButton(){$('#play').textContent=tl.paused()?'▶':'Ⅱ';$('#play').setAttribute('aria-label',tl.paused()?'Play animation':'Pause animation');syncAudio()}
+function syncButton(){syncAudio()}
 sound.disabled=false;
 sound.onclick=async()=>{
     if(soundEnabled){soundEnabled=false;audio.mute();remember(false);soundUI();return;}
@@ -51,9 +49,9 @@ sound.onclick=async()=>{
     catch(error){console.error(error);soundEnabled=false;audio.mute();soundUI();$('#sound-label').textContent='RETRY SOUND'}
     finally{sound.disabled=false;sound.removeAttribute('aria-busy')}
 };
-document.addEventListener('visibilitychange',()=>{if(document.hidden){tl.pause();syncButton()}});
+let resumeOnShow=false;
+document.addEventListener('visibilitychange',()=>{if(document.hidden){resumeOnShow=!tl.paused()&&tl.progress()<1;tl.pause();syncButton()}else if(resumeOnShow){resumeOnShow=false;tl.play();syncButton()}});
 addEventListener('pagehide',()=>audio.stop());
-document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('#play').click()}});
 if(matchMedia('(prefers-reduced-motion: reduce)').matches){tl.progress(1).pause();syncButton()}else tl.play();update();
 }
 start().catch(e=>{console.error(e);$('#error').hidden=false});
