@@ -2972,7 +2972,7 @@ export default function App() {
         .info-text { margin-top: 12px; font-size: 12.5px; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
         .info-list { margin: 14px 0 0; padding: 12px 0 0; list-style: none; border-top: 1px solid rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; gap: 8px; }
         .info-list li { position: relative; padding-left: 16px; font-size: 11.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.88); }
-        .info-list li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: #ffd98a; box-shadow: 0 0 6px rgba(255, 190, 90, 0.9); }
+        .info-list li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: #e6e8eb; box-shadow: 0 0 6px rgba(174, 179, 187, 0.9); }
         .info-foot { margin-top: 14px; font-family: 'Josefin Sans', 'JetBrains Mono', sans-serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
         @media (prefers-reduced-motion: reduce) {
           .info-mesh, .clock-colon i, .info-video.is-loading::after { animation: none; }
@@ -3063,7 +3063,7 @@ export default function App() {
         .gal-item img, .gal-item video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s ease; }
         .gal-item:hover img, .gal-item:hover video { transform: scale(1.07); }
         .gal-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(9, 5, 22, 0.75), transparent 55%); pointer-events: none; }
-        .gal-ph { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(30, 10, 60, 0.7)); }
+        .gal-ph { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(20, 20, 24, 0.6)); }
         .gal-badge {
           position: absolute; top: 8px; left: 8px; z-index: 2; padding: 3px 8px; border-radius: 999px; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
           background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.3); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
@@ -3106,7 +3106,7 @@ export default function App() {
           .lb-media { max-width: 92vw; }
         }
         .gh-title { font-size: clamp(20px, 3.2vw, 34px); font-weight: 800; letter-spacing: -0.06em; line-height: 1; }
-        .gh-title span { color: transparent; background: linear-gradient(100deg, #ffffff, #a58aff 45%, #67dcff); -webkit-background-clip: text; background-clip: text; }
+        .gh-title span { color: transparent; background: linear-gradient(100deg, #ffffff, #c9ced6 55%, #8d939c); -webkit-background-clip: text; background-clip: text; }
         .gh-toolbar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 20px 4px; }
         .gh-section { font-size: 14px; letter-spacing: -0.02em; white-space: nowrap; }
         .gh-section span { color: #747c9d; font-weight: 400; }
@@ -3224,7 +3224,7 @@ export default function App() {
         }
         .chat-pop.is-open { transform: none; opacity: 1; visibility: visible; pointer-events: auto; transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, visibility 0s; }
         .chat-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.18); }
-        .chat-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #6dff9a; box-shadow: 0 0 6px #6dff9a, 0 0 14px rgba(109, 255, 154, 0.7); }
+        .chat-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #e6e8eb; box-shadow: 0 0 6px #aeb3bb, 0 0 14px rgba(174, 179, 187, 0.7); }
         .chat-title { flex: 1; min-width: 0; }
         .chat-name { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.2; }
         .chat-sub { margin: 2px 0 0; font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255, 255, 255, 0.72); }
@@ -3237,7 +3237,7 @@ export default function App() {
         .chat-msg { max-width: 88%; padding: 9px 12px; border-radius: 16px; font-size: 13px; line-height: 1.5; animation: chat-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
         .chat-msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
         .chat-msg--bot { align-self: flex-start; border-bottom-left-radius: 5px; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.28); }
-        .chat-msg--user { align-self: flex-end; border-bottom-right-radius: 5px; background: linear-gradient(135deg, rgba(255, 150, 50, 0.7), rgba(255, 60, 40, 0.6)); border: 1px solid rgba(255, 210, 160, 0.5); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+        .chat-msg--user { align-self: flex-end; border-bottom-right-radius: 5px; background: linear-gradient(135deg, rgba(235, 238, 242, 0.34), rgba(110, 116, 126, 0.5)); border: 1px solid rgba(255, 255, 255, 0.4); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
         .chat-typing { display: flex; gap: 5px; padding: 12px 14px; }
         .chat-typing i { width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0.4; animation: chat-dot 1.1s ease-in-out infinite; }
         .chat-typing i:nth-child(2) { animation-delay: 0.15s; }
@@ -3257,10 +3257,10 @@ export default function App() {
           background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.35); transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
         .chat-input::placeholder { color: rgba(255, 255, 255, 0.6); }
-        .chat-input:focus { border-color: rgba(255, 200, 140, 0.9); box-shadow: 0 0 0 3px rgba(255, 150, 50, 0.22); }
+        .chat-input:focus { border-color: rgba(255, 255, 255, 0.85); box-shadow: 0 0 0 3px rgba(174, 179, 187, 0.25); }
         .chat-send {
           flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; color: #fff;
-          background: linear-gradient(135deg, #ff9a2f, #ff3b30); box-shadow: 0 0 10px rgba(255, 90, 30, 0.6); transition: transform 0.25s ease, opacity 0.25s ease;
+          background: linear-gradient(135deg, #9aa0a8, #43484f); box-shadow: 0 0 10px rgba(174, 179, 187, 0.55); transition: transform 0.25s ease, opacity 0.25s ease;
         }
         .chat-send:hover:not(:disabled) { transform: scale(1.08); }
         .chat-send:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
@@ -3523,7 +3523,7 @@ export default function App() {
         }
         .case-head { border-bottom: 1px solid rgba(255,255,255,.12); }
         .case-card, .gh-card { border: 1px solid rgba(255,255,255,.13); border-radius: 18px; overflow: hidden; }
-        .case-card:focus-visible, .dock-link:focus-visible, .dock-contact:focus-visible, .loader-skip:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 4px; }
+        .case-card:focus-visible, .dock-link:focus-visible, .dock-contact:focus-visible, .loader-skip:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 4px; }
         .experience-dock { position: absolute; z-index: 61; left: 48px; top: 112px; width: 260px; padding: 20px; border: 1px solid rgba(255,255,255,.25); border-radius: 24px; color: white; background: linear-gradient(135deg,rgba(255,255,255,.12),rgba(25,10,23,.28)); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: inset 0 1px 0 #ffffff40, 0 18px 48px #16071030; }
         .dock-caption { display: block; font-size: 9px; letter-spacing: .16em; color: #ffffffa6; margin-bottom: 14px; }
         .dock-link { width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 0; background: transparent; color: inherit; border: 0; border-bottom: 1px solid #ffffff20; cursor: pointer; text-align: left; }
@@ -3535,11 +3535,30 @@ export default function App() {
         .sound-preference { position: relative; z-index: 71; display: flex; gap: 8px; align-items: center; border: 0; border-radius: 9999px; padding: 5px 11px; color: yellow; font: inherit; font-size: 6px; cursor: pointer; }
         .sound-preference .fx-layer::before { inset: 2px; filter: blur(3px); }
         .sound-preference .fx-layer::after { padding: 3px; filter: blur(3px); }
-        .sound-preference:focus-visible { outline: 2px solid #ffe1b7; outline-offset: 3px; }
+        .sound-preference:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
         .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
         .loader-heading p { font-size: clamp(11px,2vw,14px); font-weight: 300; margin-top: 12px; }
         .loader-skip { position: absolute; z-index: 8; bottom: 32px; right: 32px; padding: 12px 18px; border: 1px solid #ffffff35; border-radius: 30px; color: white; background: #ffffff0d; font: inherit; font-size: 11px; cursor: pointer; }
+        /* ===== every popup: colourless glass with extra blur (chat, info, Behance, CV, GitHub, gallery, lightbox, notice) ===== */
+        :root {
+          --pop-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 60%), rgba(12, 12, 14, 0.34);
+          --pop-blur: blur(44px) saturate(0.6);
+          --pop-border: 1px solid rgba(255, 255, 255, 0.28);
+          --pop-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.45), inset -1px -1px 1px rgba(255, 255, 255, 0.16), 0 24px 70px rgba(0, 0, 0, 0.4);
+        }
+        .case-pop, .case-pop.pop-pink, .case-pop.pop-yellow, .case-pop.pop-green, .case-pop.pop-purple, .info-pop, .lb-panel, .chat-pop, .conn-card {
+          background: var(--pop-bg);
+          -webkit-backdrop-filter: var(--pop-blur); backdrop-filter: var(--pop-blur);
+          border: var(--pop-border);
+          box-shadow: var(--pop-shadow);
+        }
+        @media (max-width: 639px) {
+          .metrics-panel { background: var(--pop-bg); -webkit-backdrop-filter: var(--pop-blur); backdrop-filter: var(--pop-blur); border: var(--pop-border); box-shadow: var(--pop-shadow); }
+        }
+        /* the info popup shows the page background through the glass, no colour mesh */
+        .info-mesh { display: none; }
+        .lb { background: rgba(0, 0, 0, 0.5); }
         @supports not (backdrop-filter: blur(1px)) { .glass, .experience-dock { background-color: rgba(35,20,32,.85); } }
         @media (max-width: 1100px), (max-height: 700px) { .experience-dock { display: none; } }
         @media (prefers-reduced-motion: reduce) { .dock-link span:last-child { transition: none; } .ken-burns { animation: none !important; } }
