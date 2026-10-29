@@ -2774,7 +2774,7 @@ export default function App() {
         @keyframes robot-say { 0% { opacity: 0; transform: translate(-30%, 8px) scale(0.96); } 6%, 92% { opacity: 1; transform: translate(-30%, 0) scale(1); } 100% { opacity: 0; transform: translate(-30%, -6px) scale(0.98); } }
         @keyframes robot-pop { 0% { opacity: 0; transform: translate(-50%, 6px); } 30% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
         /* Metric glass widgets */
-        .metric-card.glass { color: #fff; }
+        .metric-card.glass { color: #fff; -webkit-backdrop-filter: blur(10px) saturate(180%); backdrop-filter: blur(10px) saturate(180%); }
         .metric-card { display: flex; }
         /* the desktop widget column sits inside a pointer-events:none wrapper, which made the player and widgets unclickable; give the cards their pointer back */
         @media (min-width: 1024px) { .metric-card { pointer-events: auto; } }
@@ -3564,7 +3564,7 @@ export default function App() {
         /* ===== every popup: colourless glass with extra blur (chat, info, Behance, CV, GitHub, gallery, lightbox, notice) ===== */
         :root {
           --pop-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 60%), rgba(12, 12, 14, 0.34);
-          --pop-blur: blur(44px) saturate(0.6);
+          --pop-blur: blur(10px) saturate(180%);
           --pop-border: 1px solid rgba(255, 255, 255, 0.28);
           --pop-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.45), inset -1px -1px 1px rgba(255, 255, 255, 0.16), 0 24px 70px rgba(0, 0, 0, 0.4);
         }
