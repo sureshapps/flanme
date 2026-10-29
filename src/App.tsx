@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
-import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
+import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Music, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 import BG_IMAGE_1 from './assets/ChatGPT_Image_Oct_29__2026__05_39_11_AM.png';
 import NAV_ICON from './assets/nav-logo.webp';
@@ -522,7 +522,7 @@ const sfx = (() => {
     // called when a menu item (or the Jom Connect button) closes the menu itself, so its own sound isn't doubled
     quietMenuClose: () => { quietMenuUntil = performance.now() + 250; },
     isEnabled: () => enabled,
-    // one master switch: off silences the interface sounds, the music player, the intro video, the robot's voice and gallery media
+    // Sound switch: off silences the interface sounds, the intro video, the robot's voice and gallery media (the music player has its own Music switch)
     subscribe: (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
     setEnabled: (value: boolean) => {
       enabled = value;
@@ -621,6 +621,29 @@ function useUiSounds(rootRef: { readonly current: HTMLElement | null }) {
 // true while sound is on; re-renders the component whenever the master Sound switch flips
 function useSoundEnabled() {
   return useSyncExternalStore(sfx.subscribe, sfx.isEnabled, () => true);
+}
+
+// Music switch: mutes the music player only. (The Sound switch above only controls the interface click / hover sounds.)
+const MUSIC_STORAGE_KEY = 'music-enabled';
+const music = (() => {
+  let enabled = true;
+  const listeners = new Set<() => void>();
+  try {
+    if (typeof window !== 'undefined') enabled = window.localStorage.getItem(MUSIC_STORAGE_KEY) !== 'off';
+  } catch { /* storage blocked: music stays on */ }
+  return {
+    isEnabled: () => enabled,
+    subscribe: (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
+    setEnabled: (value: boolean) => {
+      enabled = value;
+      try { window.localStorage.setItem(MUSIC_STORAGE_KEY, value ? 'on' : 'off'); } catch { /* storage blocked */ }
+      listeners.forEach((fn) => fn());
+    },
+  };
+})();
+
+function useMusicEnabled() {
+  return useSyncExternalStore(music.subscribe, music.isEnabled, () => true);
 }
 
 // plays the open / close sound whenever a menu, panel or popup changes state (never on first render)
@@ -1205,9 +1228,9 @@ function MusicPlayer() {
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState(false);
   const song = songs[index];
-  const soundOn = useSoundEnabled();
+  const soundOn = useMusicEnabled();
 
-  // master Sound switch: off = the player is silent (it keeps its place, so turning sound on again continues the song)
+  // Music switch: off = the player is silent (it keeps its place, so turning music on again continues the song); the Sound switch does not affect it
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) audio.muted = !soundOn;
@@ -2185,7 +2208,8 @@ function RippleBackground({ src }: { src: string }) {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const effectsOn = useSoundEnabled(); // master Sound switch (interface sounds, music, video, robot voice)
+  const effectsOn = useSoundEnabled(); // Sound switch (interface click / hover sounds, video, robot voice); the music player has its own Music switch
+  const musicOn = useMusicEnabled();
   const siteReady = true;
   const [chatOpen, setChatOpen] = useState(false); // chat popup next to the robot
   const phone = useMediaQuery('(max-width: 639px)');
@@ -3557,6 +3581,7 @@ export default function App() {
         .sound-preference .fx-layer::before { inset: 2px; filter: blur(3px); }
         .sound-preference .fx-layer::after { padding: 3px; filter: blur(3px); }
         .sound-preference:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
+        .music-preference { color: #ff2d2d; }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
         .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
         .loader-heading p { font-size: clamp(11px,2vw,14px); font-weight: 300; margin-top: 12px; }
@@ -3897,9 +3922,12 @@ export default function App() {
                 <Flame className="neon-fire" strokeWidth={1.8} />
               </span>
             </button>
-              <div className="mt-5 flex justify-start sm:mt-6">
+              <div className="mt-5 flex justify-start gap-2 sm:mt-6">
                 <button type="button" className="sound-preference glass" aria-label={effectsOn ? 'Mute interface sounds' : 'Enable interface sounds'} aria-pressed={effectsOn} data-sfx="none" onClick={() => sfx.setEnabled(!effectsOn)}>
                   <span className="fx-layer" aria-hidden="true" />{effectsOn ? <Volume2 size={10} /> : <VolumeX size={10} />}<span>Sound</span>
+                </button>
+                <button type="button" className="sound-preference music-preference glass" aria-label={musicOn ? 'Mute music player' : 'Unmute music player'} aria-pressed={musicOn} data-sfx={musicOn ? 'toggleOff' : 'toggleOn'} onClick={() => music.setEnabled(!musicOn)}>
+                  <span className="fx-layer" aria-hidden="true" />{musicOn ? <Music size={10} /> : <VolumeX size={10} />}<span>Music</span>
                 </button>
               </div>
             <div className="pointer-events-none absolute left-full top-1/2 -mt-2 w-[100px] -translate-y-1/2 sm:w-[120px]">
