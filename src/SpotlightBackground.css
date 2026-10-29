@@ -4,7 +4,7 @@
   --spotlight-haze: .85;
   --spotlight-ground: #080c15;
   --spotlight-intensity: .95;
-  --spotlight-photo-opacity: .5;
+  --spotlight-photo-opacity: .8;
   --spotlight-aim-x: 30%;
   --spotlight-aim-y: 72%;
   position: absolute; inset: 0; z-index: 10; overflow: hidden; pointer-events: none;
