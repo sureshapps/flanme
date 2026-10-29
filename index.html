@@ -276,7 +276,7 @@
           if (!animDone) {
             var a = null;
             try { a = frame.contentWindow.animation; } catch (e) {}
-            if (a && a.progress() >= 0.999) animDone = true;
+            if (a && (a.progress() >= 0.999 || (a.totalDuration() - a.time()) / a.timeScale() <= 1)) animDone = true; // ENTER shows 1s before the end
             else if (!a && Date.now() - t0 > 8000) animDone = true;   // intro failed to load: never trap the visitor
             else if (Date.now() - t0 > 30000) animDone = true;        // failsafe
           }
