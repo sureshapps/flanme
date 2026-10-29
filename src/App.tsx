@@ -1368,7 +1368,7 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
 
     const W = 280;
     const H = 320;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1393,6 +1393,8 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     let webhookAbort: AbortController | null = null;
     let mouthUntil = 0;
     let frame = 0;
+    let lastRobotPaint = 0;
+    let robotVisible = true;
 
     const clamp = (value: number) => Math.max(-1, Math.min(1, value));
     const updateTarget = (clientX: number, clientY: number) => {
@@ -1404,7 +1406,14 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     const onMove = (event: PointerEvent) => updateTarget(event.clientX, event.clientY);
     const onLeave = () => { target.x = 0; target.y = 0; };
 
-    const draw = () => {
+    const draw = (timestamp = performance.now()) => {
+      frame = 0;
+      if (document.hidden || !robotVisible) return;
+      if (lastRobotPaint && timestamp - lastRobotPaint < 1000 / 30 - 1) {
+        frame = requestAnimationFrame(draw);
+        return;
+      }
+      lastRobotPaint = timestamp;
       if (!reduced) time += 0.05;
       mouse.x += (target.x - mouse.x) * 0.1;
       mouse.y += (target.y - mouse.y) * 0.1;
@@ -1825,6 +1834,9 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
     // canvas ignores the mouse so the trailing robot never blocks the page; clicks near it still trigger reactions
     const onWindowClick = (event: MouseEvent) => {
       if (document.querySelector('.curtain')) return; // the robot ignores touches while the curtain is still there
+      // Small-screen controls can sit inside the robot's generous hit area.
+      // Their clicks must not also trigger a robot reaction or open the chat.
+      if (event.target instanceof Element && event.target.closest('button,a,input,select,textarea,summary,details,[role="dialog"]')) return;
       const r = canvas.getBoundingClientRect();
       const dx = event.clientX - (r.left + r.width / 2);
       const dy = event.clientY - (r.top + r.height / 2);
@@ -1839,10 +1851,23 @@ function RobotCard({ onTouch }: { onTouch: () => void }) {
       speaking = false;
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     });
+    const resumeRobot = () => {
+      lastRobotPaint = 0;
+      if (document.hidden || !robotVisible) { cancelAnimationFrame(frame); frame = 0; }
+      else if (!frame) frame = requestAnimationFrame(draw);
+    };
+    const robotObserver = new IntersectionObserver(([entry]) => {
+      robotVisible = entry.isIntersecting;
+      resumeRobot();
+    });
+    robotObserver.observe(canvas);
+    document.addEventListener('visibilitychange', resumeRobot);
     frame = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(frame);
+      robotObserver.disconnect();
+      document.removeEventListener('visibilitychange', resumeRobot);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', onMove);
       document.documentElement.removeEventListener('mouseleave', onLeave);

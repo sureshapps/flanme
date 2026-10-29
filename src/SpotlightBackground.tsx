@@ -75,6 +75,9 @@ export default function SpotlightBackground({ active, controlsTarget }: { active
     let disposed = false;
     let elapsed = 0;
     let previous = 0;
+    let lastPaint = 0;
+    const mobile = matchMedia('(pointer: coarse)').matches || innerWidth < 768;
+    const frameInterval = mobile ? 1000 / 30 : 1000 / 60;
     let lastInput = -10;
     let held = false;
     let pulseUntil = 0;
@@ -138,9 +141,13 @@ export default function SpotlightBackground({ active, controlsTarget }: { active
     const measure = () => {
       const width = host.clientWidth || innerWidth;
       const height = host.clientHeight || innerHeight;
-      const pixelRatio = Math.min(devicePixelRatio || 1, matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5);
-      canvas.width = Math.round(width * pixelRatio);
-      canvas.height = Math.round(height * pixelRatio);
+      const pixelRatio = Math.min(devicePixelRatio || 1, mobile ? 1 : 1.5);
+      const nextWidth = Math.round(width * pixelRatio);
+      const nextHeight = Math.round(height * pixelRatio);
+      // Browser bars and orientation can send repeated resize notifications.
+      // Reallocate the GPU drawing buffer only when its dimensions change.
+      if (canvas.width !== nextWidth) canvas.width = nextWidth;
+      if (canvas.height !== nextHeight) canvas.height = nextHeight;
       gl?.viewport(0, 0, canvas.width, canvas.height);
       const rect = headline?.getBoundingClientRect();
       const bounds = root.getBoundingClientRect();
@@ -167,6 +174,8 @@ export default function SpotlightBackground({ active, controlsTarget }: { active
     const paint = (now: number) => {
       raf = 0;
       if (disposed || !active || !intersecting || document.hidden) { previous = 0; return; }
+      if (lastPaint && now - lastPaint < frameInterval - 1) { raf = requestAnimationFrame(paint); return; }
+      lastPaint = now;
       const dt = previous ? Math.min((now - previous) / 1000, .034) : 1 / 60;
       previous = now;
       const auto = settings.current.motion && !reduced;
@@ -266,7 +275,7 @@ export default function SpotlightBackground({ active, controlsTarget }: { active
     const keyup = (event: KeyboardEvent) => {
       if (event.code === 'Space' || event.key === 'Enter') { held = false; requestPaint(); }
     };
-    const visible = () => { previous = 0; if (document.hidden) { cancelAnimationFrame(raf); raf = 0; held = false; down = false; } else requestPaint(); };
+    const visible = () => { previous = 0; lastPaint = 0; if (document.hidden) { cancelAnimationFrame(raf); raf = 0; held = false; down = false; } else requestPaint(); };
     const blur = () => { held = false; down = false; requestPaint(); };
     const motionChange = () => { reduced = query.matches; previous = 0; requestPaint(); };
     const lost = (event: Event) => { event.preventDefault(); host.classList.remove('spotlight-webgl'); };
