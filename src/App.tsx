@@ -3235,6 +3235,8 @@ function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
         .sound-preference .fx-layer::after { padding: 3px; filter: blur(3px); }
         .sound-preference:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.9); outline-offset: 3px; }
         .music-preference { color: #ff2d2d; }
+        .music-preference { color: #00cfff; text-shadow: 0 0 6px #00cfffaa; }
+        .music-preference svg { filter: drop-shadow(0 0 3px #00cfffaa); }
         .loader-heading { position: absolute; z-index: 5; top: max(42px,env(safe-area-inset-top)); left: 0; width: 100%; text-align: center; color: white; pointer-events: none; }
         .loader-heading span { font-size: 9px; letter-spacing: .24em; opacity: .55; }
         .loader-heading p { font-size: clamp(11px,2vw,14px); font-weight: 300; margin-top: 12px; }
