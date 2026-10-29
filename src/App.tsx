@@ -1,11 +1,9 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ChevronsLeft, Cloud, CloudFog, CloudLightning, CloudRain, CloudSun, Code2, FileText, Flame, Images, Info, Briefcase, Download, Music, Pause, Play, Repeat, Send, Shuffle, SkipBack, SkipForward, Sun, Volume2, VolumeX, X, type LucideIcon } from 'lucide-react';
 
 import SpotlightBackground from './SpotlightBackground';
 import NAV_ICON from './assets/nav-logo.webp';
-// The landing scene reveals the same live portfolio inside the laptop screen.
-const LaptopScroll = lazy(() => import('./LaptopScroll'));
 const SIGNATURE = '/signature.png';
 // DevOps badge shown next to the name in the Jom Connect card (put devops.svg in /public)
 const DEVOPS_ICON = '/devops.svg';
@@ -2004,12 +2002,7 @@ function ChatPopup({ open, onClose, onAction }: { open: boolean; onClose: () => 
 }
 
 export default function App() {
-  const [portfolioActive, setPortfolioActive] = useState(false);
-  return (
-    <Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: '#ededed' }} role="status" aria-label="Loading experience" />}>
-      <LaptopScroll landing onLiveChange={setPortfolioActive}><MainSite spotlightActive={portfolioActive} /></LaptopScroll>
-    </Suspense>
-  );
+  return <MainSite spotlightActive />;
 }
 
 function MainSite({ spotlightActive }: { spotlightActive: boolean }) {
