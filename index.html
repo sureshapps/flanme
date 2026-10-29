@@ -111,17 +111,17 @@
       #enter-wrap::before, #enter-wrap::after { /* neon bars */
         content: ""; position: absolute; left: 50%; transform: translateX(-50%);
         width: 30px; height: 10px; border-radius: 10px;
-        background: #2db2ff;
-        box-shadow: 0 0 5px #2db2ff, 0 0 15px #2db2ff, 0 0 30px #2db2ff, 0 0 60px #2db2ff;
+        background: #fff;
+        box-shadow: 0 0 5px #fff, 0 0 15px #fff, 0 0 30px #fff, 0 0 60px #fff;
         transition: 0.5s;
       }
       #enter-wrap::before { bottom: -3px; }
       #enter-wrap::after { top: -3px; }
-      #enter-wrap.ready:hover #enter { letter-spacing: 0.5em; text-indent: 0.5em; }
+      #enter-wrap.ready:hover #enter { letter-spacing: 0.5em; text-indent: 0.5em; color: #000; }
       #enter-wrap.ready:hover #enter::before { transform: skewX(45deg) translate(200px); }
       #enter-wrap.ready:hover::before { bottom: 0; height: 50%; width: 80%; border-radius: 30px; }
       #enter-wrap.ready:hover::after { top: 0; height: 50%; width: 80%; border-radius: 30px; }
-      #enter:focus-visible { outline: 1px solid rgba(45, 178, 255, 0.9); outline-offset: 5px; }
+      #enter:focus-visible { outline: 1px solid rgba(255, 255, 255, 0.9); outline-offset: 5px; }
       #enter:disabled { cursor: wait; opacity: 0.6; }
     </style>
   </head>
